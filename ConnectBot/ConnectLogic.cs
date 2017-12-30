@@ -14,6 +14,9 @@ namespace ConnectBot
         /// Foremost indices in sub arrays represent 'bottom' spaces of Connect 4 board.
         /// 1 is a black disc, 2 is red.
         /// TODO I think black goes first
+        /// TODO this entire class is unnecessary to do the simplicity of the game.
+        /// TODO only possibly useful part is the integer array to represent board
+        /// TODO AI can get a succinct board representation given to it by the Connect Game class
         /// </summary>
         protected int[][] gameDiscs = new int[][]
         {
