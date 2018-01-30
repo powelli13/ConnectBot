@@ -8,43 +8,28 @@ namespace ConnectBot
 {
     class ConnectAI
     {
-        /// <summary>
-        /// Array of int arrays. Represents columns and rows where the discs are.
-        /// Sub arrays represent columns. Board has 7 columns and 6 rows.
-        /// Negative 1s to buffer board for win detection make board 9 columns and 8 rows.
-        /// Foremost indices in sub arrays represent 'bottom' spaces of Connect 4 board.
-        /// 1 is a black disc, 2 is red.
-        /// TODO I think black goes first
-        /// TODO this entire class is unnecessary to do the simplicity of the game.
-        /// TODO only possibly useful part is the integer array to represent board
-        /// TODO AI can get a succinct board representation given to it by the Connect Game class
-        /// TODO are buffers even useful?
-        /// </summary>
-        //protected int[][] gameDiscs = new int[][]
-        //{
-        //    new int[] {-1, -1, -1, -1, -1, -1, -1, -1},
-        //    new int[] {-1, 0, 0, 0, 0, 0, 0, -1},
-        //    new int[] {-1, 0, 0, 0, 0, 0, 0, -1},
-        //    new int[] {-1, 0, 0, 0, 0, 0, 0, -1},
-        //    new int[] {-1, 0, 0, 0, 0, 0, 0, -1},
-        //    new int[] {-1, 0, 0, 0, 0, 0, 0, -1},
-        //    new int[] {-1, 0, 0, 0, 0, 0, 0, -1},
-        //    new int[] {-1, 0, 0, 0, 0, 0, 0, -1},
-        //    new int[] {-1, -1, -1, -1, -1, -1, -1, -1}
-        //};
+
 
         // this shouldn't need a buffer
+        //
+        // Foremost indices in sub arrays represent 'bottom' spaces of Connect 4 board.
+        // 1 is a black disc, 2 is red.
+        // TODO I think black goes first
+        // 
+
+        /// <summary>
+        /// Foremost indices in sub arrays represent 'bottom' spaces of Connect 4 board.
+        /// 1 is a black disc, 2 is red.
+        /// </summary>
         protected int[] gameDiscs = new int[]
         {
-            -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, 0, 0, 0, 0, 0, 0, -1,
-            -1, 0, 0, 0, 0, 0, 0, -1,
-            -1, 0, 0, 0, 0, 0, 0, -1,
-            -1, 0, 0, 0, 0, 0, 0, -1,
-            -1, 0, 0, 0, 0, 0, 0, -1,
-            -1, 0, 0, 0, 0, 0, 0, -1,
-            -1, 0, 0, 0, 0, 0, 0, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1
+            0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0
         };
         
         protected int aiColor;
@@ -70,13 +55,7 @@ namespace ConnectBot
         {
             aiColor = color;
 
-            treeBuilder = new BackgroundWorker();
-            treeBuilder.DoWork += new DoWorkEventHandler(treeBuilder_DoWork);
-            treeBuilder.RunWorkerAsync();
-
-            //buildTree = true;
-
-            //int treeInt = BuildTree();
+            InitializeTreeBuilder();
 
             rando = new Random();
         }
@@ -87,21 +66,9 @@ namespace ConnectBot
         /// <param name="newBoard">Array representing updated board state.</param>
         public void UpdateBoard(int[] newBoard)
         {
-            // starts at 9 skips two every six for -1 buffer
-            int trace = 0;
-            int skipper = 0;
-
-            for (int ix = 9; ix < 63; ix++)
+            for (int ix = 9; ix < 42; ix++)
             {
-                gameDiscs[ix] = newBoard[trace];
-                trace++;
-                skipper++;
-                
-                if (skipper == 5)
-                {
-                    skipper = 0;
-                    ix += 2;
-                }
+                gameDiscs[ix] = newBoard[ix];
             }
             //TODO trim tree
         }
@@ -115,6 +82,17 @@ namespace ConnectBot
         {
             //TODO use tree
             return rando.Next(0, 7);
+        }
+
+        /// <summary>
+        /// Stops the AI's worker thread from continuing to build the tree.
+        /// </summary>
+        public void Stop()
+        {
+            if (treeBuilder.WorkerSupportsCancellation)
+            {
+                treeBuilder.CancelAsync();
+            }
         }
 
         //TODO could be useful for analyzing
@@ -134,38 +112,65 @@ namespace ConnectBot
         // AI should focus on finding squares that have the most winning sequences for it's side and take them
         // AI should auto play any wins and auto block any losses.
 
-
-        // TODO work thread runs while game plays however UI becomes unresponsive.
-        // TODO build tree in stages, tell AI to stop background workers when done.
-        private void treeBuilder_DoWork(object sender, EventArgs e)
+        /// <summary>
+        /// Setup worker class to build move tree.
+        /// </summary>
+        private void InitializeTreeBuilder()
         {
+            treeBuilder = new BackgroundWorker();
+            treeBuilder.DoWork += new DoWorkEventHandler(treeBuilder_DoWork);
+            treeBuilder.RunWorkerCompleted += new RunWorkerCompletedEventHandler(treeBuilder_WorkCompleted);
+            treeBuilder.WorkerSupportsCancellation = true;
+
+            treeBuilder.RunWorkerAsync();
+        }
+
+        /// <summary>
+        /// Performs background work for building the tree and 
+        /// updating the current optimal move as the game proceeds. 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void treeBuilder_DoWork(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker worker = sender as BackgroundWorker;
+
             while (buildTree)
             {
-                taskCounter++;
-
-                if (taskCounter % 1000 == 0)
+                if (worker.CancellationPending == true)
                 {
-                    System.Console.WriteLine("Another ten thousand in builder thread. Total: {0}", taskCounter);
+                    e.Cancel = true;
+                    break;
                 }
 
-                if (taskCounter >= 1000000000)
+                taskCounter++;
+
+                if (taskCounter % 100000 == 0)
+                {
+                    Console.WriteLine("Another ten thousand in builder thread. Total: {0}", taskCounter);
+                }
+
+                if (taskCounter >= 1000000)
                 {
                     taskCounter = 0;
                 }
             }
         }
 
-        //public async Task<int> BuildTree()
-        //{
+        /// <summary>
+        /// Called when the background worker completes or is cancelled.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void treeBuilder_WorkCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Cancelled)
+            {
+                Console.WriteLine("Canceled.");
+                return;
+            }
 
-        //    while (buildTree)
-        //    {
-
-        //    }
-
-        //    System.Console.WriteLine("Stopped building tree.");
-
-        //    return 0;
-        //}
+            Console.WriteLine("Completed.");
+        }
     }
 }
