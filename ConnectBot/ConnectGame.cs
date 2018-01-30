@@ -254,8 +254,7 @@ namespace ConnectBot
         /// The bottom of the columns comes first.
         /// </summary>
         /// <returns></returns>
-        /// TODO rename also the slim board is probably not worth the hassle, make it mutli-dimensional
-        public int[] GetBufferedBoard()
+        public int[] GetTextBoard()
         {
             int[] retBoard = new int[42];
             int ix = 0;
@@ -414,14 +413,13 @@ namespace ConnectBot
 
             ResetGame();
 
-            int[] botBoard = GetBufferedBoard();
+            
 
             //TODO menu to decide which color bot plays
             playerTurn = 1;
             botTurn = 2;
 
             bot = new ConnectAI(botTurn);
-            bot.UpdateBoard(botBoard);
         }
 
         /// <summary>
@@ -458,11 +456,25 @@ namespace ConnectBot
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            // TODO Escape doesn't completed stop execution. 
+            // TODO also AI needs to get stopped when the x button is clicked on the window.
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
+                if (bot != null)
+                {
+                    bot.Stop();
+                }
+
                 Exit();
             }
 
+            if (Keyboard.GetState().IsKeyDown(Keys.J))
+            {
+                if (bot != null)
+                {
+                    bot.Stop();
+                }
+            }
             // Handle user clicks that could be on columns.
             lastMouseState = mouseState;
             mouseState = Mouse.GetState();
@@ -490,6 +502,7 @@ namespace ConnectBot
                             boardColumns[col].SetSpace(playerTurn);
                             turn = (turn == 1 ? 2 : 1);
                             CheckVictory();
+                            UpdateBotBoard();
                         }
                     }
                 }
@@ -539,6 +552,15 @@ namespace ConnectBot
             {
                 boardColumns[c].ResetSpaces();
             }
+        }
+
+        /// <summary>
+        /// Send the updated boardstate to the bot.
+        /// </summary>
+        protected void UpdateBotBoard()
+        {
+            int[] botBoard = GetTextBoard();
+            bot.UpdateBoard(botBoard);
         }
     }
 }
