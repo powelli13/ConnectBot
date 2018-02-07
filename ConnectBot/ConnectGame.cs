@@ -175,7 +175,7 @@ namespace ConnectBot
 
             /// <summary>
             /// Draws column holder, blue arrow if applicable
-            /// and all contained spaces to the screen.
+            /// and all contained discs to the screen.
             /// </summary>
             /// <param name="sb"></param>
             /// <param name="images"></param>
@@ -254,17 +254,31 @@ namespace ConnectBot
         /// The bottom of the columns comes first.
         /// </summary>
         /// <returns></returns>
-        public int[] GetTextBoard()
+        //public int[] GetTextBoard()
+        //{
+        //    int[] retBoard = new int[42];
+        //    int ix = 0;
+
+        //    for (int c = 0; c < numColumns; c++)
+        //    {
+        //        for (int r = numRows - 1; r > -1; r--)
+        //        {
+        //            retBoard[ix] = boardColumns[c].GetSpace(r);
+        //            ix++;
+        //        }
+        //    }
+
+        //    return retBoard;
+        //}
+        public int[,] GetTextBoard()
         {
-            int[] retBoard = new int[42];
-            int ix = 0;
+            int[,] retBoard = new int[numColumns, numRows];
 
             for (int c = 0; c < numColumns; c++)
             {
-                for (int r = numRows - 1; r > -1; r--)
+                for (int r = 0; r < numRows; r++)
                 {
-                    retBoard[ix] = boardColumns[c].GetSpace(r);
-                    ix++;
+                    retBoard[c, r] = boardColumns[c].GetSpace(r);
                 }
             }
 
@@ -276,6 +290,7 @@ namespace ConnectBot
         /// </summary>
         public void CheckVictory()
         {
+            // TODO display board after victory for a few seconds.
             // when checking up add 1, 2, 3 to rows
             //      check up on 0 - 6 columns
             //      check up on 0 - 2 rows
@@ -475,20 +490,13 @@ namespace ConnectBot
                     bot.Stop();
                 }
             }
-            // Handle user clicks that could be on columns.
+            // Handle user clicks that could be attempted moves.
+            // Contain mouse will not allow clicks on a column
+            // if it is already full.
             lastMouseState = mouseState;
             mouseState = Mouse.GetState();
             Point mousePosition = new Point(mouseState.X, mouseState.Y);
-
-            //if (squares[i].rect.Contains(mousePosition) &&
-            //    lastMouseState.LeftButton == ButtonState.Pressed &&
-            //    mouseState.LeftButton == ButtonState.Released)
-
-            // TODO clicks
-            // iterate columns
-            // if column contains mouse pos and is clickable
-            // if click
-            // send click to column with turn
+            
             if (turn == playerTurn)
             {
                 for (int col = 0; col < numColumns; col++)
@@ -559,7 +567,7 @@ namespace ConnectBot
         /// </summary>
         protected void UpdateBotBoard()
         {
-            int[] botBoard = GetTextBoard();
+            int[,] botBoard = GetTextBoard();
             bot.UpdateBoard(botBoard);
         }
     }
