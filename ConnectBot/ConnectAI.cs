@@ -24,6 +24,8 @@ namespace ConnectBot
         /// on the screen. Lowest row index is lowest in the column stack.
         /// </summary>
         protected int[,] gameDiscs = new int[numColumns, numRows];
+        const int black = 1;
+        const int red = 2;
         
         /// <summary>
         /// Stores the AIs disc color. 
@@ -194,44 +196,138 @@ namespace ConnectBot
         /// <summary>
         /// Evalues the board state and returns a real number score
         /// postive numbers favor black, negative favor red.
+        /// Every disc is worth one. Adjacent discs of the same color 
+        /// add .125 if adjacent discs help to form a line they are
+        /// worth .25
         /// </summary>
         /// <param name="boardState"></param>
         /// <returns></returns>
+        /// TODO there has to be a better way to structure board than all this rigorous checking
         protected double EvaluateBoardState(int[,] boardState)
         {
             double ret = 0.0;
-
-            for (int c = 0; c < numColumns; c++)
+            int tempCheck = 0;
+            int tempCol = -1;
+            int tempRow = -1;
+            int colorMulti = 1;
+            
+            /*
+             * For both colors scan the entire board.
+             * From each space reach out in scorable
+             * directions adding on more value for free
+             * spaces that could be used to score,
+             * even more value for same color discs
+             * and breaking on opponents blocking
+             * dics.
+             */
+            for (int color = 1; color < 3; color++)
             {
-                for (int r = 0; r < numRows; r++)
+                for (int c = 0; c < numColumns; c++)
                 {
-                    double deviation = 0.0;
+                    for (int r = 0; r < numRows; r++)
+                    {
+                        // from every square reach out in all eight directions in loops break when not in bounds
+                        // if space is open add .125 (possible scoring)
+                        // if oppoosite color break
+                        // if same color add .25
 
-                    if (c == 3)
-                    {
-                        deviation = 0.5;
-                    }
-                    if (c == 2 || c == 4)
-                    {
-                        deviation = 0.25;
-                    }
-                    if (c == 1 || c == 5)
-                    {
-                        deviation = 0.125;
-                    }
 
-                    if (boardState[c, r] == 1)
-                    {
-                        ret += (1.0 + (deviation));
-                    }
-                    else if (boardState[c, r] == 2)
-                    {
-                        ret -= (1.0 + (deviation));
+                        // TODO board state == color?
+                        // TODO it doesn't try to stop opponents from scoring
+                        // make potential victories be worth a huge amount to incentivise stopping
+                        if (boardState[c, r] == black)
+                        {
+                            ret += 1.0;
+                            tempCheck = 1;
+                            colorMulti = 1;
+                        }
+                        else if (boardState[c, r] == red)
+                        {
+                            ret -= 1.0;
+                            tempCheck = 2;
+                            colorMulti = -1;
+                        }
+
+                        if (tempCheck != 0)
+                        {
+                            ScorePossibles(boardState, tempCheck, c, r, ref ret);
+                        }
+
+                        tempCheck = 0;
+                        colorMulti = 1;
                     }
                 }
             }
 
             return ret;
+        }
+
+        /// <summary>
+        /// Modify the board evaluation value based on 
+        /// the scoring potentials of a given space.
+        /// </summary>
+        /// <param name="board"></param>
+        /// <param name="checkColor"></param>
+        /// <param name="c"></param>
+        /// <param name="r"></param>
+        /// <param name="val"></param>
+        private void ScorePossibles(int[,] board, int checkColor, int c, int r, ref double val)
+        {
+            int tempCol = -1;
+            int tempRow = -1;
+            int colorMulti = 1;
+
+            if (checkColor == black)
+            {
+                colorMulti = 1;
+            }
+            else if (checkColor == red)
+            {
+                colorMulti = -1;
+            }
+
+            for (int m = 1; m < 4; m++)
+            {
+                for (int cdiff = -1; cdiff < 2; cdiff++)
+                {
+                    for (int rdiff = -1; rdiff < 2; rdiff++)
+                    {
+                        tempCol = c + (cdiff * m);
+                        tempRow = r + (rdiff * m);
+
+                        if (InBounds(tempCol, tempRow))
+                        {
+                            if (board[tempCol, tempRow] == 0)
+                            {
+                                val += 0.125 * colorMulti;
+                            }
+                            else if (board[tempCol, tempRow] == checkColor)
+                            {
+                                val += 0.25 * colorMulti;
+                            }
+                            else
+                            {
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Determines if a [column, row] index pair
+        /// are in legal bounds of the board.
+        /// </summary>
+        /// <returns></returns>
+        private bool InBounds(int col, int row)
+        {
+            if ((col > -1 && col < 7) && (row > -1 && row < 6))
+            {
+                return true;
+            }
+            
+            return false;
         }
 
         /// <summary>
