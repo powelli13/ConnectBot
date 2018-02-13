@@ -207,9 +207,6 @@ namespace ConnectBot
         {
             double ret = 0.0;
             int tempCheck = 0;
-            int tempCol = -1;
-            int tempRow = -1;
-            int colorMulti = 1;
             
             /*
              * For both colors scan the entire board.
@@ -239,13 +236,11 @@ namespace ConnectBot
                         {
                             ret += 1.0;
                             tempCheck = 1;
-                            colorMulti = 1;
                         }
                         else if (boardState[c, r] == red)
                         {
                             ret -= 1.0;
                             tempCheck = 2;
-                            colorMulti = -1;
                         }
 
                         if (tempCheck != 0)
@@ -254,7 +249,6 @@ namespace ConnectBot
                         }
 
                         tempCheck = 0;
-                        colorMulti = 1;
                     }
                 }
             }
@@ -277,11 +271,7 @@ namespace ConnectBot
             int tempRow = -1;
             int colorMulti = 1;
 
-            if (checkColor == black)
-            {
-                colorMulti = 1;
-            }
-            else if (checkColor == red)
+            if (checkColor == red)
             {
                 colorMulti = -1;
             }
@@ -299,15 +289,15 @@ namespace ConnectBot
                         {
                             if (board[tempCol, tempRow] == 0)
                             {
-                                val += 0.125 * colorMulti;
+                                val += (0.125 * colorMulti);
                             }
                             else if (board[tempCol, tempRow] == checkColor)
                             {
-                                val += 0.25 * colorMulti;
+                                val += (1.50 * colorMulti);
                             }
                             else
                             {
-                                return;
+                                continue;
                             }
                         }
                     }
@@ -390,14 +380,10 @@ namespace ConnectBot
                 }
 
                 taskCounter++;
-
-                //if (taskCounter % 100000 == 0)
-                //{
-                //    Console.WriteLine("Another ten thousand in builder thread. Total: {0}", taskCounter);
-                //}
-
+                
                 if (taskCounter >= 1000000)
                 {
+                    //Console.WriteLine("Another ten thousand in builder thread. Total: {0}", taskCounter);
                     taskCounter = 0;
                 }
             }
