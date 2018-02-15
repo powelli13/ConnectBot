@@ -11,15 +11,19 @@ namespace ConnectBot
     /// </summary>
     public class ConnectGame : Game
     {
+        #region Class : Space
         /// <summary>
         /// Class to contain essential game space information.
         /// </summary>
         protected class Space
         {
-
+            // Rectangle that represents the space
             private Rectangle rect;
+            // Rectangle used to draw discs falling over time
+            private Rectangle drawRect;
             private Texture2D discSprite;
             private int discColor = 0;
+            private bool falling = false;
 
             public int DiscColor
             {
@@ -33,12 +37,28 @@ namespace ConnectBot
                 }
             }
 
+            public bool Falling
+            {
+                get
+                {
+                    return falling;
+                }
+                set
+                {
+                    falling = value;
+                }
+            }
+
             /// <summary>
             /// Constructor requires the rect placement in pixels.
             /// </summary>
             public Space(int x, int y)
             {
                 rect = new Rectangle(x, y, spaceSize, spaceSize);
+
+                // Draw rectangle starting y is the top most disc space for a column
+                // Top buffer of board to edge of screen add space size to account for blue arrows
+                drawRect = new Rectangle(x, topBuffer + spaceSize, spaceSize, spaceSize);
             }
 
             /// <summary>
@@ -49,11 +69,24 @@ namespace ConnectBot
             {
                 if (discColor != 0)
                 {
-                    sb.Draw(images[discColor], rect, Color.Wheat);
+                    sb.Draw(images[discColor], drawRect, Color.Wheat);
+
+                    if (drawRect.Y < rect.Y /*&& falling*/)
+                    {
+                        drawRect.Y += 8;
+                    }
+
+                    if (drawRect.Y >= rect.Y)
+                    {
+                        //falling = false;
+                        drawRect.Y = rect.Y;
+                    }
                 }
             }
         }
+        #endregion
 
+        #region Class : BoardColumn
         /// <summary>
         /// Column to hold spaces and column animations.
         /// Handles click detection for moves in a column.
@@ -112,14 +145,13 @@ namespace ConnectBot
             /// <param name="disc"></param>
             public void SetSpace(int disc)
             {
-                // TODO begin animation drop sequence
-                // TODO determine pixel drop height for animation
                 // Fill the first available space with the given disc.
                 for (int t = 0; t < numRows; t++)
                 {
                     if (columnSpaces[t].DiscColor == 0)
                     {
                         columnSpaces[t].DiscColor = disc;
+                        //columnSpaces[t].Falling = true;
 
                         // Determine if column is full or still movable.
                         if (t == numRows - 1)
@@ -179,7 +211,7 @@ namespace ConnectBot
             /// </summary>
             /// <param name="sb"></param>
             /// <param name="images"></param>
-            public void Draw(SpriteBatch sb, Dictionary<int, Texture2D> images)
+            public void Draw(SpriteBatch sb, Dictionary<int, Texture2D> images, bool drawBlueArrow)
             {
                 for (int i = 0; i < columnSpaces.Length; i++)
                 {
@@ -187,12 +219,13 @@ namespace ConnectBot
                 }
 
                 sb.Draw(columnHolder, columnHolderRect, Color.White);
-                if (movable)
+                if (movable && drawBlueArrow)
                 {
                     sb.Draw(blueArrow, blueArrowRect, Color.White);
                 }
             }
         }
+        #endregion
 
         /// <summary>
         /// Spacing display constants.
@@ -226,12 +259,15 @@ namespace ConnectBot
         protected int playerTurn;
         protected int botTurn;
 
+        private double timeSinceLastMove;
+
         /// <summary>
         /// Used to handle click inputs.
         /// </summary>
         private MouseState mouseState;
         private MouseState lastMouseState;
-
+        
+            
         /// <summary>
         /// Bot to play against.
         /// </summary>
@@ -246,30 +282,12 @@ namespace ConnectBot
             
             Content.RootDirectory = "Content";
         }
-
+        
         /// <summary>
-        /// Return array of integers representing board without buffers.
-        /// The first six elements are the first column, 
-        /// each section of six in the reduced board is a column.
-        /// The bottom of the columns comes first.
+        /// Returns multi dimensional array of integers
+        /// representing the current state of the board.
         /// </summary>
         /// <returns></returns>
-        //public int[] GetTextBoard()
-        //{
-        //    int[] retBoard = new int[42];
-        //    int ix = 0;
-
-        //    for (int c = 0; c < numColumns; c++)
-        //    {
-        //        for (int r = numRows - 1; r > -1; r--)
-        //        {
-        //            retBoard[ix] = boardColumns[c].GetSpace(r);
-        //            ix++;
-        //        }
-        //    }
-
-        //    return retBoard;
-        //}
         public int[,] GetTextBoard()
         {
             int[,] retBoard = new int[numColumns, numRows];
@@ -324,8 +342,14 @@ namespace ConnectBot
                         first == third &&
                         first == fourth)
                     {
-                        System.Console.WriteLine("Player {0} has won! Restarting.", first);
-                        ResetGame();
+                        string winner = "Black";
+
+                        if (first == 2)
+                        {
+                            winner = "Red";
+                        }
+
+                        VictoryConfirmed(first);
                         return;
                     }
                 }
@@ -346,8 +370,7 @@ namespace ConnectBot
                         first == third &&
                         first == fourth)
                     {
-                        System.Console.WriteLine("Player {0} has won! Restarting.", first);
-                        ResetGame();
+                        VictoryConfirmed(first);
                         return;
                     }
                 }
@@ -368,8 +391,7 @@ namespace ConnectBot
                         first == third &&
                         first == fourth)
                     {
-                        System.Console.WriteLine("Player {0} has won! Restarting.", first);
-                        ResetGame();
+                        VictoryConfirmed(first);
                         return;
                     }
                 }
@@ -390,15 +412,29 @@ namespace ConnectBot
                         first == third &&
                         first == fourth)
                     {
-                        System.Console.WriteLine("Player {0} has won! Restarting.", first);
-                        ResetGame();
+                        VictoryConfirmed(first);
                         return;
                     }
                 }
             }
+        }
 
-            //System.Console.WriteLine("No winner yet, keep playing!");
-            // TODO play again menu?
+        /// <summary>
+        /// Confirms victory to console and resets the game.
+        /// </summary>
+        /// <param name="winner"></param>
+        /// // TODO play again menu?
+        /// // TODO announce victory and prompt replay or something
+        public void VictoryConfirmed(int winner)
+        {
+            string winnerColor = "Black";
+
+            if (winner == 2)
+            {
+                winnerColor = "Red";
+            }
+
+            ResetGame();
         }
 
         /// <summary>
@@ -413,9 +449,9 @@ namespace ConnectBot
             
             IsMouseVisible = true;
 
-            // create and load space objects
+            // Create and load space objects
             int xPos = sideBuffer;
-            // space size added to account for blue arrow
+            // Add space size added to account for blue arrow
             int yPos = topBuffer + spaceSize;
             
             for (int col = 0; col < numColumns; col++)
@@ -427,9 +463,7 @@ namespace ConnectBot
             }
 
             ResetGame();
-
             
-
             //TODO menu to decide which color bot plays
             playerTurn = 1;
             botTurn = 2;
@@ -490,41 +524,48 @@ namespace ConnectBot
                     bot.Stop();
                 }
             }
+
+            timeSinceLastMove += gameTime.ElapsedGameTime.TotalSeconds;
+
+            // TODO should this be a seperate method?
             // Handle user clicks that could be attempted moves.
-            // Contain mouse will not allow clicks on a column
-            // if it is already full.
+            // Contain mouse will not allow clicks on a full column.
             lastMouseState = mouseState;
             mouseState = Mouse.GetState();
             Point mousePosition = new Point(mouseState.X, mouseState.Y);
-            
-            if (turn == playerTurn)
+
+            if (timeSinceLastMove > 0.5)
             {
-                for (int col = 0; col < numColumns; col++)
+                if (turn == playerTurn)
                 {
-                    if (boardColumns[col].ContainMouse(mousePosition))
+                    for (int col = 0; col < numColumns; col++)
                     {
-                        if (lastMouseState.LeftButton == ButtonState.Pressed &&
-                            mouseState.LeftButton == ButtonState.Released)
+                        if (boardColumns[col].ContainMouse(mousePosition))
                         {
-                            // Perform move and change turn.
-                            boardColumns[col].SetSpace(playerTurn);
-                            turn = (turn == 1 ? 2 : 1);
-                            CheckVictory();
-                            UpdateBotBoard();
+                            if (lastMouseState.LeftButton == ButtonState.Pressed
+                                && mouseState.LeftButton == ButtonState.Released)
+                            {
+                                // Perform move and change turn.
+                                // TODO this seems like it should be blended with the bot moving
+                                boardColumns[col].SetSpace(playerTurn);
+                                turn = (turn == 1 ? 2 : 1);
+                                timeSinceLastMove = 0.0;
+                                CheckVictory();
+                                UpdateBotBoard();
+                            }
                         }
                     }
                 }
+                else if (turn == botTurn)
+                {
+                    // TODO ensure bot doesn't cheat
+                    int botMove = bot.Move();
+                    boardColumns[botMove].SetSpace(botTurn);
+                    turn = (turn == 1 ? 2 : 1);
+                    timeSinceLastMove = 0.0;
+                    CheckVictory();
+                }
             }
-            else if (turn == botTurn)
-            {
-                // TODO ensure bot doesn't cheat 
-                int botMove = bot.Move();
-                boardColumns[botMove].SetSpace(botTurn);
-                turn = (turn == 1 ? 2 : 1);
-                CheckVictory();
-            }
-
-
             
             base.Update(gameTime);
         }
@@ -535,17 +576,22 @@ namespace ConnectBot
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
+            // TODO wait a little while to show game end
             GraphicsDevice.Clear(Color.Wheat);
-            
             spriteBatch.Begin();
+            bool drawBlueArrow = false;
+
+            if (timeSinceLastMove > 0.5)
+            {
+                drawBlueArrow = true;
+            }
 
             for (int col = 0; col < numColumns; col++)
             {
-                boardColumns[col].Draw(spriteBatch, imageDict);
+                boardColumns[col].Draw(spriteBatch, imageDict, drawBlueArrow);
             }
 
             spriteBatch.End();
-
             base.Draw(gameTime);
         }
 

@@ -59,11 +59,12 @@ namespace ConnectBot
         /// </summary>
         private int currentBestMoveColumn;
 
+        #region Class : Node
         /// <summary>
         /// Lightweight class used to store a board state, turn
         /// and evaluation score of the board state.
-        /// // TODO parent move? probably not. should be in tree.
         /// // TODO could this just have the column index that would generate that node? does it need the whole board?
+        /// // TODO should this save whose turn it was?
         /// </summary>
         private class Node
         {
@@ -77,7 +78,9 @@ namespace ConnectBot
                 this.evalScore = evalScore;
             }
         }
+        #endregion
 
+        #region Class : NodeList
         /// <summary>
         /// Collection of tree nodes used to organize a node's children.
         /// </summary>
@@ -85,9 +88,9 @@ namespace ConnectBot
         {
             public NodeList() : base() { }
 
-            public Node FindHighestScore()
+            public int FindHighestScoreIndex()
             {
-                return new Node(0, 0.0);
+                return 0;
             }
 
             public void AddNode(Node n)
@@ -95,7 +98,7 @@ namespace ConnectBot
                 base.Items.Add(n);
             }
         }
-
+        #endregion
 
         /// <summary>
         /// Constructor.
@@ -224,14 +227,9 @@ namespace ConnectBot
                     for (int r = 0; r < numRows; r++)
                     {
                         // from every square reach out in all eight directions in loops break when not in bounds
-                        // if space is open add .125 (possible scoring)
-                        // if oppoosite color break
-                        // if same color add .25
-
-
-                        // TODO board state == color?
                         // TODO it doesn't try to stop opponents from scoring
                         // make potential victories be worth a huge amount to incentivise stopping
+                        // this evaluator does not 
                         if (boardState[c, r] == black)
                         {
                             ret += 1.0;
@@ -289,15 +287,42 @@ namespace ConnectBot
                         {
                             if (board[tempCol, tempRow] == 0)
                             {
-                                val += (0.125 * colorMulti);
+                                val += (0.0625 * colorMulti);
                             }
                             else if (board[tempCol, tempRow] == checkColor)
                             {
-                                val += (1.50 * colorMulti);
-                            }
-                            else
-                            {
-                                continue;
+                                // Lateral connections valued more than veritcal
+                                if (rdiff == 0)
+                                {
+                                    val += (0.25 * colorMulti);
+                                }
+                                else
+                                {
+                                    val += (0.125 * colorMulti);
+                                }
+
+                                
+                                // TODO heavily rewarding three in a row
+                                // TODO this can be improved
+                                // needs to weigh the opponents three more than its own
+                                if (m < 3)
+                                {
+                                    tempCol = c + (cdiff * (m + 1));
+                                    tempRow = r + (rdiff * (m + 1));
+
+                                    if (InBounds(tempCol, tempRow))
+                                    {
+                                        if (board[tempCol, tempRow] == checkColor)
+                                        {
+                                            val += (0.5 * colorMulti);
+
+                                            //if (checkColor != aiColor)
+                                            //{
+                                            //    val += (0.5 * colorMulti);
+                                            //}
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
