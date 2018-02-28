@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 namespace ConnectBot
@@ -54,6 +55,11 @@ namespace ConnectBot
         private BackgroundWorker treeBuilder;
 
         /// <summary>
+        /// Root of the move tree.
+        /// </summary>
+        private Node treeRoot;
+
+        /// <summary>
         /// Index of the current best column to move to
         /// updated as the tree is built.
         /// </summary>
@@ -61,21 +67,25 @@ namespace ConnectBot
 
         #region Class : Node
         /// <summary>
-        /// Lightweight class used to store a board state, turn
+        /// Node of the move tree stores a board state, 
+        /// turn disc and column for move that generated this state
         /// and evaluation score of the board state.
-        /// // TODO could this just have the column index that would generate that node? does it need the whole board?
-        /// // TODO should this save whose turn it was?
         /// </summary>
         private class Node
         {
-            private int[,] boardDiscState;
+            public int[,] boardDiscState;
             public double evalScore;
             public int column;
+            public NodeList Children;
+            public int Turn;
 
-            public Node(int column, double evalScore)
+            public Node(int[,] board, int column, int turn, double evalScore)
             {
+                this.boardDiscState = board;
                 this.column = column;
                 this.evalScore = evalScore;
+                this.Turn = turn;
+                this.Children = new NodeList();
             }
         }
         #endregion
@@ -84,10 +94,16 @@ namespace ConnectBot
         /// <summary>
         /// Collection of tree nodes used to organize a node's children.
         /// </summary>
-        private class NodeList : Collection<Node>
+        private class NodeList : Collection<Node>//, IEnumerable<Node> TODO would it be worth to make this enumerable? for fun?
         {
-            public NodeList() : base() { }
+            public int Count;
 
+            public NodeList() : base()
+            {
+                Count = 0;
+            }
+
+            // TODO is this needed?
             public int FindHighestScoreIndex()
             {
                 return 0;
@@ -95,6 +111,7 @@ namespace ConnectBot
 
             public void AddNode(Node n)
             {
+                Count++;
                 base.Items.Add(n);
             }
         }
@@ -107,6 +124,7 @@ namespace ConnectBot
         public ConnectAI(int color)
         {
             aiColor = color;
+            currentBestMoveColumn = 0;
 
             InitializeTreeBuilder();
 
@@ -126,7 +144,15 @@ namespace ConnectBot
                     gameDiscs[c, r] = newBoard[c, r];
                 }
             }
-
+            
+            // Initialize tree root if it is null.
+            // Moves in 0 column for the root initialization.
+            if (treeRoot == null)
+            {
+                double score = EvaluateBoardState(newBoard);
+                int column = 0;
+                treeRoot = new Node(newBoard, column, black, score);
+            }
             //TODO trim tree
         }
         
@@ -143,15 +169,18 @@ namespace ConnectBot
             double bestScore = 100.0;
             double tempScore = 1000.0;
 
-            for (int ix = 0; ix < numColumns; ix++)
-            {
-                tempScore = EvaluateBoardState(GenerateBoardState(ix, aiColor, gameDiscs));
-                if (tempScore < bestScore)
-                {
-                    bestScore = tempScore;
-                    currentBestMoveColumn = ix;
-                }
-            }
+            //for (int ix = 0; ix < numColumns; ix++)
+            //{
+            //    tempScore = EvaluateBoardState(GenerateBoardState(ix, aiColor, gameDiscs));
+            //    if (tempScore < bestScore)
+            //    {
+            //        bestScore = tempScore;
+            //        currentBestMoveColumn = ix;
+            //    }
+            //}
+
+            // TODO should we ever do something to buy the AI more time for it's worker thread?
+            // ensure current best move is legal before returning
 
             string resultString = String.Format("AI found best move at column: {0} with a score of: {1}", currentBestMoveColumn, bestScore);
             Console.WriteLine(resultString);
@@ -273,7 +302,15 @@ namespace ConnectBot
             {
                 colorMulti = -1;
             }
-
+            
+            /*
+             * m is a multiplier to stretch out 1, 2 and 3
+             * spaces away from the current space being played.
+             * cdiff and rdiff move in all eight possible directions
+             * out from the current space summing up the space
+             * values based on whether nearby spaces are empty
+             * or have a same color disc.
+             */
             for (int m = 1; m < 4; m++)
             {
                 for (int cdiff = -1; cdiff < 2; cdiff++)
@@ -388,7 +425,7 @@ namespace ConnectBot
 
         /// <summary>
         /// Performs background work for building the tree and 
-        /// updating the current optimal move as the game proceeds. 
+        /// updating the current optimal move as the game proceeds.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -404,13 +441,36 @@ namespace ConnectBot
                     break;
                 }
 
-                taskCounter++;
-                
-                if (taskCounter >= 1000000)
+                // TODO how to respond appropriately to a null root?
+                // TODO how to build from the leafs once root as been established?
+                // TODO make a method to enumerate children given a node call that recursively
+                if (treeRoot != null)
                 {
-                    //Console.WriteLine("Another ten thousand in builder thread. Total: {0}", taskCounter);
-                    taskCounter = 0;
+                    if (treeRoot.Children.Count == 0)
+                    {
+                        int nextTurn = (treeRoot.Turn == black ? red : black);
+
+                        for (int nc = 0; nc < numColumns; nc++)
+                        {
+                            int[,] newState = GenerateBoardState(nc, nextTurn, treeRoot.boardDiscState);
+                            double newScore = EvaluateBoardState(newState);
+
+                            // TODO i don't think using a best move variable is the best way move should traverse tree from root not return an updated move
+                            // have to traverse to find best eval score, switching eval while traversing and return the move from current root that would 
+                            // yield best score, assuming opponent makes best moves.
+                            //if (newScore )
+
+                            Node child = new Node(newState, nc, nextTurn, newScore);
+                            
+                        }
+                    }
                 }
+                // from root 
+                // if no children
+                //      enumerate children moves
+                // for each child
+                //      enumerate children moves
+                // need to traverse tree
             }
         }
 

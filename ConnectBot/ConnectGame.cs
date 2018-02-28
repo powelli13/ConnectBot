@@ -469,6 +469,7 @@ namespace ConnectBot
             botTurn = 2;
 
             bot = new ConnectAI(botTurn);
+            UpdateBotBoard();
         }
 
         /// <summary>
