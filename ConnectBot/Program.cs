@@ -11,7 +11,7 @@ namespace ConnectBot
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
-        [STAThread]
+        [STAThread] // TODO Should this be single threaded application?
         static void Main()
         {
             using (var game = new ConnectGame())

@@ -144,13 +144,15 @@ namespace ConnectBot
                     gameDiscs[c, r] = newBoard[c, r];
                 }
             }
-            
+
             // Initialize tree root if it is null.
-            // Moves in 0 column for the root initialization.
+            // Moves in 0 column for the root initialization. 
+            // TODO this seems strange but shouldn't cause problems maybe make column -1 to signify no move made to reach that position
             if (treeRoot == null)
             {
                 double score = EvaluateBoardState(newBoard);
                 int column = 0;
+
                 treeRoot = new Node(newBoard, column, black, score);
             }
             //TODO trim tree
@@ -169,18 +171,18 @@ namespace ConnectBot
             double bestScore = 100.0;
             double tempScore = 1000.0;
 
-            //for (int ix = 0; ix < numColumns; ix++)
-            //{
-            //    tempScore = EvaluateBoardState(GenerateBoardState(ix, aiColor, gameDiscs));
-            //    if (tempScore < bestScore)
-            //    {
-            //        bestScore = tempScore;
-            //        currentBestMoveColumn = ix;
-            //    }
-            //}
+            for (int ix = 0; ix < numColumns; ix++)
+            {
+                tempScore = EvaluateBoardState(GenerateBoardState(ix, aiColor, gameDiscs));
+                if (tempScore < bestScore)
+                {
+                    bestScore = tempScore;
+                    currentBestMoveColumn = ix;
+                }
+            }
 
             // TODO should we ever do something to buy the AI more time for it's worker thread?
-            // ensure current best move is legal before returning
+            // TODO ensure current best move is legal before returning
 
             string resultString = String.Format("AI found best move at column: {0} with a score of: {1}", currentBestMoveColumn, bestScore);
             Console.WriteLine(resultString);
@@ -446,24 +448,26 @@ namespace ConnectBot
                 // TODO make a method to enumerate children given a node call that recursively
                 if (treeRoot != null)
                 {
-                    if (treeRoot.Children.Count == 0)
-                    {
-                        int nextTurn = (treeRoot.Turn == black ? red : black);
+                    //if (treeRoot.Children.Count == 0)
+                    //{
+                    //    int nextTurn = (treeRoot.Turn == black ? red : black);
 
-                        for (int nc = 0; nc < numColumns; nc++)
-                        {
-                            int[,] newState = GenerateBoardState(nc, nextTurn, treeRoot.boardDiscState);
-                            double newScore = EvaluateBoardState(newState);
+                    //    for (int nc = 0; nc < numColumns; nc++)
+                    //    {
+                    //        int[,] newState = GenerateBoardState(nc, nextTurn, treeRoot.boardDiscState);
+                    //        double newScore = EvaluateBoardState(newState);
 
-                            // TODO i don't think using a best move variable is the best way move should traverse tree from root not return an updated move
-                            // have to traverse to find best eval score, switching eval while traversing and return the move from current root that would 
-                            // yield best score, assuming opponent makes best moves.
-                            //if (newScore )
+                    //        // TODO i don't think using a best move variable is the best way move should traverse tree from root not return an updated move
+                    //        // have to traverse to find best eval score, switching eval while traversing and return the move from current root that would 
+                    //        // yield best score, assuming opponent makes best moves.
+                    //        //if (newScore )
 
-                            Node child = new Node(newState, nc, nextTurn, newScore);
-                            
-                        }
-                    }
+                    //        Node child = new Node(newState, nc, nextTurn, newScore);
+
+                    //    }
+                    //}
+
+                    treeBuilder_GrowChildren(treeRoot, 4);
                 }
                 // from root 
                 // if no children
@@ -472,6 +476,46 @@ namespace ConnectBot
                 //      enumerate children moves
                 // need to traverse tree
             }
+        }
+
+        /// <summary>
+        /// Builds out all possible child moves form a given
+        /// parent board state.
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="depth"></param>
+        private void treeBuilder_GrowChildren(Node parent, int depth)
+        {
+            int nextTurn = (parent.Turn == black ? red : black);
+
+            for (int nc = 0; nc < numColumns; nc++)
+            {
+                int[,] newState = GenerateBoardState(nc, nextTurn, parent.boardDiscState);
+                double newScore = EvaluateBoardState(newState);
+                
+                Node child = new Node(newState, nc, nextTurn, newScore);
+                parent.Children.Add(child);
+            }
+
+            // Build off of children if we haven't hit max depth yet.
+            if (depth > 0)
+            {
+                foreach (Node child in parent.Children)
+                {
+                    treeBuilder_GrowChildren(child, depth - 1);
+                }
+            }
+
+            if (depth <= 0)
+            {
+                Console.WriteLine("Reached max depth on branch.");
+            }
+        }
+
+        // TODO perform BFS to find best leaf node for the AIs color and select the column move that will move down that branch
+        private int FindBestMove(Node tree)
+        {
+            return 0;
         }
 
         /// <summary>

@@ -547,7 +547,6 @@ namespace ConnectBot
                                 && mouseState.LeftButton == ButtonState.Released)
                             {
                                 // Perform move and change turn.
-                                // TODO this seems like it should be blended with the bot moving
                                 boardColumns[col].SetSpace(playerTurn);
                                 turn = (turn == 1 ? 2 : 1);
                                 timeSinceLastMove = 0.0;
