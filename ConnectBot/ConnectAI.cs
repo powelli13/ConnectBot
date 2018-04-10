@@ -126,7 +126,7 @@ namespace ConnectBot
             aiColor = color;
             currentBestMoveColumn = 0;
 
-            InitializeTreeBuilder();
+            //InitializeTreeBuilder();
 
             rando = new Random();
         }
@@ -261,28 +261,169 @@ namespace ConnectBot
                         // TODO it doesn't try to stop opponents from scoring
                         // make potential victories be worth a huge amount to incentivise stopping
                         // this evaluator does not 
-                        if (boardState[c, r] == black)
+                        //if (boardState[c, r] == black)
+                        //{
+                        //    // No point in adding value based on individual discs since it will always cancel out
+                        //    //ret += 1.0;
+                        //    tempCheck = 1;
+                        //}
+                        //else if (boardState[c, r] == red)
+                        //{
+                        //    //ret -= 1.0;
+                        //    tempCheck = 2;
+                        //}
+
+                        if (boardState[c, r] != 0)
                         {
-                            ret += 1.0;
-                            tempCheck = 1;
-                        }
-                        else if (boardState[c, r] == red)
-                        {
-                            ret -= 1.0;
-                            tempCheck = 2;
+                            ScorePossibles(boardState, boardState[c, r], c, r, ref ret);
                         }
 
-                        if (tempCheck != 0)
-                        {
-                            ScorePossibles(boardState, tempCheck, c, r, ref ret);
-                        }
-
-                        tempCheck = 0;
+                        //tempCheck = 0;
                     }
                 }
             }
 
             return ret;
+        }
+
+        /// <summary>
+        /// Modify the board positional score based on scoring
+        /// potentials of both sides.
+        /// </summary>
+        /// <param name="board"></param>
+        /// <param name="checkColor"></param>
+        /// <param name="c"></param>
+        /// <param name="r"></param>
+        /// <param name="val"></param>
+        private void ScorePossibles(int[,] board, int checkColor, int c, int r, ref double val)
+        {
+            /*
+             * 4 in a row is worth as 1 point.
+             * Each like colored disc in a possible 
+             * (only open or same color, free from opposing color)
+             * 4 long sequence of spaces, is worth 0.25 points.
+             * 
+             * Reach out in all eight directions and move rolling
+             * 4 long sequence through spot being checked to determine total value.
+             * short circuit when opposing pieces are hit.
+             * 
+             * 
+             */
+
+            // The total number of possible open scoring combinations 
+            // that the checked disc participates.
+            int participatedPossibles = 0;
+            int oppositeColor = (checkColor == black ? red : black);
+            bool addPossible = true;
+
+            // Horizontal scan
+            // same row
+            // column +- 3
+            // The square looks from three to the left to zero, zero being itself.
+            // For each of these spaces to the left it scans four to the right. 
+            // This will examine all four potential horizontal scorings depending 
+            // on board position.
+            for (int ch = -3; ch < 1; ch++)
+            {
+                addPossible = true;
+
+                for (int trace = 0; trace < 4; trace++)
+                {
+                    if (InBounds(r, c + ch + trace))
+                    {
+                        if (board[r, c + ch + trace] == oppositeColor)
+                        {
+                            addPossible = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (addPossible)
+                {
+                    participatedPossibles += 1;
+                }
+            }
+
+            // Vertical scan
+            // same column
+            // row +- 3
+            // Look down three spaces.
+            // For each space count up four and add possibles when clear.
+            for (int rh = -3; rh < 1; rh++)
+            {
+                addPossible = true;
+
+                for (int trace = 0; trace < 4; trace++)
+                {
+                    if (InBounds(r + rh + trace, c))
+                    {
+                        if (board[r + rh + trace, c] == oppositeColor)
+                        {
+                            addPossible = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (addPossible)
+                {
+                    participatedPossibles += 1;
+                }
+            }
+
+            // Angled up right scan
+            // row and column +- 3 always same difference for row and column
+            // row + when column + and row - when column -
+            for (int ur = -3; ur < 1; ur++)
+            {
+                addPossible = true;
+                
+                for (int trace = 0; trace < 4; trace++)
+                {
+                    if (InBounds(r + ur + trace, c + ur + trace))
+                    {
+                        if (board[r + ur + trace, c + ur + trace] == oppositeColor)
+                        {
+                            addPossible = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (addPossible)
+                {
+                    participatedPossibles += 1;
+                }
+            }
+
+            // Angled up left scan
+            // row and column +- 3 always same difference for row and column
+            // row - when column + and row + when column -
+            for (int ul = -3; ul < 1; ul++)
+            {
+                addPossible = true;
+
+                for (int trace = 0; trace < 4; trace++)
+                {
+                    if (InBounds(r + ul + trace, c + ((-1) * (ul + trace))))
+                    {
+                        if (board[r + ul + trace, c + ((-1) * (ul + trace))] == oppositeColor)
+                        {
+                            addPossible = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (addPossible)
+                {
+                    participatedPossibles += 1;
+                }
+            }
+
+            int colorMulti = (checkColor == red ? 1 : -1);
+            val += (0.25 * participatedPossibles) * colorMulti;
         }
 
         /// <summary>
@@ -294,12 +435,12 @@ namespace ConnectBot
         /// <param name="c"></param>
         /// <param name="r"></param>
         /// <param name="val"></param>
-        private void ScorePossibles(int[,] board, int checkColor, int c, int r, ref double val)
+        private void ScorePossibles_old(int[,] board, int checkColor, int c, int r, ref double val)
         {
             int tempCol = -1;
             int tempRow = -1;
             int colorMulti = 1;
-
+            
             if (checkColor == red)
             {
                 colorMulti = -1;
@@ -326,18 +467,19 @@ namespace ConnectBot
                         {
                             if (board[tempCol, tempRow] == 0)
                             {
-                                val += (0.0625 * colorMulti);
+                                //val += (0.0625 * colorMulti);
                             }
                             else if (board[tempCol, tempRow] == checkColor)
                             {
                                 // Lateral connections valued more than veritcal
+                                // they shouldn't be it should be based on free space that could potentially become more scoring possibilities
                                 if (rdiff == 0)
                                 {
                                     val += (0.25 * colorMulti);
                                 }
                                 else
                                 {
-                                    val += (0.125 * colorMulti);
+                                    val += (0.25 * colorMulti);
                                 }
 
                                 
