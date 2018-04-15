@@ -73,12 +73,13 @@ namespace ConnectBot
         /// </summary>
         private class Node
         {
+            // TODO check the best practice for capitalization and stuff. this seems weird
             public int[,] boardDiscState;
-            public double evalScore;
-            public int column;
-            public NodeList Children;
             public int Turn;
-
+            public int column;
+            public double evalScore;
+            public NodeList Children;
+            
             public Node(int[,] board, int column, int turn, double evalScore)
             {
                 this.boardDiscState = board;
@@ -158,6 +159,36 @@ namespace ConnectBot
             //TODO trim tree
         }
         
+        // Used to call and test methods within the AI class.
+        public void AISelfTest()
+        {
+            // evaluate and empty board
+            int[,] emptyBoard = new int[numColumns, numRows];
+
+            for (int c = 0; c < numColumns; c++)
+            {
+                for (int r = 0; r < numRows; r++)
+                {
+                    emptyBoard[c, r] = 0;
+                }
+            }
+
+            double ts;
+            List<int> colors = new List<int>();
+            colors.Add(red);
+            colors.Add(black);
+
+            foreach (int tc in colors)
+            {
+                for (int ix = 0; ix < numColumns; ix++)
+                {
+                    ts = EvaluateBoardState(GenerateBoardState(ix, tc, emptyBoard));
+
+                    Console.WriteLine(String.Format("AI scored {0} for color {1} on colum {2} for empty board move.", ts, tc, ix));
+                }
+            }
+            
+        }
 
         /// <summary>
         /// Returns the column index that the AI would like to move to.
@@ -167,13 +198,18 @@ namespace ConnectBot
         {
             currentBestMoveColumn = 0;
 
-            // TODO have best score auto adjust based on AI's color
+            // TODO have best score auto adjust based on AI's color, actually with min max it should not need to
+            // TODO i think this bad simple move is making weird moves, make it always maximize and use min max properly to solve this
             double bestScore = 100.0;
             double tempScore = 1000.0;
+            List<int> openColumns = GetOpenColumns(gameDiscs);
 
-            for (int ix = 0; ix < numColumns; ix++)
+            foreach (int ix in openColumns)
             {
                 tempScore = EvaluateBoardState(GenerateBoardState(ix, aiColor, gameDiscs));
+
+                Console.WriteLine(String.Format("AI generated state value {0} at column {1}", tempScore, ix));
+
                 if (tempScore < bestScore)
                 {
                     bestScore = tempScore;
@@ -190,7 +226,6 @@ namespace ConnectBot
             //return rando.Next(7);
         }
         
-        // TODO determine which columns are movable and only generate states for them
         /// <summary>
         /// Generate a new board state based on a column index, disc color
         /// and an existing board state.
@@ -225,6 +260,26 @@ namespace ConnectBot
             }
 
             return newState;
+        }
+
+        /// <summary>
+        /// Returns list of column indices open to moves.
+        /// </summary>
+        /// <param name="board"></param>
+        /// <returns></returns>
+        protected List<int> GetOpenColumns(int[,] board)
+        {
+            List<int> ret = new List<int>();
+
+            for (int c = 0; c < numColumns; c++)
+            {
+                if (board[c, numRows - 1] == 0)
+                {
+                    ret.Add(c);
+                }
+            }
+
+            return ret;
         }
 
         /// <summary>
@@ -337,6 +392,11 @@ namespace ConnectBot
                             break;
                         }
                     }
+                    else
+                    {
+                        addPossible = false;
+                        break;
+                    }
                 }
 
                 if (addPossible)
@@ -364,6 +424,11 @@ namespace ConnectBot
                             break;
                         }
                     }
+                    else
+                    {
+                        addPossible = false;
+                        break;
+                    }
                 }
 
                 if (addPossible)
@@ -389,6 +454,11 @@ namespace ConnectBot
                             break;
                         }
                     }
+                    else
+                    {
+                        addPossible = false;
+                        break;
+                    }
                 }
 
                 if (addPossible)
@@ -413,6 +483,11 @@ namespace ConnectBot
                             addPossible = false;
                             break;
                         }
+                    }
+                    else
+                    {
+                        addPossible = false;
+                        break;
                     }
                 }
 
@@ -630,12 +705,14 @@ namespace ConnectBot
         {
             int nextTurn = (parent.Turn == black ? red : black);
 
-            for (int nc = 0; nc < numColumns; nc++)
+            List<int> openColumns = GetOpenColumns(parent.boardDiscState);
+
+            foreach (int ix in openColumns)
             {
-                int[,] newState = GenerateBoardState(nc, nextTurn, parent.boardDiscState);
+                int[,] newState = GenerateBoardState(ix, nextTurn, parent.boardDiscState);
                 double newScore = EvaluateBoardState(newState);
                 
-                Node child = new Node(newState, nc, nextTurn, newScore);
+                Node child = new Node(newState, ix, nextTurn, newScore);
                 parent.Children.Add(child);
             }
 

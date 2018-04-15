@@ -539,6 +539,7 @@ namespace ConnectBot
             {
                 if (turn == playerTurn)
                 {
+                    //bot.AISelfTest();
                     for (int col = 0; col < numColumns; col++)
                     {
                         if (boardColumns[col].ContainMouse(mousePosition))
@@ -558,6 +559,7 @@ namespace ConnectBot
                 }
                 else if (turn == botTurn)
                 {
+                    //bot.AISelfTest();
                     // TODO ensure bot doesn't cheat
                     int botMove = bot.Move();
                     boardColumns[botMove].SetSpace(botTurn);
