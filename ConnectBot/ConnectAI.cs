@@ -182,7 +182,8 @@ namespace ConnectBot
             {
                 for (int ix = 0; ix < numColumns; ix++)
                 {
-                    ts = EvaluateBoardState(GenerateBoardState(ix, tc, emptyBoard));
+                    int[,] newBoard = GenerateBoardState(ix, tc, emptyBoard);
+                    ts = EvaluateBoardState(newBoard);
 
                     Console.WriteLine(String.Format("AI scored {0} for color {1} on colum {2} for empty board move.", ts, tc, ix));
                 }
@@ -206,7 +207,8 @@ namespace ConnectBot
 
             foreach (int ix in openColumns)
             {
-                tempScore = EvaluateBoardState(GenerateBoardState(ix, aiColor, gameDiscs));
+                int[,] newBoard = GenerateBoardState(ix, aiColor, gameDiscs);
+                tempScore = EvaluateBoardState(newBoard);
 
                 Console.WriteLine(String.Format("AI generated state value {0} at column {1}", tempScore, ix));
 
@@ -306,37 +308,37 @@ namespace ConnectBot
              * and breaking on opponents blocking
              * dics.
              */
-            for (int color = 1; color < 3; color++)
+            //for (int color = 1; color < 3; color++)
+            //{
+            for (int c = 0; c < numColumns; c++)
             {
-                for (int c = 0; c < numColumns; c++)
+                for (int r = 0; r < numRows; r++)
                 {
-                    for (int r = 0; r < numRows; r++)
+                    // from every square reach out in all eight directions in loops break when not in bounds
+                    // TODO it doesn't try to stop opponents from scoring
+                    // make potential victories be worth a huge amount to incentivise stopping
+                    // this evaluator does not 
+                    //if (boardState[c, r] == black)
+                    //{
+                    //    // No point in adding value based on individual discs since it will always cancel out
+                    //    //ret += 1.0;
+                    //    tempCheck = 1;
+                    //}
+                    //else if (boardState[c, r] == red)
+                    //{
+                    //    //ret -= 1.0;
+                    //    tempCheck = 2;
+                    //}
+
+                    if (boardState[c, r] != 0)
                     {
-                        // from every square reach out in all eight directions in loops break when not in bounds
-                        // TODO it doesn't try to stop opponents from scoring
-                        // make potential victories be worth a huge amount to incentivise stopping
-                        // this evaluator does not 
-                        //if (boardState[c, r] == black)
-                        //{
-                        //    // No point in adding value based on individual discs since it will always cancel out
-                        //    //ret += 1.0;
-                        //    tempCheck = 1;
-                        //}
-                        //else if (boardState[c, r] == red)
-                        //{
-                        //    //ret -= 1.0;
-                        //    tempCheck = 2;
-                        //}
-
-                        if (boardState[c, r] != 0)
-                        {
-                            ScorePossibles(boardState, boardState[c, r], c, r, ref ret);
-                        }
-
-                        //tempCheck = 0;
+                        ScorePossibles(boardState, boardState[c, r], c, r, ref ret);
                     }
+
+                    //tempCheck = 0;
                 }
             }
+            //}
 
             return ret;
         }
@@ -384,9 +386,9 @@ namespace ConnectBot
 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (InBounds(r, c + ch + trace))
+                    if (InBounds(c + ch + trace, r))
                     {
-                        if (board[r, c + ch + trace] == oppositeColor)
+                        if (board[c + ch + trace, r] == oppositeColor)
                         {
                             addPossible = false;
                             break;
@@ -416,9 +418,9 @@ namespace ConnectBot
 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (InBounds(r + rh + trace, c))
+                    if (InBounds(c, r + rh + trace))
                     {
-                        if (board[r + rh + trace, c] == oppositeColor)
+                        if (board[c, r + rh + trace] == oppositeColor)
                         {
                             addPossible = false;
                             break;
@@ -446,9 +448,9 @@ namespace ConnectBot
                 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (InBounds(r + ur + trace, c + ur + trace))
+                    if (InBounds(c + ur + trace, r + ur + trace))
                     {
-                        if (board[r + ur + trace, c + ur + trace] == oppositeColor)
+                        if (board[c + ur + trace, r + ur + trace] == oppositeColor)
                         {
                             addPossible = false;
                             break;
@@ -476,9 +478,9 @@ namespace ConnectBot
 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (InBounds(r + ul + trace, c + ((-1) * (ul + trace))))
+                    if (InBounds(c + ((-1) * (ul + trace)), r + ul + trace))
                     {
-                        if (board[r + ul + trace, c + ((-1) * (ul + trace))] == oppositeColor)
+                        if (board[c + ((-1) * (ul + trace)), r + ul + trace] == oppositeColor)
                         {
                             addPossible = false;
                             break;
@@ -538,13 +540,13 @@ namespace ConnectBot
                         tempCol = c + (cdiff * m);
                         tempRow = r + (rdiff * m);
 
-                        if (InBounds(tempCol, tempRow))
+                        if (InBounds(tempRow, tempCol))
                         {
-                            if (board[tempCol, tempRow] == 0)
+                            if (board[tempRow, tempCol] == 0)
                             {
                                 //val += (0.0625 * colorMulti);
                             }
-                            else if (board[tempCol, tempRow] == checkColor)
+                            else if (board[tempRow, tempCol] == checkColor)
                             {
                                 // Lateral connections valued more than veritcal
                                 // they shouldn't be it should be based on free space that could potentially become more scoring possibilities
@@ -566,9 +568,9 @@ namespace ConnectBot
                                     tempCol = c + (cdiff * (m + 1));
                                     tempRow = r + (rdiff * (m + 1));
 
-                                    if (InBounds(tempCol, tempRow))
+                                    if (InBounds(tempRow, tempCol))
                                     {
-                                        if (board[tempCol, tempRow] == checkColor)
+                                        if (board[tempRow, tempCol] == checkColor)
                                         {
                                             val += (0.5 * colorMulti);
 

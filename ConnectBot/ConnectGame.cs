@@ -547,19 +547,20 @@ namespace ConnectBot
                             if (lastMouseState.LeftButton == ButtonState.Pressed
                                 && mouseState.LeftButton == ButtonState.Released)
                             {
+                                bot.AISelfTest();
                                 // Perform move and change turn.
-                                boardColumns[col].SetSpace(playerTurn);
-                                turn = (turn == 1 ? 2 : 1);
-                                timeSinceLastMove = 0.0;
-                                CheckVictory();
-                                UpdateBotBoard();
+                                //boardColumns[col].SetSpace(playerTurn);
+                                //turn = (turn == 1 ? 2 : 1);
+                                //timeSinceLastMove = 0.0;
+                                //CheckVictory();
+                                //UpdateBotBoard();
                             }
                         }
                     }
                 }
                 else if (turn == botTurn)
                 {
-                    //bot.AISelfTest();
+                    bot.AISelfTest();
                     // TODO ensure bot doesn't cheat
                     int botMove = bot.Move();
                     boardColumns[botMove].SetSpace(botTurn);
