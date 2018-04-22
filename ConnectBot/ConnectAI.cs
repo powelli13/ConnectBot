@@ -26,14 +26,15 @@ namespace ConnectBot
         /// </summary>
         protected int[,] gameDiscs = new int[numColumns, numRows];
         const int black = 1;
-        const int red = 2;
+        const int red = -1;
         
         /// <summary>
         /// Stores the AIs disc color. 
         /// 1 is black, moves first with positive eval score.
-        /// 2 is red, moves second with negative eval score.
+        /// -1 is red, moves second with negative eval score.
         /// </summary>
         protected int aiColor;
+        protected int opponentColor;
         // TODO have best move variable updated as tree is explored? return when called upon?
 
         /// <summary>
@@ -74,19 +75,82 @@ namespace ConnectBot
         private class Node
         {
             // TODO check the best practice for capitalization and stuff. this seems weird
-            public int[,] boardDiscState;
-            public int Turn;
-            public int column;
-            public double evalScore;
-            public NodeList Children;
+            // Fields should be private and camelCase exposed by public properties that are PascalCase
+            // fields should also have full words used in naming
+            // this is overkill in a small project but I'm trying to build good habits and learn
+            private int[,] boardDiscState;
+            private int currentTurn;
+            private int columnMoved;
+            private double positionalScore;
+            private NodeList children;
+
+            /// <summary>
+            /// Position of the discs on the board for the node.
+            /// </summary>
+            public int[,] BoardDiscState
+            {
+                get
+                {
+                    return boardDiscState;
+                }
+            }
+
+            /// <summary>
+            /// Color to next move at that node.
+            /// </summary>
+            public int CurrentTurn
+            {
+                get
+                {
+                    return currentTurn;
+                }
+            }
+
+            /// <summary>
+            /// Column that was moved in to generate this node.
+            /// </summary>
+            public int ColumnMoved
+            {
+                get
+                {
+                    return columnMoved;
+                }
+            }
+
+            /// <summary>
+            /// The evaluated positional score for that node.
+            /// </summary>
+            public double PositionalScore
+            {
+                get
+                {
+                    return positionalScore;
+                }
+            }
+
+            /// <summary>
+            /// List of children moves from this node.
+            /// </summary>
+            public NodeList Children
+            {
+                get
+                {
+                    return children;
+                }
+
+                set
+                {
+                    children = value;
+                }
+            }
             
-            public Node(int[,] board, int column, int turn, double evalScore)
+            public Node(int[,] board, int column, int turn, double score)
             {
                 this.boardDiscState = board;
-                this.column = column;
-                this.evalScore = evalScore;
-                this.Turn = turn;
-                this.Children = new NodeList();
+                this.columnMoved = column;
+                this.positionalScore = score;
+                this.currentTurn = turn;
+                this.children = new NodeList();
             }
         }
         #endregion
@@ -97,14 +161,23 @@ namespace ConnectBot
         /// </summary>
         private class NodeList : Collection<Node>//, IEnumerable<Node> TODO would it be worth to make this enumerable? for fun?
         {
-            public int Count;
+            private int count;
+
+            public int Count
+            {
+                get
+                {
+                    return count;
+                }
+            }
 
             public NodeList() : base()
             {
-                Count = 0;
+                count = 0;
             }
 
-            // TODO is this needed?
+            // TODO is this needed? yes this will be valuable for search
+            // TODO this may need to return some kind of struct though with value and index
             public int FindHighestScoreIndex()
             {
                 return 0;
@@ -112,7 +185,7 @@ namespace ConnectBot
 
             public void AddNode(Node n)
             {
-                Count++;
+                count++;
                 base.Items.Add(n);
             }
         }
@@ -125,9 +198,10 @@ namespace ConnectBot
         public ConnectAI(int color)
         {
             aiColor = color;
+            opponentColor = (aiColor == black ? red : black);
             currentBestMoveColumn = 0;
 
-            //InitializeTreeBuilder();
+            InitializeTreeBuilder();
 
             rando = new Random();
         }
@@ -136,7 +210,7 @@ namespace ConnectBot
         /// Update internal board state.
         /// </summary>
         /// <param name="newBoard">Array representing updated board state.</param>
-        public void UpdateBoard(int[,] newBoard)
+        public void UpdateBoard(int[,] newBoard, int currTurn)
         {
             for (int c = 0; c < numColumns; c++)
             {
@@ -149,13 +223,14 @@ namespace ConnectBot
             // Initialize tree root if it is null.
             // Moves in 0 column for the root initialization. 
             // TODO this seems strange but shouldn't cause problems maybe make column -1 to signify no move made to reach that position
-            if (treeRoot == null)
-            {
-                double score = EvaluateBoardState(newBoard);
-                int column = 0;
+            //if (treeRoot == null)
+            //{
+            // TODO when trimming the last move that generated that state may need to be remembered? should automatically happen because of tree structure
+            double score = EvaluateBoardState(newBoard);
+            int column = 0; // TODO should this be updated as last column moved in?
 
-                treeRoot = new Node(newBoard, column, black, score);
-            }
+            treeRoot = new Node(newBoard, column, currTurn, score);
+            //}
             //TODO trim tree
         }
         
@@ -371,6 +446,7 @@ namespace ConnectBot
             // that the checked disc participates.
             int participatedPossibles = 0;
             int oppositeColor = (checkColor == black ? red : black);
+            
             bool addPossible = true;
 
             // Horizontal scan
@@ -499,9 +575,36 @@ namespace ConnectBot
                 }
             }
 
-            int colorMulti = (checkColor == red ? 1 : -1);
-            val += (0.25 * participatedPossibles) * colorMulti;
+            //int colorMulti = (checkColor == red ? -1 : 1);
+            val += (0.25 * participatedPossibles) * checkColor;
         }
+
+        /// <summary>
+        /// Find the best move in the move tree for the AI's color
+        /// using the NegaMax search.
+        /// </summary>
+        /// <returns></returns>
+        //private double NegaMaxTraverse(Node n, int depth)
+        //{
+        //    if (depth == 0)
+        //    {
+        //        return n.evalScore;
+        //    }
+
+        //    // return maximum child
+        //    foreach (Node child in n.Children)
+        //    {
+        //        NegaMaxTraverse();
+        //    }
+
+        //    return 0;
+        //}
+
+        // see FindHighestScoreIndex in Node List
+        //private int GetMaxChild(Node n)
+        //{
+
+        //}
 
         /// <summary>
         /// Modify the board evaluation value based on 
@@ -705,13 +808,13 @@ namespace ConnectBot
         /// <param name="depth"></param>
         private void treeBuilder_GrowChildren(Node parent, int depth)
         {
-            int nextTurn = (parent.Turn == black ? red : black);
+            int nextTurn = (parent.CurrentTurn == black ? red : black);
 
-            List<int> openColumns = GetOpenColumns(parent.boardDiscState);
+            List<int> openColumns = GetOpenColumns(parent.BoardDiscState);
 
             foreach (int ix in openColumns)
             {
-                int[,] newState = GenerateBoardState(ix, nextTurn, parent.boardDiscState);
+                int[,] newState = GenerateBoardState(ix, nextTurn, parent.BoardDiscState);
                 double newScore = EvaluateBoardState(newState);
                 
                 Node child = new Node(newState, ix, nextTurn, newScore);

@@ -253,9 +253,12 @@ namespace ConnectBot
         BoardColumn[] boardColumns = new BoardColumn[numColumns];
 
         /// <summary>
-        /// Represents which players turn it is, 1 for black, 2 for red.
+        /// Represents which players turn it is, 1 for black, -1 for red.
         /// </summary>
         protected int turn;
+        const int black = 1;
+        const int red = -1;
+
         protected int playerTurn;
         protected int botTurn;
 
@@ -465,8 +468,8 @@ namespace ConnectBot
             ResetGame();
             
             //TODO menu to decide which color bot plays
-            playerTurn = 1;
-            botTurn = 2;
+            playerTurn = black;
+            botTurn = red;
 
             bot = new ConnectAI(botTurn);
             UpdateBotBoard();
@@ -485,7 +488,7 @@ namespace ConnectBot
             imageDict = new Dictionary<int, Texture2D>();
 
             imageDict[1] = Content.Load<Texture2D>("black_disc");
-            imageDict[2] = Content.Load<Texture2D>("red_disc");
+            imageDict[-1] = Content.Load<Texture2D>("red_disc");
             imageDict[3] = Content.Load<Texture2D>("blue_arrow");
             imageDict[4] = Content.Load<Texture2D>("column_holder");
         }
@@ -544,16 +547,17 @@ namespace ConnectBot
                     {
                         if (boardColumns[col].ContainMouse(mousePosition))
                         {
-                            if (lastMouseState.LeftButton == ButtonState.Pressed
-                                && mouseState.LeftButton == ButtonState.Released)
+                            if (lastMouseState.LeftButton == ButtonState.Pressed &&
+                                mouseState.LeftButton == ButtonState.Released)
                             {
                                 bot.AISelfTest();
-                                // Perform move and change turn.
-                                //boardColumns[col].SetSpace(playerTurn);
-                                //turn = (turn == 1 ? 2 : 1);
-                                //timeSinceLastMove = 0.0;
-                                //CheckVictory();
-                                //UpdateBotBoard();
+                                //Perform move and change turn.
+                                boardColumns[col].SetSpace(playerTurn);
+                                timeSinceLastMove = 0.0;
+
+                                ChangeTurn();
+                                CheckVictory();
+                                UpdateBotBoard();
                             }
                         }
                     }
@@ -564,13 +568,22 @@ namespace ConnectBot
                     // TODO ensure bot doesn't cheat
                     int botMove = bot.Move();
                     boardColumns[botMove].SetSpace(botTurn);
-                    turn = (turn == 1 ? 2 : 1);
                     timeSinceLastMove = 0.0;
+
+                    ChangeTurn();
                     CheckVictory();
                 }
             }
             
             base.Update(gameTime);
+        }
+
+        /// <summary>
+        /// Updates the turn for the game.
+        /// </summary>
+        protected void ChangeTurn()
+        {
+            turn = (turn == black ? red : black);
         }
 
         /// <summary>
@@ -617,7 +630,7 @@ namespace ConnectBot
         protected void UpdateBotBoard()
         {
             int[,] botBoard = GetTextBoard();
-            bot.UpdateBoard(botBoard);
+            bot.UpdateBoard(botBoard, turn);
         }
     }
 }
