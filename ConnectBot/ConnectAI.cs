@@ -66,6 +66,24 @@ namespace ConnectBot
         /// </summary>
         private int currentBestMoveColumn;
 
+        #region Struct : ScoreColumn
+        /// <summary>
+        /// Lightweight struct used to return the 
+        /// score of a position and the column that generated it.
+        /// </summary>
+        private struct ScoreColumn
+        {
+            public double score;
+            public int column;
+
+            public ScoreColumn(double s, int c)
+            {
+                score = s;
+                column = c;
+            }
+        }
+        #endregion
+
         #region Class : Node
         /// <summary>
         /// Node of the move tree stores a board state, 
@@ -82,7 +100,7 @@ namespace ConnectBot
             private int currentTurn;
             private int columnMoved;
             private double positionalScore;
-            private NodeList children;
+            private List<Node> children;
 
             /// <summary>
             /// Position of the discs on the board for the node.
@@ -131,7 +149,7 @@ namespace ConnectBot
             /// <summary>
             /// List of children moves from this node.
             /// </summary>
-            public NodeList Children
+            public List<Node> Children
             {
                 get
                 {
@@ -150,59 +168,29 @@ namespace ConnectBot
                 this.columnMoved = column;
                 this.positionalScore = score;
                 this.currentTurn = turn;
-                this.children = new NodeList();
+                this.children = new List<Node>();
             }
         }
         #endregion
-
-        #region Class : NodeList
-        /// <summary>
-        /// Collection of tree nodes used to organize a node's children.
-        /// </summary>
-        private class NodeList : Collection<Node>//, IEnumerable<Node> TODO would it be worth to make this enumerable? for fun?
-        {
-            private int count;
-
-            public int Count
-            {
-                get
-                {
-                    return count;
-                }
-            }
-
-            public NodeList() : base()
-            {
-                count = 0;
-            }
-
-            // TODO is this needed? yes this will be valuable for search
-            // TODO this may need to return some kind of struct though with value and index
-            public int FindHighestScoreIndex()
-            {
-                return 0;
-            }
-
-            public void AddNode(Node n)
-            {
-                count++;
-                base.Items.Add(n);
-            }
-        }
-        #endregion
-
+        
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="color">Color for AI to play.</param>
-        public ConnectAI(int color)
+        public ConnectAI(int color, int[,] newBoard, int column, int currTurn)
         {
             aiColor = color;
             opponentColor = (aiColor == black ? red : black);
+
+            // TODO should the root only ever start on the AI's turn?
+            double score = EvaluateBoardState(newBoard);
+            treeRoot = new Node(newBoard, column, currTurn, score);
             currentBestMoveColumn = 0;
 
             InitializeTreeBuilder();
 
+
+            
             rando = new Random();
         }
         
@@ -228,16 +216,17 @@ namespace ConnectBot
             // TODO when trimming the last move that generated that state may need to be remembered? should automatically happen because of tree structure
             double score = EvaluateBoardState(newBoard);
             int column = 0; // TODO should this be updated as last column moved in?
-
-            treeRoot = new Node(newBoard, column, currTurn, score);
+            
+            //treeRoot = new Node(newBoard, column, currTurn, score);
             //}
-            //TODO trim tree
+            //TODO trim tree and update root
         }
         
         // Used to call and test methods within the AI class.
         public void AISelfTest()
         {
             // evaluate and empty board
+            /*
             int[,] emptyBoard = new int[numColumns, numRows];
 
             for (int c = 0; c < numColumns; c++)
@@ -263,14 +252,17 @@ namespace ConnectBot
                     Console.WriteLine(String.Format("AI scored {0} for color {1} on colum {2} for empty board move.", ts, tc, ix));
                 }
             }
-            
+            */
+            //treeBuilder_GrowChildren(treeRoot, 4);
+            // TODO do we need a safety mechanism to not expand children too large?
+            System.Console.WriteLine("examine tree root here");
         }
 
         /// <summary>
         /// Returns the column index that the AI would like to move to.
         /// </summary>
         /// <returns>Index of AI to move to.</returns>
-        public int Move()
+        public int Move_temp()
         {
             currentBestMoveColumn = 0;
 
@@ -303,6 +295,14 @@ namespace ConnectBot
             //return rando.Next(7);
         }
         
+        public int Move()
+        {
+            ScoreColumn bestMove = NegaMaxTraverse(treeRoot, 4, aiColor);
+            // TODO left off here. because treeRoot doesn't change during update this will only ever return 3 (best move at start)
+            // update board needs to trim tree, update root and possilby start off background worker again.
+            return bestMove.column;
+        }
+
         /// <summary>
         /// Generate a new board state based on a column index, disc color
         /// and an existing board state.
@@ -576,6 +576,7 @@ namespace ConnectBot
             }
 
             //int colorMulti = (checkColor == red ? -1 : 1);
+            // TODO possible don't multiply here since negamax search is multiplying also
             val += (0.25 * participatedPossibles) * checkColor;
         }
 
@@ -584,21 +585,33 @@ namespace ConnectBot
         /// using the NegaMax search.
         /// </summary>
         /// <returns></returns>
-        //private double NegaMaxTraverse(Node n, int depth)
-        //{
-        //    if (depth == 0)
-        //    {
-        //        return n.evalScore;
-        //    }
+        private ScoreColumn NegaMaxTraverse(Node n, int depth, int color)
+        {
+            if (depth == 0)
+            {
+                // return structure with score and 
+                return new ScoreColumn(color * n.PositionalScore, n.ColumnMoved);
+            }
 
-        //    // return maximum child
-        //    foreach (Node child in n.Children)
-        //    {
-        //        NegaMaxTraverse();
-        //    }
+            ScoreColumn bestValue = new ScoreColumn(System.Double.MinValue, 0);
+            ScoreColumn temp;
 
-        //    return 0;
-        //}
+            // return maximum child
+            // TODO this switching score may be weird
+            foreach (Node child in n.Children)
+            {
+                temp = NegaMaxTraverse(child, depth - 1, color * -1);
+                temp.score = temp.score * -1;
+                
+                if (temp.score > bestValue.score)
+                {
+                    bestValue.score = temp.score;
+                    bestValue.column = temp.column;
+                }
+            }
+
+            return bestValue;
+        }
 
         // see FindHighestScoreIndex in Node List
         //private int GetMaxChild(Node n)
@@ -757,47 +770,30 @@ namespace ConnectBot
         {
             BackgroundWorker worker = sender as BackgroundWorker;
 
-            while (buildTree)
+            //while (buildTree)
+            //{
+            if (worker.CancellationPending == true)
             {
-                if (worker.CancellationPending == true)
-                {
-                    e.Cancel = true;
-                    break;
-                }
-
-                // TODO how to respond appropriately to a null root?
-                // TODO how to build from the leafs once root as been established?
-                // TODO make a method to enumerate children given a node call that recursively
-                if (treeRoot != null)
-                {
-                    //if (treeRoot.Children.Count == 0)
-                    //{
-                    //    int nextTurn = (treeRoot.Turn == black ? red : black);
-
-                    //    for (int nc = 0; nc < numColumns; nc++)
-                    //    {
-                    //        int[,] newState = GenerateBoardState(nc, nextTurn, treeRoot.boardDiscState);
-                    //        double newScore = EvaluateBoardState(newState);
-
-                    //        // TODO i don't think using a best move variable is the best way move should traverse tree from root not return an updated move
-                    //        // have to traverse to find best eval score, switching eval while traversing and return the move from current root that would 
-                    //        // yield best score, assuming opponent makes best moves.
-                    //        //if (newScore )
-
-                    //        Node child = new Node(newState, nc, nextTurn, newScore);
-
-                    //    }
-                    //}
-
-                    treeBuilder_GrowChildren(treeRoot, 4);
-                }
-                // from root 
-                // if no children
-                //      enumerate children moves
-                // for each child
-                //      enumerate children moves
-                // need to traverse tree
+                e.Cancel = true;
+                // was break; when loop was here
+                return;
             }
+
+            // TODO how to respond appropriately to a null root?
+            // TODO how to build from the leafs once root as been established?
+            // TODO make a method to enumerate children given a node call that recursively
+            if (treeRoot != null)
+            {
+                if (treeRoot.Children.Count == 0)
+                {
+                    System.Console.WriteLine("starting to growchildren");
+                    treeBuilder_GrowChildren(treeRoot, 4);
+                    System.Console.WriteLine("check out tree root");
+                }
+
+            }
+            //} // TODO this was a loop to continuously build tree. should the tree be restarted from the new node on tree trimming? might make sense
+            // that would require the back ground worker to continually reset, and it should probably take in any Node type and not depend on treeRoot.
         }
 
         /// <summary>
@@ -824,22 +820,16 @@ namespace ConnectBot
             // Build off of children if we haven't hit max depth yet.
             if (depth > 0)
             {
-                foreach (Node child in parent.Children)
+                for (int ic = 0; ic < parent.Children.Count; ic++)
                 {
-                    treeBuilder_GrowChildren(child, depth - 1);
+                    treeBuilder_GrowChildren(parent.Children[ic], depth - 1);
                 }
             }
 
-            if (depth <= 0)
-            {
-                Console.WriteLine("Reached max depth on branch.");
-            }
-        }
-
-        // TODO perform BFS to find best leaf node for the AIs color and select the column move that will move down that branch
-        private int FindBestMove(Node tree)
-        {
-            return 0;
+            //if (depth <= 0)
+            //{
+            //    Console.WriteLine("Reached max depth on branch.");
+            //}
         }
 
         /// <summary>

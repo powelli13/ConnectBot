@@ -471,7 +471,9 @@ namespace ConnectBot
             playerTurn = black;
             botTurn = red;
 
-            bot = new ConnectAI(botTurn);
+            // TODO what to pass as column here? how to show null move at board start?
+            // TODO how to signify to AI that they should build for specific color does root node determine it?
+            bot = new ConnectAI(botTurn, GetTextBoard(), 0, turn);
             UpdateBotBoard();
         }
 
@@ -550,7 +552,7 @@ namespace ConnectBot
                             if (lastMouseState.LeftButton == ButtonState.Pressed &&
                                 mouseState.LeftButton == ButtonState.Released)
                             {
-                                bot.AISelfTest();
+                                //bot.AISelfTest();
                                 //Perform move and change turn.
                                 boardColumns[col].SetSpace(playerTurn);
                                 timeSinceLastMove = 0.0;
@@ -564,7 +566,7 @@ namespace ConnectBot
                 }
                 else if (turn == botTurn)
                 {
-                    bot.AISelfTest();
+                    //bot.AISelfTest();
                     // TODO ensure bot doesn't cheat
                     int botMove = bot.Move();
                     boardColumns[botMove].SetSpace(botTurn);
