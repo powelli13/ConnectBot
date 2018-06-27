@@ -840,6 +840,7 @@ namespace ConnectBot
             //{
             //    Console.WriteLine("Reached max depth on branch.");
             //}
+            // testing VS git integration
         }
 
         /// <summary>
