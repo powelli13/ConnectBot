@@ -473,8 +473,8 @@ namespace ConnectBot
 
             // TODO what to pass as column here? how to show null move at board start?
             // TODO how to signify to AI that they should build for specific color does root node determine it?
-            bot = new ConnectAI(botTurn, GetTextBoard(), 0, turn);
-            UpdateBotBoard();
+            bot = new ConnectAI(botTurn, GetTextBoard(), -1, turn);
+            UpdateBotBoard(-1);
         }
 
         /// <summary>
@@ -559,7 +559,7 @@ namespace ConnectBot
 
                                 ChangeTurn();
                                 CheckVictory();
-                                UpdateBotBoard();
+                                UpdateBotBoard(col);
                             }
                         }
                     }
@@ -629,10 +629,10 @@ namespace ConnectBot
         /// <summary>
         /// Send the updated boardstate to the bot.
         /// </summary>
-        protected void UpdateBotBoard()
+        protected void UpdateBotBoard(int columnMoved)
         {
             int[,] botBoard = GetTextBoard();
-            bot.UpdateBoard(botBoard, turn);
+            bot.UpdateBoard(botBoard, turn, columnMoved);
         }
     }
 }

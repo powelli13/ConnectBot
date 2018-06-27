@@ -97,7 +97,7 @@ namespace ConnectBot
             // fields should also have full words used in naming
             // this is overkill in a small project but I'm trying to build good habits and learn
             private int[,] boardDiscState;
-            private int currentTurn;
+            private int colorMoved;
             private int columnMoved;
             private double positionalScore;
             private List<Node> children;
@@ -116,11 +116,11 @@ namespace ConnectBot
             /// <summary>
             /// Color to next move at that node.
             /// </summary>
-            public int CurrentTurn
+            public int ColorMoved
             {
                 get
                 {
-                    return currentTurn;
+                    return colorMoved;
                 }
             }
 
@@ -167,7 +167,7 @@ namespace ConnectBot
                 this.boardDiscState = board;
                 this.columnMoved = column;
                 this.positionalScore = score;
-                this.currentTurn = turn;
+                this.colorMoved = turn;// TODO will this pass the turn that just moved?
                 this.children = new List<Node>();
             }
         }
@@ -185,7 +185,7 @@ namespace ConnectBot
             // TODO should the root only ever start on the AI's turn?
             double score = EvaluateBoardState(newBoard);
             treeRoot = new Node(newBoard, column, currTurn, score);
-            currentBestMoveColumn = 0;
+            currentBestMoveColumn = -1;
 
             InitializeTreeBuilder();
 
@@ -198,7 +198,9 @@ namespace ConnectBot
         /// Update internal board state.
         /// </summary>
         /// <param name="newBoard">Array representing updated board state.</param>
-        public void UpdateBoard(int[,] newBoard, int currTurn)
+        /// <param name="currTurn"></param>
+        /// <param name="lastMove">Last move made on the new board. Negative one signifies first board update.</param>
+        public void UpdateBoard(int[,] newBoard, int currTurn, int lastMove)
         {
             for (int c = 0; c < numColumns; c++)
             {
@@ -214,14 +216,17 @@ namespace ConnectBot
             //if (treeRoot == null)
             //{
             // TODO when trimming the last move that generated that state may need to be remembered? should automatically happen because of tree structure
-            double score = EvaluateBoardState(newBoard);
-            int column = 0; // TODO should this be updated as last column moved in?
-            
-            //treeRoot = new Node(newBoard, column, currTurn, score);
-            //}
-            //TODO trim tree and update root
+
+            if (lastMove != -1)
+            {
+                double score = EvaluateBoardState(newBoard);
+
+                treeRoot = new Node(newBoard, lastMove, currTurn, score);
+                Stop();
+                InitializeTreeBuilder();
+            }
         }
-        
+
         // Used to call and test methods within the AI class.
         public void AISelfTest()
         {
@@ -300,6 +305,8 @@ namespace ConnectBot
             ScoreColumn bestMove = NegaMaxTraverse(treeRoot, 4, aiColor);
             // TODO left off here. because treeRoot doesn't change during update this will only ever return 3 (best move at start)
             // update board needs to trim tree, update root and possilby start off background worker again.
+            // check open columns
+            // when player moves first AI is not taking that into account. tree should only start building on first update call i think
             return bestMove.column;
         }
 
@@ -589,7 +596,8 @@ namespace ConnectBot
         {
             if (depth == 0)
             {
-                // return structure with score and 
+                // return structure with score
+                // TODO should this ensure that it favors the bot?
                 return new ScoreColumn(color * n.PositionalScore, n.ColumnMoved);
             }
 
@@ -804,16 +812,18 @@ namespace ConnectBot
         /// <param name="depth"></param>
         private void treeBuilder_GrowChildren(Node parent, int depth)
         {
-            int nextTurn = (parent.CurrentTurn == black ? red : black);
+            //int nextTurn = (parent.CurrentTurn == black ? red : black);
+            // The color that moved resulting in the current position.
+            int colorMoved = (parent.ColorMoved == black ? red : black);
 
             List<int> openColumns = GetOpenColumns(parent.BoardDiscState);
 
             foreach (int ix in openColumns)
             {
-                int[,] newState = GenerateBoardState(ix, nextTurn, parent.BoardDiscState);
+                int[,] newState = GenerateBoardState(ix, colorMoved, parent.BoardDiscState);
                 double newScore = EvaluateBoardState(newState);
                 
-                Node child = new Node(newState, ix, nextTurn, newScore);
+                Node child = new Node(newState, ix, colorMoved, newScore);
                 parent.Children.Add(child);
             }
 
