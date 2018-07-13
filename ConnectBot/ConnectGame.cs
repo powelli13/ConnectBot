@@ -254,6 +254,7 @@ namespace ConnectBot
 
         /// <summary>
         /// Represents which players turn it is, 1 for black, -1 for red.
+        /// For this games purposes as of now black will go first.
         /// </summary>
         protected int turn;
         const int black = 1;

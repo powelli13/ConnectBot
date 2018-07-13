@@ -172,7 +172,93 @@ namespace ConnectBot
             }
         }
         #endregion
-        
+
+        #region Class : ReversibleNode
+        /// <summary>
+        /// Node representing current game state that can reverse moves
+        /// in order to track back up the tree. Will be used in more
+        /// efficient searching.
+        /// </summary>
+        protected class ReversibleNode
+        {
+            private int[,] boardState;
+            private int colorToMove;
+            private Stack<int> moveHistory;
+            
+            /// <summary>
+            /// Initializes empty board state with black player to move.
+            /// </summary>
+            public ReversibleNode()
+            {
+                // Initialize game state and move history
+                boardState = new int[numColumns, numRows];
+                colorToMove = black;
+
+                for (int c = 0; c < numColumns; c++)
+                {
+                    for (int r = 0; r < numRows; r++)
+                    {
+                        boardState[c, r] = 0;
+                    }
+                }
+
+                moveHistory = new Stack<int>();
+            }
+
+            /// <summary>
+            /// Perform move on the reversible board.
+            /// </summary>
+            /// <param name="column"></param>
+            /// <returns>Boolean to signify if the move was correct and performed or not.</returns>
+            public bool Move(int column)
+            {
+                // TODO does move history need to hold color or can it be implied?
+                if (boardState[column, numRows - 1] == 0)
+                {
+                    int rowMoved = 0;
+
+                    while (boardState[column, rowMoved] != 0)
+                    {
+                        rowMoved++;
+                    }
+
+                    boardState[column, rowMoved] = colorToMove;
+                    colorToMove = (colorToMove == black ? red : black);
+                    moveHistory.Push(column);
+
+                    return true;
+                }
+                
+                return false;
+            }
+
+            /// <summary>
+            /// Reverses the last move performed.
+            /// </summary>
+            /// <returns>Boolean to signify if there was a move to reverse.</returns>
+            public bool ReverseMove()
+            {
+                if (moveHistory.Count > 0)
+                {
+                    int rowRemoved = numRows - 1;
+                    int lastColumn = moveHistory.Pop();
+
+                    while (boardState[lastColumn, rowRemoved] == 0)
+                    {
+                        rowRemoved--;
+                    }
+
+                    boardState[lastColumn, rowRemoved] = 0;
+                    colorToMove = (colorToMove == black ? red : black);
+
+                    return true;
+                }
+
+                return false;
+            }
+        }
+        #endregion
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -182,14 +268,12 @@ namespace ConnectBot
             aiColor = color;
             opponentColor = (aiColor == black ? red : black);
 
-            // TODO should the root only ever start on the AI's turn?
+            // TODO should the root only ever start on the AI's turn? yeah probably
             double score = EvaluateBoardState(newBoard);
             treeRoot = new Node(newBoard, column, currTurn, score);
             currentBestMoveColumn = -1;
 
-            InitializeTreeBuilder();
-
-
+            //InitializeTreeBuilder();
             
             rando = new Random();
         }
@@ -302,12 +386,18 @@ namespace ConnectBot
         
         public int Move()
         {
-            ScoreColumn bestMove = NegaMaxTraverse(treeRoot, 4, aiColor);
+            //ScoreColumn bestMove = NegaMaxTraverse(treeRoot, 4, aiColor);
+
             // TODO left off here. because treeRoot doesn't change during update this will only ever return 3 (best move at start)
             // update board needs to trim tree, update root and possilby start off background worker again.
             // check open columns
             // when player moves first AI is not taking that into account. tree should only start building on first update call i think
-            return bestMove.column;
+            //return bestMove.column;
+
+
+
+            AISelfTest();
+            return rando.Next(0, 6);
         }
 
         /// <summary>
