@@ -92,7 +92,6 @@ namespace ConnectBot
         /// </summary>
         private class Node
         {
-            // TODO check the best practice for capitalization and stuff. this seems weird
             // Fields should be private and camelCase exposed by public properties that are PascalCase
             // fields should also have full words used in naming
             // this is overkill in a small project but I'm trying to build good habits and learn
@@ -307,7 +306,7 @@ namespace ConnectBot
 
                 treeRoot = new Node(newBoard, lastMove, currTurn, score);
                 Stop();
-                InitializeTreeBuilder();
+                //InitializeTreeBuilder();
             }
         }
 
@@ -822,7 +821,7 @@ namespace ConnectBot
         /// </summary>
         public void Stop()
         {
-            if (treeBuilder.WorkerSupportsCancellation)
+            if (treeBuilder != null && treeBuilder.WorkerSupportsCancellation)
             {
                 treeBuilder.CancelAsync();
             }
