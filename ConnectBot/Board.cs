@@ -74,20 +74,21 @@ namespace ConnectBot
             /// Draws disc to the screen, only draws if it has a disc.
             /// </summary>
             /// <param name="sb"></param>
-            public void Draw(SpriteBatch sb, Dictionary<int, Texture2D> images)
+            public void Draw(SpriteBatch sb, Dictionary<string, Texture2D> images)
             {
+                string imageName = (discColor == 1 ? "black_disc" : "red_disc");
+                
                 if (discColor != 0)
                 {
-                    sb.Draw(images[discColor], drawRect, Color.Wheat);
+                    sb.Draw(images[imageName], drawRect, Color.Wheat);
 
-                    if (drawRect.Y < rect.Y /*&& falling*/)
+                    if (drawRect.Y < rect.Y)
                     {
                         drawRect.Y += 8;
                     }
 
                     if (drawRect.Y >= rect.Y)
                     {
-                        //falling = false;
                         drawRect.Y = rect.Y;
                     }
                 }
@@ -221,7 +222,7 @@ namespace ConnectBot
             /// </summary>
             /// <param name="sb"></param>
             /// <param name="images"></param>
-            public void Draw(SpriteBatch sb, Dictionary<int, Texture2D> images, bool drawBlueArrow)
+            public void Draw(SpriteBatch sb, Dictionary<string, Texture2D> images, bool drawBlueArrow)
             {
                 for (int i = 0; i < columnSpaces.Length; i++)
                 {
@@ -234,6 +235,18 @@ namespace ConnectBot
                     sb.Draw(blueArrow, blueArrowRect, Color.White);
                 }
             }
+        }
+        #endregion
+
+
+
+        #region Constructor
+        /// <summary>
+        /// Constructor for board class.
+        /// </summary>
+        public Board()
+        {
+
         }
         #endregion
 

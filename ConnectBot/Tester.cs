@@ -10,7 +10,9 @@ namespace ConnectBot
     {
         static void Main()
         {
-            Console.WriteLine("hi there");
+
+            Console.WriteLine("hi thre from tester");
+
         }
     }
 }
