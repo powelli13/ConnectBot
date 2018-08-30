@@ -211,6 +211,9 @@ namespace ConnectBot
             /// <returns>Boolean to signify if the move was correct and performed or not.</returns>
             public bool Move(int column)
             {
+                // TODO resolve huge bug where AI thinks it is moving successfully but does not move. 
+                // the game should request moves from the AI until it gets a legal one.
+
                 // TODO does move history need to hold color or can it be implied?
                 if (boardState[column, numRows - 1] == 0)
                 {

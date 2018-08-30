@@ -26,7 +26,7 @@ namespace ConnectBot
             int YNoButtonBuffer = 90;
 
             Dictionary<string, Rectangle> drawingRectangles;
-            
+
 
 
             #region Constructor
@@ -40,17 +40,20 @@ namespace ConnectBot
                 drawingRectangles["play_again_question"] = new Rectangle(
                     XBuffer + XQuestionBuffer,
                     YBuffer + YQuestionBuffer,
-                    320, 80);
+                    320, 80
+                );
 
                 drawingRectangles["yes_button"] = new Rectangle(
                     XBuffer + XYesButtonBuffer,
                     YBuffer + YYesButtonBuffer,
-                    160, 80);
+                    160, 80
+                );
 
                 drawingRectangles["no_button"] = new Rectangle(
                     XBuffer + XNoButtonBuffer,
                     YBuffer + YNoButtonBuffer,
-                    160, 80);
+                    160, 80
+                );
 
             }
             #endregion
@@ -68,6 +71,30 @@ namespace ConnectBot
 
                 sb.Draw(images["yes_button"], drawingRectangles["yes_button"], Color.Wheat);
                 sb.Draw(images["no_button"], drawingRectangles["no_button"], Color.Wheat);
+
+            }
+
+            /// <summary>
+            /// Determine if the yes button contains the given mouse position.
+            /// </summary>
+            /// <param name="p"></param>
+            /// <returns></returns>
+            public bool YesButtonContainsMouse(Point p)
+            {
+
+                return drawingRectangles["yes_button"].Contains(p);
+                
+            }
+
+            /// <summary>
+            /// Determine if the no button contains the given mouse position.
+            /// </summary>
+            /// <param name="p"></param>
+            /// <returns></returns>
+            public bool NoButtonContainsMouse(Point p)
+            {
+
+                return drawingRectangles["no_button"].Contains(p);
 
             }
 

@@ -353,12 +353,7 @@ namespace ConnectBot
             // TODO also AI needs to get stopped when the x button is clicked on the window.
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
-                if (bot != null)
-                {
-                    bot.Stop();
-                }
-
-                Exit();
+                EndGame();
             }
 
             if (Keyboard.GetState().IsKeyDown(Keys.J))
@@ -424,10 +419,23 @@ namespace ConnectBot
 
                 case MenuState.PlayAgain:
 
-
+                    // Detect a click on either of the buttons and respond accordingly.
+                    if (lastMouseState.LeftButton == ButtonState.Pressed &&
+                            mouseState.LeftButton == ButtonState.Released)
+                    {
+                        if (playAgainMenu.YesButtonContainsMouse(mousePosition))
+                        {
+                            ResetGame();
+                            break;
+                        }
+                        else if (playAgainMenu.NoButtonContainsMouse(mousePosition))
+                        {
+                            EndGame();
+                            break;
+                        }
+                    }
 
                     break;
-
             }
             
             
@@ -490,6 +498,19 @@ namespace ConnectBot
             {
                 boardColumns[c].ResetSpaces();
             }
+        }
+
+        /// <summary>
+        /// Clean up resources and exit the game.
+        /// </summary>
+        protected void EndGame()
+        {
+            if (bot != null)
+            {
+                bot.Stop();
+            }
+
+            Exit();
         }
 
         /// <summary>

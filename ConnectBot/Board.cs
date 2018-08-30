@@ -182,7 +182,9 @@ namespace ConnectBot
             /// <returns></returns>
             public int GetSpace(int row)
             {
+
                 return columnSpaces[row].DiscColor;
+
             }
 
             /// <summary>
@@ -202,18 +204,12 @@ namespace ConnectBot
             /// Determines if the column contians the given mouse point.
             /// </summary>
             /// <param name="p">Point representing mouse's location.</param>
-            /// <returns>True if the column is clickable and contains point.</returns>
+            /// <returns>True if the column is clickable and contains mouse point.</returns>
             public bool ContainMouse(Point p)
             {
-                if (movable)
-                {
-                    if (columnHolderRect.Contains(p) || blueArrowRect.Contains(p))
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
+                
+                return movable && (columnHolderRect.Contains(p) || blueArrowRect.Contains(p));
+                
             }
 
             /// <summary>
@@ -246,7 +242,7 @@ namespace ConnectBot
         /// </summary>
         public Board()
         {
-
+            // TODO what should / could be in here?
         }
         #endregion
 
