@@ -378,7 +378,6 @@ namespace ConnectBot
             }
 
             // TODO should we ever do something to buy the AI more time for it's worker thread?
-            // TODO ensure current best move is legal before returning
 
             string resultString = String.Format("AI found best move at column: {0} with a score of: {1}", currentBestMoveColumn, bestScore);
             Console.WriteLine(resultString);
@@ -388,18 +387,35 @@ namespace ConnectBot
         
         public int Move()
         {
-            //ScoreColumn bestMove = NegaMaxTraverse(treeRoot, 4, aiColor);
+
 
             // TODO left off here. because treeRoot doesn't change during update this will only ever return 3 (best move at start)
             // update board needs to trim tree, update root and possilby start off background worker again.
             // check open columns
             // when player moves first AI is not taking that into account. tree should only start building on first update call i think
-            //return bestMove.column;
 
 
 
-            AISelfTest();
-            return rando.Next(0, 6);
+
+            //AISelfTest();
+
+            Node n = new Node(gameDiscs, 0, aiColor, 0.0);
+
+            int retMove = AlphaBetaSearch(n);
+
+            // TODO
+            // randomly moving if the AI doesn't find something, bad temporary fix
+            if (retMove == -1)
+            {
+                retMove = rando.Next(0, 6);
+
+                while (gameDiscs[retMove, 5] != 0)
+                {
+                    retMove = rando.Next(0, 6);
+                }
+            }
+
+            return retMove;
         }
 
         /// <summary>
@@ -679,45 +695,96 @@ namespace ConnectBot
             val += (0.25 * participatedPossibles) * checkColor;
         }
 
-        /// <summary>
-        /// Find the best move in the move tree for the AI's color
-        /// using the NegaMax search.
-        /// </summary>
-        /// <returns></returns>
-        private ScoreColumn NegaMaxTraverse(Node n, int depth, int color)
+
+        private int AlphaBetaSearch(Node n)
         {
-            if (depth == 0)
-            {
-                // return structure with score
-                // TODO should this ensure that it favors the bot?
-                return new ScoreColumn(color * n.PositionalScore, n.ColumnMoved);
-            }
 
-            ScoreColumn bestValue = new ScoreColumn(System.Double.MinValue, 0);
-            ScoreColumn temp;
+            double alpha = Double.MinValue;
+            double beta = Double.MaxValue;
 
-            // return maximum child
-            // TODO this switching score may be weird
-            foreach (Node child in n.Children)
+            int totalDepth = 7;
+
+            // TODO change this based on the AI's color
+            double val = MinValue(n, ref alpha, ref beta, ref totalDepth);
+
+            int ret = -1;
+
+            foreach (int openMove in GetOpenColumns(n.BoardDiscState))
             {
-                temp = NegaMaxTraverse(child, depth - 1, color * -1);
-                temp.score = temp.score * -1;
-                
-                if (temp.score > bestValue.score)
+                if (EvaluateBoardState(GenerateBoardState(openMove, aiColor, n.BoardDiscState)) == val)
                 {
-                    bestValue.score = temp.score;
-                    bestValue.column = temp.column;
+                    ret = openMove;
+                    break;
                 }
             }
 
-            return bestValue;
+            return ret;
         }
 
-        // see FindHighestScoreIndex in Node List
-        //private int GetMaxChild(Node n)
-        //{
 
-        //}
+        private double MaxValue(Node n, ref double alpha, ref double beta, ref int depth)
+        {
+            // TODO terminal check
+            if (depth <= 0)
+            {
+                return EvaluateBoardState(n.BoardDiscState);
+            }
+
+            double ret = double.MinValue;
+            int colorMoved = (n.ColorMoved == black ? red : black);
+
+            foreach (int openMove in GetOpenColumns(n.BoardDiscState))
+            {
+                int[,] newState = GenerateBoardState(openMove, colorMoved, n.BoardDiscState);
+
+                Node child = new Node(newState, openMove, colorMoved, 0.0);
+
+                depth--;
+                ret = Math.Max(ret, MinValue(child, ref alpha, ref beta, ref depth));
+
+                if (ret >= beta)
+                {
+                    return ret;
+                }
+
+                alpha = Math.Max(alpha, ret);
+            }
+
+            return ret;
+        }
+
+
+        private double MinValue(Node n, ref double alpha, ref double beta, ref int depth)
+        {
+            // TODO terminal check
+            if (depth <= 0)
+            {
+                return EvaluateBoardState(n.BoardDiscState);
+            }
+
+            double ret = double.MaxValue;
+            int colorMoved = (n.ColorMoved == black ? red : black);
+
+            foreach (int openMove in GetOpenColumns(n.BoardDiscState))
+            {
+                int[,] newState = GenerateBoardState(openMove, colorMoved, n.BoardDiscState);
+
+                Node child = new Node(newState, openMove, colorMoved, 0.0);
+
+                depth--;
+                ret = Math.Min(ret, MaxValue(child, ref alpha, ref beta, ref depth));
+
+                if (ret <= alpha)
+                {
+                    return ret;
+                }
+
+                beta = Math.Min(beta, ret);
+            }
+            
+            return ret;
+        }
+
 
         /// <summary>
         /// Modify the board evaluation value based on 

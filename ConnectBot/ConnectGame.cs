@@ -405,8 +405,13 @@ namespace ConnectBot
                         else if (turn == botTurn)
                         {
                             //bot.AISelfTest();
-                            // TODO ensure bot doesn't cheat
+                            // TODO ensure bot makes valie move
+
                             int botMove = bot.Move();
+
+
+                            //while (botMo)
+
                             boardColumns[botMove].SetSpace(botTurn);
                             timeSinceLastMove = 0.0;
 
