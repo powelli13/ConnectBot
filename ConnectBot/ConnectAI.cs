@@ -2,6 +2,8 @@
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ConnectBot
 {
@@ -385,7 +387,7 @@ namespace ConnectBot
             //return rando.Next(7);
         }
         
-        public int Move()
+        public Task<int> Move()
         {
 
 
@@ -415,7 +417,9 @@ namespace ConnectBot
                 }
             }
 
-            return retMove;
+            Thread.Sleep(2000);
+
+            return Task.FromResult<int>(retMove);
         }
 
         /// <summary>

@@ -2,6 +2,8 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ConnectBot
 {
@@ -260,7 +262,7 @@ namespace ConnectBot
         protected override void Initialize()
         {
             base.Initialize();
-            
+            // TODO figure out how to resize the window. looks terrible on my new laptop
             IsMouseVisible = true;
 
             // Create and load space objects
@@ -372,6 +374,7 @@ namespace ConnectBot
             lastMouseState = mouseState;
             mouseState = Mouse.GetState();
             Point mousePosition = new Point(mouseState.X, mouseState.Y);
+            bool botMoveRunning = false;
             
             switch (currentMenu)
             {
@@ -407,16 +410,18 @@ namespace ConnectBot
                             //bot.AISelfTest();
                             // TODO ensure bot makes valie move
 
-                            int botMove = bot.Move();
+                            //int bfotMove = bot.Move();
+                            // TODO this is definitely not the way to do this
+                            if (!botMoveRunning)
+                            {
+                                Task<int> botMove = bot.Move();
+                            }
 
+                            //boardColumns[botMove].SetSpace(botTurn);
+                            //timeSinceLastMove = 0.0;
 
-                            //while (botMo)
-
-                            boardColumns[botMove].SetSpace(botTurn);
-                            timeSinceLastMove = 0.0;
-
-                            ChangeTurn();
-                            CheckVictory();
+                            //ChangeTurn();
+                            //CheckVictory();
                         }
                     }
 
@@ -523,6 +528,7 @@ namespace ConnectBot
         /// </summary>
         protected void UpdateBotBoard(int columnMoved)
         {
+            // TODO this should probably be moved to the bot class
             int[,] botBoard = GetTextBoard();
             bot.UpdateBoard(botBoard, turn, columnMoved);
         }
