@@ -72,6 +72,9 @@ namespace ConnectBot
         /// </summary>
         private ConnectAI bot;
 
+        // TODO remove this and check the thread result
+        private bool botThinking = false;
+
         /// <summary>
         /// Menus classes to handle various inputs.
         /// </summary>
@@ -375,7 +378,7 @@ namespace ConnectBot
             mouseState = Mouse.GetState();
             Point mousePosition = new Point(mouseState.X, mouseState.Y);
             //Task<int> botMove;
-            bool botMoveRunning = false;
+            //bool botMoveRunning = false;
 
             switch (currentMenu)
             {
@@ -408,45 +411,12 @@ namespace ConnectBot
                         else if (turn == botTurn)
                         {
                             //bot.AISelfTest();
-                            // TODO ensure bot makes valid move
 
-                            GetBotMove();
-
-                            //int botMove = bot.Move();
-                            // TODO this is definitely not the way to do this
-                            //if (!botMoveRunning)
-                            //{
-                            //    Task<int> botMove = bot.Move();
-                            //}
-                            //if (botMove == null)
-                            //{
-                            //    botMove = bot.Move().Result;
-                            //}
-                            //if (!botMoveRunning)
-                            //{
-                            //    botMoveRunning = true;
-                            //    int botMove = GetBotMove();
-                            //    boardColumns[botMove].SetSpace(botTurn);
-
-                            //    ChangeTurn();
-                            //    CheckVictory();
-
-                            //    //Task<int> getBotMove = bot.Move()
-                            //    //    .ContinueWith<int>(m =>
-                            //    //    {
-                            //    //        boardColumns[m.Result].SetSpace(botTurn);
-
-                            //    //        botMoveRunning = false;
-                            //    //        ChangeTurn();
-                            //    //        CheckVictory();
-                            //    //        return m.Result;
-                            //    //    });
-
-                            //}
-                            //boardColumns[botMove].SetSpace(botTurn);
-
-                            //ChangeTurn();
-                            //CheckVictory();
+                            if (!botThinking)
+                            {
+                                botThinking = true;
+                                GetBotMove();
+                            }
                         }
                     }
 
@@ -481,11 +451,14 @@ namespace ConnectBot
         {
             int botMove = 0;
             await Task<int>.Run(() => botMove = bot.Move().Result);
-
+            
             boardColumns[botMove].SetSpace(botTurn);
 
+            // TODO ensure bot made valid move if it tried to cheat request another
+            // maybe the board state should be passed into the bot at move request
             ChangeTurn();
             CheckVictory();
+            botThinking = false;
         }
 
         /// <summary>
