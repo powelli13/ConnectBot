@@ -387,7 +387,7 @@ namespace ConnectBot
             //return rando.Next(7);
         }
         
-        public Task<int> Move()
+        public async Task<int> Move()
         {
 
 
@@ -395,9 +395,6 @@ namespace ConnectBot
             // update board needs to trim tree, update root and possilby start off background worker again.
             // check open columns
             // when player moves first AI is not taking that into account. tree should only start building on first update call i think
-
-
-
 
             //AISelfTest();
 
@@ -417,9 +414,10 @@ namespace ConnectBot
                 }
             }
 
-            Thread.Sleep(2000);
+            Thread.Sleep(1000);
 
-            return Task.FromResult<int>(retMove);
+            return retMove;
+            //return retMove;
         }
 
         /// <summary>

@@ -374,15 +374,15 @@ namespace ConnectBot
             lastMouseState = mouseState;
             mouseState = Mouse.GetState();
             Point mousePosition = new Point(mouseState.X, mouseState.Y);
+            //Task<int> botMove;
             bool botMoveRunning = false;
-            
+
             switch (currentMenu)
             {
                 case MenuState.None:
                     // Check for movement clicks
                     if (timeSinceLastMove > 0.5)
                     {
-
                         if (turn == playerTurn)
                         {
                             //bot.AISelfTest();
@@ -408,17 +408,42 @@ namespace ConnectBot
                         else if (turn == botTurn)
                         {
                             //bot.AISelfTest();
-                            // TODO ensure bot makes valie move
+                            // TODO ensure bot makes valid move
 
-                            //int bfotMove = bot.Move();
+                            GetBotMove();
+
+                            //int botMove = bot.Move();
                             // TODO this is definitely not the way to do this
-                            if (!botMoveRunning)
-                            {
-                                Task<int> botMove = bot.Move();
-                            }
+                            //if (!botMoveRunning)
+                            //{
+                            //    Task<int> botMove = bot.Move();
+                            //}
+                            //if (botMove == null)
+                            //{
+                            //    botMove = bot.Move().Result;
+                            //}
+                            //if (!botMoveRunning)
+                            //{
+                            //    botMoveRunning = true;
+                            //    int botMove = GetBotMove();
+                            //    boardColumns[botMove].SetSpace(botTurn);
 
+                            //    ChangeTurn();
+                            //    CheckVictory();
+
+                            //    //Task<int> getBotMove = bot.Move()
+                            //    //    .ContinueWith<int>(m =>
+                            //    //    {
+                            //    //        boardColumns[m.Result].SetSpace(botTurn);
+
+                            //    //        botMoveRunning = false;
+                            //    //        ChangeTurn();
+                            //    //        CheckVictory();
+                            //    //        return m.Result;
+                            //    //    });
+
+                            //}
                             //boardColumns[botMove].SetSpace(botTurn);
-                            //timeSinceLastMove = 0.0;
 
                             //ChangeTurn();
                             //CheckVictory();
@@ -450,6 +475,17 @@ namespace ConnectBot
             
             
             base.Update(gameTime);
+        }
+
+        protected async void GetBotMove()
+        {
+            int botMove = 0;
+            await Task<int>.Run(() => botMove = bot.Move().Result);
+
+            boardColumns[botMove].SetSpace(botTurn);
+
+            ChangeTurn();
+            CheckVictory();
         }
 
         /// <summary>
