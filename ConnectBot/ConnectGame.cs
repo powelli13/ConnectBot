@@ -325,17 +325,6 @@ namespace ConnectBot
             {
                 imageDict[img] = Content.Load<Texture2D>(img);
             }
-
-            //imageDict[1] = Content.Load<Texture2D>("black_disc");
-            //imageDict[-1] = Content.Load<Texture2D>("red_disc");
-            //imageDict[3] = Content.Load<Texture2D>("blue_arrow");
-            //imageDict[4] = Content.Load<Texture2D>("column_holder");
-
-            //imageDict[5] = Content.Load<Texture2D>("play_again_background");
-            //imageDict[6] = Content.Load<Texture2D>("play_again_question");
-            //imageDict[7] = Content.Load<Texture2D>("yes_button");
-            //imageDict[8] = Content.Load<Texture2D>("no_button");
-            
         }
 
         /// <summary>
@@ -450,7 +439,7 @@ namespace ConnectBot
         protected async void GetBotMove()
         {
             int botMove = 0;
-            await Task<int>.Run(() => botMove = bot.Move().Result);
+            await Task.Run(() => botMove = bot.Move().Result);
             
             boardColumns[botMove].SetSpace(botTurn);
 
@@ -481,7 +470,7 @@ namespace ConnectBot
 
             bool drawBlueArrow = false;
 
-            if (timeSinceLastMove > 0.5)
+            if (timeSinceLastMove > 0.5 && turn != botTurn)
             {
                 drawBlueArrow = true;
             }

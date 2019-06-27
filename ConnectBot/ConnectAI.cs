@@ -399,25 +399,24 @@ namespace ConnectBot
             //AISelfTest();
 
             Node n = new Node(gameDiscs, 0, aiColor, 0.0);
-
+            // TODO check for easy wins first?
             int retMove = AlphaBetaSearch(n);
 
             // TODO
             // randomly moving if the AI doesn't find something, bad temporary fix
-            if (retMove == -1)
-            {
-                retMove = rando.Next(0, 6);
+            //if (retMove == -1)
+            //{
+            //    retMove = rando.Next(0, 6);
 
-                while (gameDiscs[retMove, 5] != 0)
-                {
-                    retMove = rando.Next(0, 6);
-                }
-            }
+            //    while (gameDiscs[retMove, 5] != 0)
+            //    {
+            //        retMove = rando.Next(0, 6);
+            //    }
+            //}
 
-            Thread.Sleep(1000);
+            Thread.Sleep(1500);
 
             return retMove;
-            //return retMove;
         }
 
         /// <summary>
@@ -710,7 +709,8 @@ namespace ConnectBot
             double val = MinValue(n, ref alpha, ref beta, ref totalDepth);
 
             int ret = -1;
-
+            // TODO left off this doesn't even return what the bot found.
+            // the must have been implemented wrong because i didn't understand the book
             foreach (int openMove in GetOpenColumns(n.BoardDiscState))
             {
                 if (EvaluateBoardState(GenerateBoardState(openMove, aiColor, n.BoardDiscState)) == val)
