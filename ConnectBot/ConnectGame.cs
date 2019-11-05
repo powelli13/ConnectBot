@@ -2,8 +2,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ConnectBot
 {
@@ -41,20 +39,20 @@ namespace ConnectBot
         /// Represents which players turn it is, 1 for black, -1 for red.
         /// For this games purposes as of now black will go first.
         /// </summary>
-        protected int turn;
+        protected int CurrentTurn { get; set; }
         const int black = 1;
         const int red = -1;
 
-        protected int playerTurn;
-        protected int botTurn;
+        protected int PlayerTurn { get; set; }
+        protected int BotTurn { get; set; }
 
         private double timeSinceLastMove;
 
         /// <summary>
         /// Used to handle click inputs.
         /// </summary>
-        private MouseState mouseState;
-        private MouseState lastMouseState;
+        private MouseState MouseState { get; set; }
+        private MouseState LastMouseState { get; set; }
 
         /// <summary>
         /// Enum used to keep track of which menu is up if any.
@@ -65,12 +63,12 @@ namespace ConnectBot
             PlayAgain,
             SelectColor
         };
-        private MenuState currentMenu;
-            
+        private MenuState CurrentMenu { get; set; }
+
         /// <summary>
         /// Bot to play against.
         /// </summary>
-        private ConnectAI bot;
+        private ConnectAI Bot { get; set; }
 
         // TODO remove this and check the thread result
         private bool botThinking = false;
@@ -252,7 +250,7 @@ namespace ConnectBot
         protected void ShowPlayAgainMenu()
         {
 
-            currentMenu = MenuState.PlayAgain;
+            CurrentMenu = MenuState.PlayAgain;
 
         }
 
@@ -285,12 +283,12 @@ namespace ConnectBot
             ResetGame();
             
             //TODO menu to decide which color bot plays
-            playerTurn = black;
-            botTurn = red;
+            PlayerTurn = black;
+            BotTurn = red;
 
             // TODO what to pass as column here? how to show null move at board start?
             // TODO how to signify to AI that they should build for specific color does root node determine it?
-            bot = new ConnectAI(botTurn, GetTextBoard(), -1, turn);
+            Bot = new ConnectAI(BotTurn);
             UpdateBotBoard(-1);
 
             playAgainMenu = new GameMenus.PlayAgainMenu();
@@ -352,10 +350,10 @@ namespace ConnectBot
 
             if (Keyboard.GetState().IsKeyDown(Keys.J))
             {
-                if (bot != null)
-                {
-                    bot.Stop();
-                }
+                //if (bot != null)
+                //{
+                //    bot.Stop();
+                //}
             }
 
             timeSinceLastMove += gameTime.ElapsedGameTime.TotalSeconds;
@@ -363,31 +361,31 @@ namespace ConnectBot
             // TODO should this be a seperate method?
             // Handle user clicks that could be attempted moves.
             // Contain mouse will not allow clicks on a full column.
-            lastMouseState = mouseState;
-            mouseState = Mouse.GetState();
-            Point mousePosition = new Point(mouseState.X, mouseState.Y);
+            LastMouseState = MouseState;
+            MouseState = Mouse.GetState();
+            Point mousePosition = new Point(MouseState.X, MouseState.Y);
             //Task<int> botMove;
             //bool botMoveRunning = false;
 
-            switch (currentMenu)
+            switch (CurrentMenu)
             {
                 case MenuState.None:
                     // Check for movement clicks
                     if (timeSinceLastMove > 0.5)
                     {
-                        if (turn == playerTurn)
+                        if (CurrentTurn == PlayerTurn)
                         {
                             //bot.AISelfTest();
                             for (int col = 0; col < numColumns; col++)
                             {
                                 if (boardColumns[col].ContainMouse(mousePosition))
                                 {
-                                    if (lastMouseState.LeftButton == ButtonState.Pressed &&
-                                        mouseState.LeftButton == ButtonState.Released)
+                                    if (LastMouseState.LeftButton == ButtonState.Pressed &&
+                                        MouseState.LeftButton == ButtonState.Released)
                                     {
                                         //bot.AISelfTest();
                                         //Perform move and change turn.
-                                        boardColumns[col].SetSpace(playerTurn);
+                                        boardColumns[col].SetSpace(PlayerTurn);
                                         timeSinceLastMove = 0.0;
 
                                         ChangeTurn();
@@ -397,7 +395,7 @@ namespace ConnectBot
                                 }
                             }
                         }
-                        else if (turn == botTurn)
+                        else if (CurrentTurn == BotTurn)
                         {
                             //bot.AISelfTest();
 
@@ -408,14 +406,13 @@ namespace ConnectBot
                             }
                         }
                     }
-
                     break;
 
                 case MenuState.PlayAgain:
 
                     // Detect a click on either of the buttons and respond accordingly.
-                    if (lastMouseState.LeftButton == ButtonState.Pressed &&
-                            mouseState.LeftButton == ButtonState.Released)
+                    if (LastMouseState.LeftButton == ButtonState.Pressed &&
+                            MouseState.LeftButton == ButtonState.Released)
                     {
                         if (playAgainMenu.YesButtonContainsMouse(mousePosition))
                         {
@@ -428,20 +425,17 @@ namespace ConnectBot
                             break;
                         }
                     }
-
                     break;
             }
-            
             
             base.Update(gameTime);
         }
 
         protected async void GetBotMove()
         {
-            int botMove = 0;
-            await Task.Run(() => botMove = bot.Move().Result);
+            int botMove = await Bot.Move();
             
-            boardColumns[botMove].SetSpace(botTurn);
+            boardColumns[botMove].SetSpace(BotTurn);
 
             // TODO ensure bot made valid move if it tried to cheat request another
             // maybe the board state should be passed into the bot at move request
@@ -455,7 +449,7 @@ namespace ConnectBot
         /// </summary>
         protected void ChangeTurn()
         {
-            turn = (turn == black ? red : black);
+            CurrentTurn = (CurrentTurn == black ? red : black);
         }
 
         /// <summary>
@@ -470,7 +464,7 @@ namespace ConnectBot
 
             bool drawBlueArrow = false;
 
-            if (timeSinceLastMove > 0.5 && turn != botTurn)
+            if (timeSinceLastMove > 0.5 && CurrentTurn != BotTurn)
             {
                 drawBlueArrow = true;
             }
@@ -480,15 +474,12 @@ namespace ConnectBot
                 boardColumns[col].Draw(spriteBatch, imageDict, drawBlueArrow);
             }
 
-            switch (currentMenu)
+            switch (CurrentMenu)
             {
                 case MenuState.PlayAgain:
-
                     playAgainMenu.Draw(spriteBatch, imageDict);
-
                     break;
             }
-
 
             spriteBatch.End();
             base.Draw(gameTime);
@@ -499,8 +490,8 @@ namespace ConnectBot
         /// </summary>
         protected void ResetGame()
         {
-            turn = 1;
-            currentMenu = MenuState.None;
+            CurrentTurn = 1;
+            CurrentMenu = MenuState.None;
 
             for (int c = 0; c < numColumns; c++)
             {
@@ -513,11 +504,6 @@ namespace ConnectBot
         /// </summary>
         protected void EndGame()
         {
-            if (bot != null)
-            {
-                bot.Stop();
-            }
-
             Exit();
         }
 
@@ -526,9 +512,8 @@ namespace ConnectBot
         /// </summary>
         protected void UpdateBotBoard(int columnMoved)
         {
-            // TODO this should probably be moved to the bot class
             int[,] botBoard = GetTextBoard();
-            bot.UpdateBoard(botBoard, turn, columnMoved);
+            Bot.UpdateBoard(botBoard, columnMoved);
         }
     }
 }

@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace ConnectBot
 {
@@ -30,33 +29,10 @@ namespace ConnectBot
             private Rectangle rect;
             // Rectangle used to draw discs falling over time
             private Rectangle drawRect;
-            private Texture2D discSprite;
-            private int discColor = 0;
-            private bool falling = false;
 
-            public int DiscColor
-            {
-                get
-                {
-                    return discColor;
-                }
-                set
-                {
-                    discColor = value;
-                }
-            }
+            public int DiscColor { get; set; }
 
-            public bool Falling
-            {
-                get
-                {
-                    return falling;
-                }
-                set
-                {
-                    falling = value;
-                }
-            }
+            public bool Falling { get; set; }
 
             /// <summary>
             /// Constructor requires the rect placement in pixels.
@@ -76,9 +52,9 @@ namespace ConnectBot
             /// <param name="sb"></param>
             public void Draw(SpriteBatch sb, Dictionary<string, Texture2D> images)
             {
-                string imageName = (discColor == 1 ? "black_disc" : "red_disc");
+                string imageName = (DiscColor == 1 ? "black_disc" : "red_disc");
                 
-                if (discColor != 0)
+                if (DiscColor != 0)
                 {
                     sb.Draw(images[imageName], drawRect, Color.Wheat);
 
@@ -103,19 +79,19 @@ namespace ConnectBot
         /// </summary>
         public class BoardColumn
         {
-            private Texture2D blueArrow;
-            private Texture2D columnHolder;
+            private Texture2D BlueArrow { get; set; }
+            private Texture2D ColumnHolder { get; set; }
             // TODO change this to an index
             private Space[] columnSpaces;
 
             /// <summary>
             /// Determines if the column can still be played in.
             /// </summary>
-            private bool movable;
+            private bool Movable { get; set; }
 
             // Rectangles for the blue arrow and column holder.
-            private Rectangle columnHolderRect;
-            private Rectangle blueArrowRect;
+            private Rectangle ColumnHolderRect { get; set; }
+            private Rectangle BlueArrowRect { get; set; }
 
             /// <summary>
             /// Constructor for the column container and click handler.
@@ -127,11 +103,11 @@ namespace ConnectBot
             public BoardColumn(int x, int y, Texture2D ch, Texture2D ba)
             {
                 // Create rectangles and save sprites.
-                blueArrowRect = new Rectangle(x, y - SpaceSize, SpaceSize, SpaceSize);
-                columnHolderRect = new Rectangle(x, y, SpaceSize, SpaceSize * NumRows);
+                BlueArrowRect = new Rectangle(x, y - SpaceSize, SpaceSize, SpaceSize);
+                ColumnHolderRect = new Rectangle(x, y, SpaceSize, SpaceSize * NumRows);
 
-                blueArrow = ba;
-                columnHolder = ch;
+                BlueArrow = ba;
+                ColumnHolder = ch;
 
                 // Initialize spaces in column.
                 columnSpaces = new Space[6];
@@ -147,7 +123,7 @@ namespace ConnectBot
                     columnSpaces[row] = new Space(x, yPos);
                 }
 
-                movable = true;
+                Movable = true;
             }
 
             /// <summary>
@@ -167,7 +143,7 @@ namespace ConnectBot
                         // Determine if column is full or still movable.
                         if (t == NumRows - 1)
                         {
-                            movable = false;
+                            Movable = false;
                         }
 
                         return;
@@ -182,9 +158,7 @@ namespace ConnectBot
             /// <returns></returns>
             public int GetSpace(int row)
             {
-
                 return columnSpaces[row].DiscColor;
-
             }
 
             /// <summary>
@@ -197,7 +171,7 @@ namespace ConnectBot
                     columnSpaces[r].DiscColor = 0;
                 }
 
-                movable = true;
+                Movable = true;
             }
 
             /// <summary>
@@ -207,9 +181,7 @@ namespace ConnectBot
             /// <returns>True if the column is clickable and contains mouse point.</returns>
             public bool ContainMouse(Point p)
             {
-                
-                return movable && (columnHolderRect.Contains(p) || blueArrowRect.Contains(p));
-                
+                return Movable && (ColumnHolderRect.Contains(p) || BlueArrowRect.Contains(p));   
             }
 
             /// <summary>
@@ -225,26 +197,13 @@ namespace ConnectBot
                     columnSpaces[i].Draw(sb, images);
                 }
 
-                sb.Draw(columnHolder, columnHolderRect, Color.White);
-                if (movable && drawBlueArrow)
+                sb.Draw(ColumnHolder, ColumnHolderRect, Color.White);
+                if (Movable && drawBlueArrow)
                 {
-                    sb.Draw(blueArrow, blueArrowRect, Color.White);
+                    sb.Draw(BlueArrow, BlueArrowRect, Color.White);
                 }
             }
         }
         #endregion
-
-
-
-        #region Constructor
-        /// <summary>
-        /// Constructor for board class.
-        /// </summary>
-        public Board()
-        {
-            // TODO what should / could be in here?
-        }
-        #endregion
-
     }
 }

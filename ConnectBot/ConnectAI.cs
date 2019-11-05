@@ -1,90 +1,48 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace ConnectBot
 {
     class ConnectAI
     {
-
-
         // this shouldn't need a buffer
         //
         // Foremost indices in sub arrays represent 'bottom' spaces of Connect 4 board.
         // 1 is a black disc, 2 is red.
         // TODO I think black goes first
-        // 
 
-        const int numRows = 6;
-        const int numColumns = 7;
+        const int NumRows = 6;
+        const int NumColumns = 7;
 
         /// <summary>
         /// Multidimensional array of integers representing the board
         /// indexed by [column, row]. Lowest column index is left most 
         /// on the screen. Lowest row index is lowest in the column stack.
         /// </summary>
-        protected int[,] gameDiscs = new int[numColumns, numRows];
-        const int black = 1;
-        const int red = -1;
+        protected int[,] GameDiscs = new int[NumColumns, NumRows];
+        const int Black = 1;
+        const int Red = -1;
         
         /// <summary>
         /// Stores the AIs disc color. 
         /// 1 is black, moves first with positive eval score.
         /// -1 is red, moves second with negative eval score.
         /// </summary>
-        protected int aiColor;
-        protected int opponentColor;
+        protected int AiColor { get; set; }
+        protected int OpponentColor { get; set; }
         // TODO have best move variable updated as tree is explored? return when called upon?
 
         /// <summary>
         /// used for testing
         /// </summary>
-        protected Random rando;
-        protected int taskCounter;
-
-        // Variables used to build and use the move tree.
-        /// <summary>
-        /// Used to stop the async tree builder.
-        /// </summary>
-        protected bool buildTree = true;
-
-        /// <summary>
-        /// Background worker to construct the minmax tree 
-        /// used to determine optimal moves.
-        /// </summary>
-        private BackgroundWorker treeBuilder;
-
-        /// <summary>
-        /// Root of the move tree.
-        /// </summary>
-        private Node treeRoot;
+        protected Random Rando { get; set; }
 
         /// <summary>
         /// Index of the current best column to move to
         /// updated as the tree is built.
         /// </summary>
-        private int currentBestMoveColumn;
-
-        #region Struct : ScoreColumn
-        /// <summary>
-        /// Lightweight struct used to return the 
-        /// score of a position and the column that generated it.
-        /// </summary>
-        private struct ScoreColumn
-        {
-            public double score;
-            public int column;
-
-            public ScoreColumn(double s, int c)
-            {
-                score = s;
-                column = c;
-            }
-        }
-        #endregion
+        private int CurrentBestMoveColumn { get; set; }
 
         #region Class : Node
         /// <summary>
@@ -192,12 +150,12 @@ namespace ConnectBot
             public ReversibleNode()
             {
                 // Initialize game state and move history
-                boardState = new int[numColumns, numRows];
-                colorToMove = black;
+                boardState = new int[NumColumns, NumRows];
+                colorToMove = Black;
 
-                for (int c = 0; c < numColumns; c++)
+                for (int c = 0; c < NumColumns; c++)
                 {
-                    for (int r = 0; r < numRows; r++)
+                    for (int r = 0; r < NumRows; r++)
                     {
                         boardState[c, r] = 0;
                     }
@@ -217,7 +175,7 @@ namespace ConnectBot
                 // the game should request moves from the AI until it gets a legal one.
 
                 // TODO does move history need to hold color or can it be implied?
-                if (boardState[column, numRows - 1] == 0)
+                if (boardState[column, NumRows - 1] == 0)
                 {
                     int rowMoved = 0;
 
@@ -227,7 +185,7 @@ namespace ConnectBot
                     }
 
                     boardState[column, rowMoved] = colorToMove;
-                    colorToMove = (colorToMove == black ? red : black);
+                    colorToMove = (colorToMove == Black ? Red : Black);
                     moveHistory.Push(column);
 
                     return true;
@@ -244,7 +202,7 @@ namespace ConnectBot
             {
                 if (moveHistory.Count > 0)
                 {
-                    int rowRemoved = numRows - 1;
+                    int rowRemoved = NumRows - 1;
                     int lastColumn = moveHistory.Pop();
 
                     while (boardState[lastColumn, rowRemoved] == 0)
@@ -253,7 +211,7 @@ namespace ConnectBot
                     }
 
                     boardState[lastColumn, rowRemoved] = 0;
-                    colorToMove = (colorToMove == black ? red : black);
+                    colorToMove = (colorToMove == Black ? Red : Black);
 
                     return true;
                 }
@@ -263,55 +221,52 @@ namespace ConnectBot
         }
         #endregion
 
+        #region Class : ScoredMoveIndex
+        /// <summary>
+        /// Lightweight class used to return the score of a 
+        /// position and the moved column that generated it.
+        /// </summary>
+        protected class ScoredMoveIndex
+        {
+            public double PositionScore { get; set; }
+
+            public int MoveIndex { get; set; }
+
+            public ScoredMoveIndex(double positionScore, int moveIndex)
+            {
+                PositionScore = positionScore;
+                MoveIndex = moveIndex;
+            }
+        }
+        #endregion
+
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="color">Color for AI to play.</param>
-        public ConnectAI(int color, int[,] newBoard, int column, int currTurn)
+        public ConnectAI(int color)
         {
-            aiColor = color;
-            opponentColor = (aiColor == black ? red : black);
+            AiColor = color;
+            OpponentColor = (AiColor == Black ? Red : Black);
 
             // TODO should the root only ever start on the AI's turn? yeah probably
-            double score = EvaluateBoardState(newBoard);
-            treeRoot = new Node(newBoard, column, currTurn, score);
-            currentBestMoveColumn = -1;
-
-            //InitializeTreeBuilder();
             
-            rando = new Random();
+            Rando = new Random();
         }
         
         /// <summary>
         /// Update internal board state.
         /// </summary>
         /// <param name="newBoard">Array representing updated board state.</param>
-        /// <param name="currTurn"></param>
         /// <param name="lastMove">Last move made on the new board. Negative one signifies first board update.</param>
-        public void UpdateBoard(int[,] newBoard, int currTurn, int lastMove)
+        public void UpdateBoard(int[,] newBoard, int lastMove)
         {
-            for (int c = 0; c < numColumns; c++)
+            for (int c = 0; c < NumColumns; c++)
             {
-                for (int r = 0; r < numRows; r++)
+                for (int r = 0; r < NumRows; r++)
                 {
-                    gameDiscs[c, r] = newBoard[c, r];
+                    GameDiscs[c, r] = newBoard[c, r];
                 }
-            }
-
-            // Initialize tree root if it is null.
-            // Moves in 0 column for the root initialization. 
-            // TODO this seems strange but shouldn't cause problems maybe make column -1 to signify no move made to reach that position
-            //if (treeRoot == null)
-            //{
-            // TODO when trimming the last move that generated that state may need to be remembered? should automatically happen because of tree structure
-
-            if (lastMove != -1)
-            {
-                double score = EvaluateBoardState(newBoard);
-
-                treeRoot = new Node(newBoard, lastMove, currTurn, score);
-                Stop();
-                //InitializeTreeBuilder();
             }
         }
 
@@ -351,46 +306,8 @@ namespace ConnectBot
             System.Console.WriteLine("examine tree root here");
         }
 
-        /// <summary>
-        /// Returns the column index that the AI would like to move to.
-        /// </summary>
-        /// <returns>Index of AI to move to.</returns>
-        public int Move_temp()
-        {
-            currentBestMoveColumn = 0;
-
-            // TODO have best score auto adjust based on AI's color, actually with min max it should not need to
-            // TODO i think this bad simple move is making weird moves, make it always maximize and use min max properly to solve this
-            double bestScore = 100.0;
-            double tempScore = 1000.0;
-            List<int> openColumns = GetOpenColumns(gameDiscs);
-
-            foreach (int ix in openColumns)
-            {
-                int[,] newBoard = GenerateBoardState(ix, aiColor, gameDiscs);
-                tempScore = EvaluateBoardState(newBoard);
-
-                Console.WriteLine(String.Format("AI generated state value {0} at column {1}", tempScore, ix));
-
-                if (tempScore < bestScore)
-                {
-                    bestScore = tempScore;
-                    currentBestMoveColumn = ix;
-                }
-            }
-
-            // TODO should we ever do something to buy the AI more time for it's worker thread?
-
-            string resultString = String.Format("AI found best move at column: {0} with a score of: {1}", currentBestMoveColumn, bestScore);
-            Console.WriteLine(resultString);
-            return currentBestMoveColumn;
-            //return rando.Next(7);
-        }
-        
         public async Task<int> Move()
         {
-
-
             // TODO left off here. because treeRoot doesn't change during update this will only ever return 3 (best move at start)
             // update board needs to trim tree, update root and possilby start off background worker again.
             // check open columns
@@ -398,23 +315,9 @@ namespace ConnectBot
 
             //AISelfTest();
 
-            Node n = new Node(gameDiscs, 0, aiColor, 0.0);
+            Node n = new Node(GameDiscs, 0, AiColor, 0.0);
             // TODO check for easy wins first?
             int retMove = AlphaBetaSearch(n);
-
-            // TODO
-            // randomly moving if the AI doesn't find something, bad temporary fix
-            //if (retMove == -1)
-            //{
-            //    retMove = rando.Next(0, 6);
-
-            //    while (gameDiscs[retMove, 5] != 0)
-            //    {
-            //        retMove = rando.Next(0, 6);
-            //    }
-            //}
-
-            Thread.Sleep(1500);
 
             return retMove;
         }
@@ -430,11 +333,11 @@ namespace ConnectBot
         protected int[,] GenerateBoardState(int moveColumn, int discColor, int[,] currState)
         {
             // TODO is this needed or can c# copy multi dimensional arrays?
-            int[,] newState = new int[numColumns, numRows];
+            int[,] newState = new int[NumColumns, NumRows];
 
-            for (int c = 0; c < numColumns; c++)
+            for (int c = 0; c < NumColumns; c++)
             {
-                for (int r = 0; r < numRows; r++)
+                for (int r = 0; r < NumRows; r++)
                 {
                     newState[c, r] = currState[c, r];
                 }
@@ -442,11 +345,10 @@ namespace ConnectBot
 
             // TODO currently assuming that the move is valid.
             // this will probably break.
-            for (int row = 0; row < numRows; row++)
+            for (int row = 0; row < NumRows; row++)
             {
                 if (newState[moveColumn, row] == 0)
                 {
-                    //Console.WriteLine("AI generated a board state.");
                     newState[moveColumn, row] = discColor;
                     break;
                 }
@@ -464,9 +366,9 @@ namespace ConnectBot
         {
             List<int> ret = new List<int>();
 
-            for (int c = 0; c < numColumns; c++)
+            for (int c = 0; c < NumColumns; c++)
             {
-                if (board[c, numRows - 1] == 0)
+                if (board[c, NumRows - 1] == 0)
                 {
                     ret.Add(c);
                 }
@@ -488,7 +390,6 @@ namespace ConnectBot
         protected double EvaluateBoardState(int[,] boardState)
         {
             double ret = 0.0;
-            int tempCheck = 0;
             
             /*
              * For both colors scan the entire board.
@@ -499,37 +400,16 @@ namespace ConnectBot
              * and breaking on opponents blocking
              * dics.
              */
-            //for (int color = 1; color < 3; color++)
-            //{
-            for (int c = 0; c < numColumns; c++)
+            for (int c = 0; c < NumColumns; c++)
             {
-                for (int r = 0; r < numRows; r++)
+                for (int r = 0; r < NumRows; r++)
                 {
-                    // from every square reach out in all eight directions in loops break when not in bounds
-                    // TODO it doesn't try to stop opponents from scoring
-                    // make potential victories be worth a huge amount to incentivise stopping
-                    // this evaluator does not 
-                    //if (boardState[c, r] == black)
-                    //{
-                    //    // No point in adding value based on individual discs since it will always cancel out
-                    //    //ret += 1.0;
-                    //    tempCheck = 1;
-                    //}
-                    //else if (boardState[c, r] == red)
-                    //{
-                    //    //ret -= 1.0;
-                    //    tempCheck = 2;
-                    //}
-
                     if (boardState[c, r] != 0)
                     {
                         ScorePossibles(boardState, boardState[c, r], c, r, ref ret);
                     }
-
-                    //tempCheck = 0;
                 }
             }
-            //}
 
             return ret;
         }
@@ -561,7 +441,7 @@ namespace ConnectBot
             // The total number of possible open scoring combinations 
             // that the checked disc participates.
             int participatedPossibles = 0;
-            int oppositeColor = (checkColor == black ? red : black);
+            int oppositeColor = (checkColor == Black ? Red : Black);
             
             bool addPossible = true;
 
@@ -699,178 +579,92 @@ namespace ConnectBot
 
         private int AlphaBetaSearch(Node n)
         {
-
             double alpha = Double.MinValue;
             double beta = Double.MaxValue;
 
             int totalDepth = 7;
 
             // TODO change this based on the AI's color
-            double val = MinValue(n, ref alpha, ref beta, ref totalDepth);
+            var scoredColumn = MinValue(n, ref alpha, ref beta, totalDepth);
 
-            int ret = -1;
-            // TODO left off this doesn't even return what the bot found.
-            // the must have been implemented wrong because i didn't understand the book
-            foreach (int openMove in GetOpenColumns(n.BoardDiscState))
-            {
-                if (EvaluateBoardState(GenerateBoardState(openMove, aiColor, n.BoardDiscState)) == val)
-                {
-                    ret = openMove;
-                    break;
-                }
-            }
-
-            return ret;
+            return scoredColumn.MoveIndex;
         }
 
-
-        private double MaxValue(Node n, ref double alpha, ref double beta, ref int depth)
+        private ScoredMoveIndex MaxValue(Node n, ref double alpha, ref double beta, int depth)
         {
             // TODO terminal check
             if (depth <= 0)
             {
-                return EvaluateBoardState(n.BoardDiscState);
+                return new ScoredMoveIndex(EvaluateBoardState(n.BoardDiscState), n.ColumnMoved);
             }
 
-            double ret = double.MinValue;
-            int colorMoved = (n.ColorMoved == black ? red : black);
+            double maxVal = double.MinValue;
+            int ix = -1;
+            int colorMoved = (n.ColorMoved == Black ? Red : Black);
 
             foreach (int openMove in GetOpenColumns(n.BoardDiscState))
             {
                 int[,] newState = GenerateBoardState(openMove, colorMoved, n.BoardDiscState);
+                double newStateScore = EvaluateBoardState(newState);
+                Node child = new Node(newState, openMove, colorMoved, newStateScore);
 
-                Node child = new Node(newState, openMove, colorMoved, 0.0);
+                Console.WriteLine($"Depth: {depth} Column: {openMove} Score: {newStateScore}");
 
-                depth--;
-                ret = Math.Max(ret, MinValue(child, ref alpha, ref beta, ref depth));
+                var minVal = MinValue(child, ref alpha, ref beta, depth - 1);
 
-                if (ret >= beta)
+                if (minVal.PositionScore > maxVal)
                 {
-                    return ret;
+                    maxVal = minVal.PositionScore;
+                    ix = openMove;
                 }
 
-                alpha = Math.Max(alpha, ret);
+                if (maxVal >= beta)
+                {
+                    return new ScoredMoveIndex(maxVal, ix);
+                }
+
+                alpha = Math.Max(alpha, maxVal);
             }
 
-            return ret;
+            return new ScoredMoveIndex(maxVal, ix);
         }
 
-
-        private double MinValue(Node n, ref double alpha, ref double beta, ref int depth)
+        private ScoredMoveIndex MinValue(Node n, ref double alpha, ref double beta, int depth)
         {
-            // TODO terminal check
             if (depth <= 0)
             {
-                return EvaluateBoardState(n.BoardDiscState);
+                return new ScoredMoveIndex(EvaluateBoardState(n.BoardDiscState), n.ColumnMoved);
             }
 
-            double ret = double.MaxValue;
-            int colorMoved = (n.ColorMoved == black ? red : black);
+            double minVal = double.MaxValue;
+            int ix = -1;
+            int colorMoved = (n.ColorMoved == Black ? Red : Black);
 
             foreach (int openMove in GetOpenColumns(n.BoardDiscState))
             {
                 int[,] newState = GenerateBoardState(openMove, colorMoved, n.BoardDiscState);
+                double newStateScore = EvaluateBoardState(newState);
+                Node child = new Node(newState, openMove, colorMoved, newStateScore);
 
-                Node child = new Node(newState, openMove, colorMoved, 0.0);
+                Console.WriteLine($"Depth: {depth} Column: {openMove} Score: {newStateScore}");
 
-                depth--;
-                ret = Math.Min(ret, MaxValue(child, ref alpha, ref beta, ref depth));
+                var maxMove = MaxValue(child, ref alpha, ref beta, depth - 1);
 
-                if (ret <= alpha)
+                if (maxMove.PositionScore < minVal)
                 {
-                    return ret;
+                    minVal = maxMove.PositionScore;
+                    ix = openMove;
                 }
 
-                beta = Math.Min(beta, ret);
-            }
-            
-            return ret;
-        }
-
-
-        /// <summary>
-        /// Modify the board evaluation value based on 
-        /// the scoring potentials of a given space.
-        /// </summary>
-        /// <param name="board"></param>
-        /// <param name="checkColor"></param>
-        /// <param name="c"></param>
-        /// <param name="r"></param>
-        /// <param name="val"></param>
-        private void ScorePossibles_old(int[,] board, int checkColor, int c, int r, ref double val)
-        {
-            int tempCol = -1;
-            int tempRow = -1;
-            int colorMulti = 1;
-            
-            if (checkColor == red)
-            {
-                colorMulti = -1;
-            }
-            
-            /*
-             * m is a multiplier to stretch out 1, 2 and 3
-             * spaces away from the current space being played.
-             * cdiff and rdiff move in all eight possible directions
-             * out from the current space summing up the space
-             * values based on whether nearby spaces are empty
-             * or have a same color disc.
-             */
-            for (int m = 1; m < 4; m++)
-            {
-                for (int cdiff = -1; cdiff < 2; cdiff++)
+                if (minVal <= alpha)
                 {
-                    for (int rdiff = -1; rdiff < 2; rdiff++)
-                    {
-                        tempCol = c + (cdiff * m);
-                        tempRow = r + (rdiff * m);
-
-                        if (InBounds(tempRow, tempCol))
-                        {
-                            if (board[tempRow, tempCol] == 0)
-                            {
-                                //val += (0.0625 * colorMulti);
-                            }
-                            else if (board[tempRow, tempCol] == checkColor)
-                            {
-                                // Lateral connections valued more than veritcal
-                                // they shouldn't be it should be based on free space that could potentially become more scoring possibilities
-                                if (rdiff == 0)
-                                {
-                                    val += (0.25 * colorMulti);
-                                }
-                                else
-                                {
-                                    val += (0.25 * colorMulti);
-                                }
-
-                                
-                                // TODO heavily rewarding three in a row
-                                // TODO this can be improved
-                                // needs to weigh the opponents three more than its own
-                                if (m < 3)
-                                {
-                                    tempCol = c + (cdiff * (m + 1));
-                                    tempRow = r + (rdiff * (m + 1));
-
-                                    if (InBounds(tempRow, tempCol))
-                                    {
-                                        if (board[tempRow, tempCol] == checkColor)
-                                        {
-                                            val += (0.5 * colorMulti);
-
-                                            //if (checkColor != aiColor)
-                                            //{
-                                            //    val += (0.5 * colorMulti);
-                                            //}
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    return new ScoredMoveIndex(minVal, openMove);
                 }
+
+                beta = Math.Min(beta, minVal);
             }
+            
+            return new ScoredMoveIndex(minVal, ix);
         }
 
         /// <summary>
@@ -886,138 +680,6 @@ namespace ConnectBot
             }
             
             return false;
-        }
-
-        /// <summary>
-        /// Stops the AI's worker thread from continuing to build the tree.
-        /// </summary>
-        public void Stop()
-        {
-            if (treeBuilder != null && treeBuilder.WorkerSupportsCancellation)
-            {
-                treeBuilder.CancelAsync();
-            }
-        }
-
-        //TODO could be useful for analyzing
-        // when checking up add 1, 2, 3,
-        //      check up on 0 - 6 columns
-        //      check up on 0 - 2 rows
-        // when checking right add 7, 8, 9
-        //      check right on 0 - 3 columns
-        //      check right on 0 - 6 rows
-        // when checking up left subtract 6, 12, 19
-        //      check up left on columns 3 - 6
-        //      check up right on rows 0 - 2
-        // when checking up right add 8, 16, 24
-        //      check up right on columns 0 - 3
-        //      check up right on rows 0 - 2
-        // NOTE: spaces that have intersections with more possible winning sequences are more valuable.
-        // AI should focus on finding squares that have the most winning sequences for it's side and take them
-        // AI should auto play any wins and auto block any losses.
-
-        /// <summary>
-        /// Setup worker class to build move tree.
-        /// </summary>
-        private void InitializeTreeBuilder()
-        {
-            treeBuilder = new BackgroundWorker();
-            treeBuilder.DoWork += new DoWorkEventHandler(treeBuilder_DoWork);
-            treeBuilder.RunWorkerCompleted += new RunWorkerCompletedEventHandler(treeBuilder_WorkCompleted);
-            treeBuilder.WorkerSupportsCancellation = true;
-
-            treeBuilder.RunWorkerAsync();
-        }
-
-        /// <summary>
-        /// Performs background work for building the tree and 
-        /// updating the current optimal move as the game proceeds.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void treeBuilder_DoWork(object sender, DoWorkEventArgs e)
-        {
-            BackgroundWorker worker = sender as BackgroundWorker;
-
-            //while (buildTree)
-            //{
-            if (worker.CancellationPending == true)
-            {
-                e.Cancel = true;
-                // was break; when loop was here
-                return;
-            }
-
-            // TODO how to respond appropriately to a null root?
-            // TODO how to build from the leafs once root as been established?
-            // TODO make a method to enumerate children given a node call that recursively
-            if (treeRoot != null)
-            {
-                if (treeRoot.Children.Count == 0)
-                {
-                    System.Console.WriteLine("starting to growchildren");
-                    treeBuilder_GrowChildren(treeRoot, 4);
-                    System.Console.WriteLine("check out tree root");
-                }
-
-            }
-            //} // TODO this was a loop to continuously build tree. should the tree be restarted from the new node on tree trimming? might make sense
-            // that would require the back ground worker to continually reset, and it should probably take in any Node type and not depend on treeRoot.
-        }
-
-        /// <summary>
-        /// Builds out all possible child moves form a given
-        /// parent board state.
-        /// </summary>
-        /// <param name="parent"></param>
-        /// <param name="depth"></param>
-        private void treeBuilder_GrowChildren(Node parent, int depth)
-        {
-            //int nextTurn = (parent.CurrentTurn == black ? red : black);
-            // The color that moved resulting in the current position.
-            int colorMoved = (parent.ColorMoved == black ? red : black);
-
-            List<int> openColumns = GetOpenColumns(parent.BoardDiscState);
-
-            foreach (int ix in openColumns)
-            {
-                int[,] newState = GenerateBoardState(ix, colorMoved, parent.BoardDiscState);
-                double newScore = EvaluateBoardState(newState);
-                
-                Node child = new Node(newState, ix, colorMoved, newScore);
-                parent.Children.Add(child);
-            }
-
-            // Build off of children if we haven't hit max depth yet.
-            if (depth > 0)
-            {
-                for (int ic = 0; ic < parent.Children.Count; ic++)
-                {
-                    treeBuilder_GrowChildren(parent.Children[ic], depth - 1);
-                }
-            }
-
-            //if (depth <= 0)
-            //{
-            //    Console.WriteLine("Reached max depth on branch.");
-            //}
-            // testing VS git integration
-        }
-
-        /// <summary>
-        /// Called when the background worker completes or is cancelled.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void treeBuilder_WorkCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Cancelled)
-            {
-                Console.WriteLine("Canceled.");
-                return;
-            }
-
-            Console.WriteLine("Completed.");
         }
     }
 }
