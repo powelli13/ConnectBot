@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ConnectBot
 {
@@ -433,12 +434,15 @@ namespace ConnectBot
 
         protected async void GetBotMove()
         {
-            int botMove = await Bot.Move();
-            
-            boardColumns[botMove].SetSpace(BotTurn);
+            // TODO double check that this is necessary. the commented await seems to block momentarily sometimes
+            //int botMove = await Bot.Move();
+            int botMove = -1;
+            await Task.Run(() => botMove = Bot.Move().Result);
 
             // TODO ensure bot made valid move if it tried to cheat request another
             // maybe the board state should be passed into the bot at move request
+            boardColumns[botMove].SetSpace(BotTurn);
+
             ChangeTurn();
             CheckVictory();
             botThinking = false;
