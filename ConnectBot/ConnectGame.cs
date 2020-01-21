@@ -18,9 +18,6 @@ namespace ConnectBot
         const int XBoardBuffer = 80;
         const int YBoardBuffer = 100;
 
-        const int numRows = 6;
-        const int numColumns = 7;
-
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         
@@ -34,7 +31,7 @@ namespace ConnectBot
         /// Array of board column objects, contains game board state
         /// and drawing functionality.
         /// </summary>
-        Board.BoardColumn[] boardColumns = new Board.BoardColumn[numColumns];
+        Board.BoardColumn[] boardColumns = new Board.BoardColumn[LogicalBoardHelpers.NUM_COLUMNS];
 
         /// <summary>
         /// Represents which players turn it is, 1 for black, -1 for red.
@@ -96,11 +93,11 @@ namespace ConnectBot
         /// <returns></returns>
         public int[,] GetTextBoard()
         {
-            int[,] retBoard = new int[numColumns, numRows];
+            int[,] retBoard = new int[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
 
-            for (int c = 0; c < numColumns; c++)
+            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
             {
-                for (int r = 0; r < numRows; r++)
+                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
                 {
                     retBoard[c, r] = boardColumns[c].GetSpace(r);
                 }
@@ -109,140 +106,15 @@ namespace ConnectBot
             return retBoard;
         }
 
-        // TODO this should move to logical board
-        /// <summary>
-        /// Determines if a color won and reset if ther is a winner.
-        /// </summary>
-        public void CheckVictory()
-        {
-            // TODO display board after victory for a few seconds.
-            // when checking up add 1, 2, 3 to rows
-            //      check up on 0 - 6 columns
-            //      check up on 0 - 2 rows
-            // when checking right add 1, 2, 3, to columns
-            //      check right on 0 - 3 columns
-            //      check right on 0 - 6 rows
-            // when checking up left subtract 1 from cols, add 1 to rows
-            //      check up left on columns 3 - 6
-            //      check up right on rows 0 - 2
-            // when checking up right add 1 to cols, add 1 to rows
-            //      check up right on columns 0 - 3
-            //      check up right on rows 0 - 2
-            // TODO could only check when latest move is in the mix
-            int first;
-            int second;
-            int third;
-            int fourth;
-            
-            // check verticals
-            for (int chkUpCol = 0; chkUpCol < numColumns; chkUpCol++)
-            {
-                for (int chkUpRow = 0; chkUpRow < 3; chkUpRow++)
-                {
-                    first = boardColumns[chkUpCol].GetSpace(chkUpRow);
-                    second = boardColumns[chkUpCol].GetSpace(chkUpRow + 1);
-                    third = boardColumns[chkUpCol].GetSpace(chkUpRow + 2);
-                    fourth = boardColumns[chkUpCol].GetSpace(chkUpRow + 3);
-
-                    if (first != 0 &&
-                        first == second &&
-                        first == third &&
-                        first == fourth)
-                    {
-                        string winner = "Black";
-
-                        if (first == 2)
-                        {
-                            winner = "Red";
-                        }
-
-                        VictoryConfirmed(first);
-                        return;
-                    }
-                }
-            }
-
-            // check horizontals
-            for (int chkCrossCol = 0; chkCrossCol < 4; chkCrossCol++)
-            {
-                for (int chkCrossRow = 0; chkCrossRow < numRows; chkCrossRow++)
-                {
-                    first = boardColumns[chkCrossCol].GetSpace(chkCrossRow);
-                    second = boardColumns[chkCrossCol + 1].GetSpace(chkCrossRow);
-                    third = boardColumns[chkCrossCol + 2].GetSpace(chkCrossRow);
-                    fourth = boardColumns[chkCrossCol + 3].GetSpace(chkCrossRow);
-
-                    if (first != 0 &&
-                        first == second &&
-                        first == third &&
-                        first == fourth)
-                    {
-                        VictoryConfirmed(first);
-                        return;
-                    }
-                }
-            }
-
-            // check left diagonal
-            for (int chkLDiagCol = 3; chkLDiagCol < numColumns; chkLDiagCol++)
-            {
-                for (int chkLDiagRow = 0; chkLDiagRow < 3; chkLDiagRow++)
-                {
-                    first = boardColumns[chkLDiagCol].GetSpace(chkLDiagRow);
-                    second = boardColumns[chkLDiagCol - 1].GetSpace(chkLDiagRow + 1);
-                    third = boardColumns[chkLDiagCol - 2].GetSpace(chkLDiagRow + 2);
-                    fourth = boardColumns[chkLDiagCol - 3].GetSpace(chkLDiagRow + 3);
-
-                    if (first != 0 &&
-                        first == second &&
-                        first == third &&
-                        first == fourth)
-                    {
-                        VictoryConfirmed(first);
-                        return;
-                    }
-                }
-            }
-
-            // check right diagonal
-            for (int chkRDiagCol = 0; chkRDiagCol < 4; chkRDiagCol++)
-            {
-                for (int chkRDiagRow = 0; chkRDiagRow < 3; chkRDiagRow++)
-                {
-                    first = boardColumns[chkRDiagCol].GetSpace(chkRDiagRow);
-                    second = boardColumns[chkRDiagCol + 1].GetSpace(chkRDiagRow + 1);
-                    third = boardColumns[chkRDiagCol + 2].GetSpace(chkRDiagRow + 2);
-                    fourth = boardColumns[chkRDiagCol + 3].GetSpace(chkRDiagRow + 3);
-
-                    if (first != 0 &&
-                        first == second &&
-                        first == third &&
-                        first == fourth)
-                    {
-                        VictoryConfirmed(first);
-                        return;
-                    }
-                }
-            }
-        }
-
         /// <summary>
         /// Confirms victory to console and resets the game.
         /// </summary>
         /// <param name="winner"></param>
-        /// // TODO play again menu?
         /// // TODO announce victory and prompt replay or something
         protected void VictoryConfirmed(int winner)
         {
-            string winnerColor = "Black";
-
-            if (winner == 2)
-            {
-                winnerColor = "Red";
-            }
-
-            ShowPlayAgainMenu();
-            
+            if (winner != 0)
+                ShowPlayAgainMenu();
         }
 
         /// <summary>
@@ -250,9 +122,7 @@ namespace ConnectBot
         /// </summary>
         protected void ShowPlayAgainMenu()
         {
-
             CurrentMenu = MenuState.PlayAgain;
-
         }
 
         /// <summary>
@@ -273,7 +143,7 @@ namespace ConnectBot
             // Add space size added to account for blue arrow
             int yPos = YBoardBuffer + SpaceSize;
 
-            for (int col = 0; col < numColumns; col++)
+            for (int col = 0; col < LogicalBoardHelpers.NUM_COLUMNS; col++)
             {
                 boardColumns[col] = new Board.BoardColumn(xPos, yPos, imageDict["column_holder"], imageDict["blue_arrow"]);
 
@@ -377,7 +247,7 @@ namespace ConnectBot
                         if (CurrentTurn == PlayerTurn)
                         {
                             //bot.AISelfTest();
-                            for (int col = 0; col < numColumns; col++)
+                            for (int col = 0; col < LogicalBoardHelpers.NUM_COLUMNS; col++)
                             {
                                 if (boardColumns[col].ContainMouse(mousePosition))
                                 {
@@ -390,7 +260,9 @@ namespace ConnectBot
                                         timeSinceLastMove = 0.0;
 
                                         ChangeTurn();
-                                        CheckVictory();
+                                        int winner = LogicalBoardHelpers.CheckVictory(GetTextBoard());
+                                        VictoryConfirmed(winner);
+
                                         UpdateBotBoard(col);
                                     }
                                 }
@@ -444,7 +316,9 @@ namespace ConnectBot
             boardColumns[botMove].SetSpace(BotTurn);
 
             ChangeTurn();
-            CheckVictory();
+            int winner = LogicalBoardHelpers.CheckVictory(GetTextBoard());
+            VictoryConfirmed(winner);
+
             botThinking = false;
         }
 
@@ -473,7 +347,7 @@ namespace ConnectBot
                 drawBlueArrow = true;
             }
 
-            for (int col = 0; col < numColumns; col++)
+            for (int col = 0; col < LogicalBoardHelpers.NUM_COLUMNS; col++)
             {
                 boardColumns[col].Draw(spriteBatch, imageDict, drawBlueArrow);
             }
@@ -497,7 +371,7 @@ namespace ConnectBot
             CurrentTurn = 1;
             CurrentMenu = MenuState.None;
 
-            for (int c = 0; c < numColumns; c++)
+            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
             {
                 boardColumns[c].ResetSpaces();
             }
