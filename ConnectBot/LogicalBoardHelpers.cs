@@ -12,8 +12,12 @@ namespace ConnectBot
     /// </summary>
     public static class LogicalBoardHelpers
     {
-        public const int NUM_ROWS = 6;
-        public const int NUM_COLUMNS = 7;
+        public static int NUM_ROWS = 6;
+        public static int NUM_COLUMNS = 7;
+
+        public static int DISC_COLOR_BLACK = 1;
+        public static int DISC_COLOR_RED = -1;
+        public static int DISC_COLOR_NONE = 0;
 
         // TODO this should move to logical board
         /// <summary>

@@ -21,8 +21,6 @@ namespace ConnectBot
         /// on the screen. Lowest row index is lowest in the column stack.
         /// </summary>
         protected int[,] GameDiscs = new int[NumColumns, NumRows];
-        const int Black = 1;
-        const int Red = -1;
         
         /// <summary>
         /// Stores the AIs disc color. 
@@ -52,82 +50,29 @@ namespace ConnectBot
         /// </summary>
         private class Node
         {
-            // Fields should be private and camelCase exposed by public properties that are PascalCase
-            // fields should also have full words used in naming
-            // this is overkill in a small project but I'm trying to build good habits and learn
-            private int[,] boardDiscState;
-            private int colorMoved;
-            private int columnMoved;
-            private double positionalScore;
-            private List<Node> children;
-
-            /// <summary>
-            /// Position of the discs on the board for the node.
-            /// </summary>
-            public int[,] BoardDiscState
-            {
-                get
-                {
-                    return boardDiscState;
-                }
-            }
+            public int[,] BoardDiscState { get; set; }
 
             /// <summary>
             /// Color to next move at that node.
             /// </summary>
-            public int ColorMoved
-            {
-                get
-                {
-                    return colorMoved;
-                }
-            }
+            public int ColorMoved { get; set; }
 
             /// <summary>
             /// Column that was moved in to generate this node.
             /// </summary>
-            public int ColumnMoved
-            {
-                get
-                {
-                    return columnMoved;
-                }
-            }
+            public int ColumnMoved { get; set; }
 
-            /// <summary>
-            /// The evaluated positional score for that node.
-            /// </summary>
-            public double PositionalScore
-            {
-                get
-                {
-                    return positionalScore;
-                }
-            }
+            public double PositionalScore { get; set; }
 
-            /// <summary>
-            /// List of children moves from this node.
-            /// </summary>
-            public List<Node> Children
-            {
-                get
-                {
-                    return children;
-                }
-
-                set
-                {
-                    children = value;
-                }
-            }
+            public List<Node> Children { get; set; }
             
             public Node(int[,] board, int column, int turn, double score)
             {
-                this.boardDiscState = board;
-                this.columnMoved = column;
-                this.positionalScore = score;
-                this.colorMoved = turn;// TODO will this pass the turn that just moved?
-                this.children = new List<Node>();
+                BoardDiscState = board;
+                ColumnMoved = column;
+                PositionalScore = score;
+                ColorMoved = turn;// TODO will this pass the turn that just moved?
+                Children = new List<Node>();
             }
         }
         #endregion
@@ -151,7 +96,7 @@ namespace ConnectBot
             {
                 // Initialize game state and move history
                 boardState = new int[NumColumns, NumRows];
-                colorToMove = Black;
+                colorToMove = LogicalBoardHelpers.DISC_COLOR_BLACK;
 
                 for (int c = 0; c < NumColumns; c++)
                 {
@@ -185,7 +130,9 @@ namespace ConnectBot
                     }
 
                     boardState[column, rowMoved] = colorToMove;
-                    colorToMove = (colorToMove == Black ? Red : Black);
+                    colorToMove = (colorToMove == LogicalBoardHelpers.DISC_COLOR_BLACK 
+                        ? LogicalBoardHelpers.DISC_COLOR_RED 
+                        : LogicalBoardHelpers.DISC_COLOR_BLACK);
                     moveHistory.Push(column);
 
                     return true;
@@ -211,7 +158,9 @@ namespace ConnectBot
                     }
 
                     boardState[lastColumn, rowRemoved] = 0;
-                    colorToMove = (colorToMove == Black ? Red : Black);
+                    colorToMove = (colorToMove == LogicalBoardHelpers.DISC_COLOR_BLACK
+                        ? LogicalBoardHelpers.DISC_COLOR_RED
+                        : LogicalBoardHelpers.DISC_COLOR_BLACK);
 
                     return true;
                 }
@@ -247,7 +196,9 @@ namespace ConnectBot
         public ConnectAI(int color)
         {
             AiColor = color;
-            OpponentColor = (AiColor == Black ? Red : Black);
+            OpponentColor = (AiColor == LogicalBoardHelpers.DISC_COLOR_BLACK 
+                ? LogicalBoardHelpers.DISC_COLOR_RED 
+                : LogicalBoardHelpers.DISC_COLOR_BLACK);
 
             // TODO should the root only ever start on the AI's turn? yeah probably
             
@@ -315,13 +266,46 @@ namespace ConnectBot
 
             //AISelfTest();
 
+            // Look for wins before performing in depth searches
+            int killerMove = await FindKillerMove(GameDiscs);
+
+            if (killerMove != -1) 
+                return killerMove;
+
             Node n = new Node(GameDiscs, 0, AiColor, 0.0);
-            // TODO check for easy wins first?
-
-
+            
             int retMove = AlphaBetaSearch(n);
 
             return retMove;
+        }
+
+        protected async Task<int> FindKillerMove(int[,] boardState)
+        {
+            int move = -1;
+
+            for (int i = 0; i < NumColumns; i++)
+            {
+                try
+                {
+                    // If the AI could win return that immediately.
+                    var movedBoard = GenerateBoardState(i, AiColor, boardState);
+                    var winner = LogicalBoardHelpers.CheckVictory(movedBoard);
+
+                    if (winner == AiColor)
+                        return i;
+
+                    // If the opponent could win be sure to check the rest in case the AI could win
+                    // at a column further down.
+                    var oppMovedBoard = GenerateBoardState(i, OpponentColor, boardState);
+                    var oppWinner = LogicalBoardHelpers.CheckVictory(oppMovedBoard);
+
+                    if (oppWinner == OpponentColor)
+                        move = i;
+                }
+                catch (InvalidOperationException _) { }
+            }
+
+            return move;
         }
 
         /// <summary>
@@ -334,7 +318,6 @@ namespace ConnectBot
         /// <returns></returns>
         protected int[,] GenerateBoardState(int moveColumn, int discColor, int[,] currState)
         {
-            // TODO is this needed or can c# copy multi dimensional arrays?
             int[,] newState = new int[NumColumns, NumRows];
 
             for (int c = 0; c < NumColumns; c++)
@@ -345,16 +328,18 @@ namespace ConnectBot
                 }
             }
 
-            // TODO currently assuming that the move is valid.
-            // this will probably break.
+            bool moveWasLegal = false;
             for (int row = 0; row < NumRows; row++)
             {
                 if (newState[moveColumn, row] == 0)
                 {
                     newState[moveColumn, row] = discColor;
+                    moveWasLegal = true;
                     break;
                 }
             }
+
+            if (!moveWasLegal) throw new InvalidOperationException($"Illegal move attempted for column {moveColumn}");
 
             return newState;
         }
@@ -443,8 +428,11 @@ namespace ConnectBot
             // The total number of possible open scoring combinations 
             // that the checked disc participates.
             int participatedPossibles = 0;
-            int oppositeColor = (checkColor == Black ? Red : Black);
-            
+            // TODO I'm doing this a lot, find a better way?
+            int oppositeColor = (checkColor == LogicalBoardHelpers.DISC_COLOR_BLACK
+                ? LogicalBoardHelpers.DISC_COLOR_RED
+                : LogicalBoardHelpers.DISC_COLOR_BLACK);
+
             bool addPossible = true;
 
             // Horizontal scan
@@ -602,7 +590,9 @@ namespace ConnectBot
 
             double maxVal = double.MinValue;
             int ix = -1;
-            int colorMoved = (n.ColorMoved == Black ? Red : Black);
+            int colorMoved = (n.ColorMoved == LogicalBoardHelpers.DISC_COLOR_BLACK
+                ? LogicalBoardHelpers.DISC_COLOR_RED
+                : LogicalBoardHelpers.DISC_COLOR_BLACK);
 
             foreach (int openMove in GetOpenColumns(n.BoardDiscState))
             {
@@ -640,7 +630,9 @@ namespace ConnectBot
 
             double minVal = double.MaxValue;
             int ix = -1;
-            int colorMoved = (n.ColorMoved == Black ? Red : Black);
+            int colorMoved = (n.ColorMoved == LogicalBoardHelpers.DISC_COLOR_BLACK
+                ? LogicalBoardHelpers.DISC_COLOR_RED
+                : LogicalBoardHelpers.DISC_COLOR_BLACK);
 
             foreach (int openMove in GetOpenColumns(n.BoardDiscState))
             {
