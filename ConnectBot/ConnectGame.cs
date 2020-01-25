@@ -145,7 +145,11 @@ namespace ConnectBot
 
             for (int col = 0; col < LogicalBoardHelpers.NUM_COLUMNS; col++)
             {
-                boardColumns[col] = new Board.BoardColumn(xPos, yPos, imageDict["column_holder"], imageDict["blue_arrow"]);
+                boardColumns[col] = new Board.BoardColumn(
+                    xPos, 
+                    yPos, 
+                    imageDict[ImageNames.COLUMN_HOLDER], 
+                    imageDict[ImageNames.BLUE_ARROW]);
 
                 // Move to next column.
                 xPos += SpaceSize;
@@ -178,19 +182,7 @@ namespace ConnectBot
             // Populate image dictionary
             imageDict = new Dictionary<string, Texture2D>();
 
-            // TODO could this be an enum so that strings do not get misspelled? make it namespace wide so that other classes can use it
-            string[] imageNames = {
-                "black_disc",
-                "red_disc",
-                "blue_arrow",
-                "column_holder",
-                "play_again_background",
-                "play_again_question",
-                "yes_button",
-                "no_button"
-            };
-
-            foreach (string img in imageNames)
+            foreach (string img in ImageNames.AllImageNames)
             {
                 imageDict[img] = Content.Load<Texture2D>(img);
             }

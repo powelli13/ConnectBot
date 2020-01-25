@@ -57,7 +57,7 @@ namespace ConnectBot
             /// // this is because the disc is different than the space, consider redesigning 
             public void Draw(SpriteBatch sb, Dictionary<string, Texture2D> images)
             {
-                string imageName = (DiscColor == 1 ? "black_disc" : "red_disc");
+                string imageName = (DiscColor == 1 ? ImageNames.BLACK_DISC : ImageNames.RED_DISC);
                 
                 if (DiscColor != 0)
                 {

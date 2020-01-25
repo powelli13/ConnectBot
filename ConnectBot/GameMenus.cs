@@ -35,21 +35,21 @@ namespace ConnectBot
                 // Create rectangles that will be used for drawinng
                 drawingRectangles = new Dictionary<string, Rectangle>();
 
-                drawingRectangles["play_again_background"] = new Rectangle(XBuffer, YBuffer, 450, 300);
+                drawingRectangles[ImageNames.PLAY_AGAIN_BACKGROUND] = new Rectangle(XBuffer, YBuffer, 450, 300);
 
-                drawingRectangles["play_again_question"] = new Rectangle(
+                drawingRectangles[ImageNames.PLAY_AGAIN_QUESTION] = new Rectangle(
                     XBuffer + XQuestionBuffer,
                     YBuffer + YQuestionBuffer,
                     320, 80
                 );
 
-                drawingRectangles["yes_button"] = new Rectangle(
+                drawingRectangles[ImageNames.YES_BUTTON] = new Rectangle(
                     XBuffer + XYesButtonBuffer,
                     YBuffer + YYesButtonBuffer,
                     160, 80
                 );
 
-                drawingRectangles["no_button"] = new Rectangle(
+                drawingRectangles[ImageNames.NO_BUTTON] = new Rectangle(
                     XBuffer + XNoButtonBuffer,
                     YBuffer + YNoButtonBuffer,
                     160, 80
@@ -66,11 +66,19 @@ namespace ConnectBot
             public void Draw(SpriteBatch sb, Dictionary<string, Texture2D> images)
             {
 
-                sb.Draw(images["play_again_background"], drawingRectangles["play_again_background"], Color.Wheat);
-                sb.Draw(images["play_again_question"], drawingRectangles["play_again_question"], Color.Wheat);
+                sb.Draw(
+                    images[ImageNames.PLAY_AGAIN_BACKGROUND], 
+                    drawingRectangles[ImageNames.PLAY_AGAIN_BACKGROUND], Color.Wheat);
+                sb.Draw(
+                    images[ImageNames.PLAY_AGAIN_QUESTION], 
+                    drawingRectangles[ImageNames.PLAY_AGAIN_QUESTION], Color.Wheat);
 
-                sb.Draw(images["yes_button"], drawingRectangles["yes_button"], Color.Wheat);
-                sb.Draw(images["no_button"], drawingRectangles["no_button"], Color.Wheat);
+                sb.Draw(
+                    images[ImageNames.YES_BUTTON], 
+                    drawingRectangles[ImageNames.YES_BUTTON], Color.Wheat);
+                sb.Draw(
+                    images[ImageNames.NO_BUTTON], 
+                    drawingRectangles[ImageNames.NO_BUTTON], Color.Wheat);
 
             }
 
@@ -82,7 +90,7 @@ namespace ConnectBot
             public bool YesButtonContainsMouse(Point p)
             {
 
-                return drawingRectangles["yes_button"].Contains(p);
+                return drawingRectangles[ImageNames.YES_BUTTON].Contains(p);
                 
             }
 
@@ -94,7 +102,7 @@ namespace ConnectBot
             public bool NoButtonContainsMouse(Point p)
             {
 
-                return drawingRectangles["no_button"].Contains(p);
+                return drawingRectangles[ImageNames.NO_BUTTON].Contains(p);
 
             }
 

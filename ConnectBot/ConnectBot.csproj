@@ -63,6 +63,7 @@
     <Compile Include="ConnectAI.cs" />
     <Compile Include="ConnectGame.cs" />
     <Compile Include="GameMenus.cs" />
+    <Compile Include="ImageNames.cs" />
     <Compile Include="LogicalBoardHelpers.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
