@@ -131,5 +131,14 @@ namespace ConnectBot
 
             return 0;
         }
+
+        public static int ChangeTurnColor(int color)
+        {
+            if (color != DISC_COLOR_RED &&
+                color != DISC_COLOR_BLACK)
+                throw new ArgumentException("Must pass in a valid disc color.", nameof(color));
+
+            return color == DISC_COLOR_RED ? DISC_COLOR_BLACK : DISC_COLOR_RED;
+        }
     }
 }

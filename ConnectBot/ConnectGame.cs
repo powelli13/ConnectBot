@@ -318,9 +318,7 @@ namespace ConnectBot
         /// </summary>
         protected void ChangeTurn()
         {
-            CurrentTurn = (CurrentTurn == LogicalBoardHelpers.DISC_COLOR_BLACK 
-                ? LogicalBoardHelpers.DISC_COLOR_RED 
-                : LogicalBoardHelpers.DISC_COLOR_BLACK);
+            CurrentTurn = LogicalBoardHelpers.ChangeTurnColor(CurrentTurn);
         }
 
         /// <summary>

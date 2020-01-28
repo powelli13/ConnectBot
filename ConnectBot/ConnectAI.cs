@@ -62,11 +62,11 @@ namespace ConnectBot
             /// </summary>
             public int ColumnMoved { get; set; }
 
-            public double PositionalScore { get; set; }
+            public decimal PositionalScore { get; set; }
 
             public List<Node> Children { get; set; }
             
-            public Node(int[,] board, int column, int turn, double score)
+            public Node(int[,] board, int column, int turn, decimal score)
             {
                 BoardDiscState = board;
                 ColumnMoved = column;
@@ -130,9 +130,7 @@ namespace ConnectBot
                     }
 
                     boardState[column, rowMoved] = colorToMove;
-                    colorToMove = (colorToMove == LogicalBoardHelpers.DISC_COLOR_BLACK 
-                        ? LogicalBoardHelpers.DISC_COLOR_RED 
-                        : LogicalBoardHelpers.DISC_COLOR_BLACK);
+                    colorToMove = LogicalBoardHelpers.ChangeTurnColor(colorToMove);
                     moveHistory.Push(column);
 
                     return true;
@@ -158,9 +156,7 @@ namespace ConnectBot
                     }
 
                     boardState[lastColumn, rowRemoved] = 0;
-                    colorToMove = (colorToMove == LogicalBoardHelpers.DISC_COLOR_BLACK
-                        ? LogicalBoardHelpers.DISC_COLOR_RED
-                        : LogicalBoardHelpers.DISC_COLOR_BLACK);
+                    colorToMove = LogicalBoardHelpers.ChangeTurnColor(colorToMove);
 
                     return true;
                 }
@@ -177,11 +173,11 @@ namespace ConnectBot
         /// </summary>
         protected class ScoredMoveIndex
         {
-            public double PositionScore { get; set; }
+            public decimal PositionScore { get; set; }
 
             public int MoveIndex { get; set; }
 
-            public ScoredMoveIndex(double positionScore, int moveIndex)
+            public ScoredMoveIndex(decimal positionScore, int moveIndex)
             {
                 PositionScore = positionScore;
                 MoveIndex = moveIndex;
@@ -196,12 +192,9 @@ namespace ConnectBot
         public ConnectAI(int color)
         {
             AiColor = color;
-            OpponentColor = (AiColor == LogicalBoardHelpers.DISC_COLOR_BLACK 
-                ? LogicalBoardHelpers.DISC_COLOR_RED 
-                : LogicalBoardHelpers.DISC_COLOR_BLACK);
-
+            OpponentColor = LogicalBoardHelpers.ChangeTurnColor(AiColor);
             // TODO should the root only ever start on the AI's turn? yeah probably
-            
+
             Rando = new Random();
         }
         
@@ -259,7 +252,8 @@ namespace ConnectBot
 
         public async Task<int> Move()
         {
-            // TODO left off here. because treeRoot doesn't change during update this will only ever return 3 (best move at start)
+            // TODO left off here. because treeRoot doesn't change during update this will only ever return 3 
+            // (best move at start)
             // update board needs to trim tree, update root and possilby start off background worker again.
             // check open columns
             // when player moves first AI is not taking that into account. tree should only start building on first update call i think
@@ -272,7 +266,7 @@ namespace ConnectBot
             if (killerMove != -1) 
                 return killerMove;
 
-            Node n = new Node(GameDiscs, 0, AiColor, 0.0);
+            Node n = new Node(GameDiscs, 0, AiColor, 0.0m);
             
             int retMove = AlphaBetaSearch(n);
 
@@ -374,10 +368,8 @@ namespace ConnectBot
         /// <param name="boardState"></param>
         /// <returns></returns>
         /// TODO there has to be a better way to structure board than all this rigorous checking
-        protected double EvaluateBoardState(int[,] boardState)
+        protected decimal EvaluateBoardState(int[,] boardState)
         {
-            double ret = 0.0;
-            
             /*
              * For both colors scan the entire board.
              * From each space reach out in scorable
@@ -387,13 +379,15 @@ namespace ConnectBot
              * and breaking on opponents blocking
              * dics.
              */
+            var ret = 0.0m;
+
             for (int c = 0; c < NumColumns; c++)
             {
                 for (int r = 0; r < NumRows; r++)
                 {
                     if (boardState[c, r] != 0)
                     {
-                        ScorePossibles(boardState, boardState[c, r], c, r, ref ret);
+                        ret += ScorePossibles(boardState, boardState[c, r], c, r);
                     }
                 }
             }
@@ -402,15 +396,15 @@ namespace ConnectBot
         }
 
         /// <summary>
-        /// Modify the board positional score based on scoring
+        /// Return the board positional score based on scoring
         /// potentials of both sides.
         /// </summary>
         /// <param name="board"></param>
         /// <param name="checkColor"></param>
-        /// <param name="c"></param>
-        /// <param name="r"></param>
+        /// <param name="discColumn"></param>
+        /// <param name="discRow"></param>
         /// <param name="val"></param>
-        private void ScorePossibles(int[,] board, int checkColor, int c, int r, ref double val)
+        private decimal ScorePossibles(int[,] board, int checkColor, int discColumn, int discRow)
         {
             /*
              * 4 in a row is worth as 1 point.
@@ -422,16 +416,13 @@ namespace ConnectBot
              * 4 long sequence through spot being checked to determine total value.
              * short circuit when opposing pieces are hit.
              * 
-             * 
              */
 
             // The total number of possible open scoring combinations 
             // that the checked disc participates.
             int participatedPossibles = 0;
-            // TODO I'm doing this a lot, find a better way?
-            int oppositeColor = (checkColor == LogicalBoardHelpers.DISC_COLOR_BLACK
-                ? LogicalBoardHelpers.DISC_COLOR_RED
-                : LogicalBoardHelpers.DISC_COLOR_BLACK);
+            decimal participatedValue = 0.25m;
+            int oppositeColor = LogicalBoardHelpers.ChangeTurnColor(checkColor);
 
             bool addPossible = true;
 
@@ -448,9 +439,9 @@ namespace ConnectBot
 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (InBounds(c + ch + trace, r))
+                    if (InBounds(discColumn + ch + trace, discRow))
                     {
-                        if (board[c + ch + trace, r] == oppositeColor)
+                        if (board[discColumn + ch + trace, discRow] == oppositeColor)
                         {
                             addPossible = false;
                             break;
@@ -465,7 +456,7 @@ namespace ConnectBot
 
                 if (addPossible)
                 {
-                    participatedPossibles += 1;
+                    participatedPossibles++;
                 }
             }
 
@@ -480,9 +471,9 @@ namespace ConnectBot
 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (InBounds(c, r + rh + trace))
+                    if (InBounds(discColumn, discRow + rh + trace))
                     {
-                        if (board[c, r + rh + trace] == oppositeColor)
+                        if (board[discColumn, discRow + rh + trace] == oppositeColor)
                         {
                             addPossible = false;
                             break;
@@ -497,7 +488,7 @@ namespace ConnectBot
 
                 if (addPossible)
                 {
-                    participatedPossibles += 1;
+                    participatedPossibles++;
                 }
             }
 
@@ -510,9 +501,9 @@ namespace ConnectBot
                 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (InBounds(c + ur + trace, r + ur + trace))
+                    if (InBounds(discColumn + ur + trace, discRow + ur + trace))
                     {
-                        if (board[c + ur + trace, r + ur + trace] == oppositeColor)
+                        if (board[discColumn + ur + trace, discRow + ur + trace] == oppositeColor)
                         {
                             addPossible = false;
                             break;
@@ -540,9 +531,9 @@ namespace ConnectBot
 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (InBounds(c + ((-1) * (ul + trace)), r + ul + trace))
+                    if (InBounds(discColumn + (-1 * (ul + trace)), discRow + ul + trace))
                     {
-                        if (board[c + ((-1) * (ul + trace)), r + ul + trace] == oppositeColor)
+                        if (board[discColumn + (-1 * (ul + trace)), discRow + ul + trace] == oppositeColor)
                         {
                             addPossible = false;
                             break;
@@ -561,18 +552,20 @@ namespace ConnectBot
                 }
             }
 
-            //int colorMulti = (checkColor == red ? -1 : 1);
-            // TODO possible don't multiply here since negamax search is multiplying also
-            val += (0.25 * participatedPossibles) * checkColor;
+            // TODO double check this if we ever move to a negamax algo
+            return (participatedValue * participatedPossibles);
         }
 
-
+        // TODO
+        // Notes while debugging:
+        // the terminal check is short circuiting those level evaluations and so the first
+        // node at a terminal level will return it's score
         private int AlphaBetaSearch(Node n)
         {
-            double alpha = Double.MinValue;
-            double beta = Double.MaxValue;
+            decimal alpha = decimal.MinValue;
+            decimal beta = decimal.MaxValue;
 
-            int totalDepth = 7;
+            int totalDepth = 0;
 
             // TODO change this based on the AI's color
             var scoredColumn = MinValue(n, ref alpha, ref beta, totalDepth);
@@ -580,24 +573,39 @@ namespace ConnectBot
             return scoredColumn.MoveIndex;
         }
 
-        private ScoredMoveIndex MaxValue(Node n, ref double alpha, ref double beta, int depth)
+        private ScoredMoveIndex MaxValue(Node n, ref decimal alpha, ref decimal beta, int depth)
         {
+            decimal maxVal = decimal.MinValue;
+            int ix = -1;
+            int colorMoved = LogicalBoardHelpers.ChangeTurnColor(n.ColorMoved);
+            
             // TODO terminal check
             if (depth <= 0)
             {
-                return new ScoredMoveIndex(EvaluateBoardState(n.BoardDiscState), n.ColumnMoved);
-            }
+                decimal tempMaxVal = decimal.MinValue;
 
-            double maxVal = double.MinValue;
-            int ix = -1;
-            int colorMoved = (n.ColorMoved == LogicalBoardHelpers.DISC_COLOR_BLACK
-                ? LogicalBoardHelpers.DISC_COLOR_RED
-                : LogicalBoardHelpers.DISC_COLOR_BLACK);
+                foreach (int openTerminalMove in GetOpenColumns(n.BoardDiscState))
+                {
+                    int[,] newState = GenerateBoardState(openTerminalMove, colorMoved, n.BoardDiscState);
+                    decimal newStateScore = EvaluateBoardState(newState);
+                    Node child = new Node(newState, openTerminalMove, colorMoved, newStateScore);
+
+                    Console.WriteLine($"Terminal Depth. Column: {openTerminalMove} Score: {newStateScore}");
+                    if (tempMaxVal < newStateScore)
+                    {
+                        tempMaxVal = newStateScore;
+                        ix = openTerminalMove;
+                    }
+                }
+
+                Console.WriteLine($"Terminal returned. Column: {ix} Score: {tempMaxVal}");
+                return new ScoredMoveIndex(tempMaxVal, ix);
+            }
 
             foreach (int openMove in GetOpenColumns(n.BoardDiscState))
             {
                 int[,] newState = GenerateBoardState(openMove, colorMoved, n.BoardDiscState);
-                double newStateScore = EvaluateBoardState(newState);
+                decimal newStateScore = EvaluateBoardState(newState);
                 Node child = new Node(newState, openMove, colorMoved, newStateScore);
 
                 Console.WriteLine($"Depth: {depth} Column: {openMove} Score: {newStateScore}");
@@ -621,23 +629,39 @@ namespace ConnectBot
             return new ScoredMoveIndex(maxVal, ix);
         }
 
-        private ScoredMoveIndex MinValue(Node n, ref double alpha, ref double beta, int depth)
+        private ScoredMoveIndex MinValue(Node n, ref decimal alpha, ref decimal beta, int depth)
         {
+            decimal minVal = decimal.MaxValue;
+            int ix = -1;
+            int colorMoved = LogicalBoardHelpers.ChangeTurnColor(n.ColorMoved);
+
             if (depth <= 0)
             {
-                return new ScoredMoveIndex(EvaluateBoardState(n.BoardDiscState), n.ColumnMoved);
+                decimal tempMinVal = decimal.MaxValue;
+
+                foreach (int openTerminalMove in GetOpenColumns(n.BoardDiscState))
+                {
+                    int[,] newState = GenerateBoardState(openTerminalMove, colorMoved, n.BoardDiscState);
+                    decimal newStateScore = EvaluateBoardState(newState);
+                    Node child = new Node(newState, openTerminalMove, colorMoved, newStateScore);
+
+                    Console.WriteLine($"Terminal Depth. Column: {openTerminalMove} Score: {newStateScore}");
+                    if (tempMinVal > newStateScore)
+                    {
+                        tempMinVal = newStateScore;
+                        ix = openTerminalMove;
+                    }
+                }
+
+                Console.WriteLine($"Terminal returned. Column: {ix} Score: {tempMinVal}");
+                return new ScoredMoveIndex(tempMinVal, ix);
             }
 
-            double minVal = double.MaxValue;
-            int ix = -1;
-            int colorMoved = (n.ColorMoved == LogicalBoardHelpers.DISC_COLOR_BLACK
-                ? LogicalBoardHelpers.DISC_COLOR_RED
-                : LogicalBoardHelpers.DISC_COLOR_BLACK);
 
             foreach (int openMove in GetOpenColumns(n.BoardDiscState))
             {
                 int[,] newState = GenerateBoardState(openMove, colorMoved, n.BoardDiscState);
-                double newStateScore = EvaluateBoardState(newState);
+                decimal newStateScore = EvaluateBoardState(newState);
                 Node child = new Node(newState, openMove, colorMoved, newStateScore);
 
                 Console.WriteLine($"Depth: {depth} Column: {openMove} Score: {newStateScore}");
