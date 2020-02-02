@@ -586,9 +586,9 @@ namespace ConnectBot
 
                 var maxMove = MinValue(child, maxDepth);
 
-                if (maxMove.PositionScore < minMove)
+                if (maxMove < minMove)
                 {
-                    minMove = maxMove.PositionScore;
+                    minMove = maxMove;
                     movedColumn = openMove;
                 }
             }
@@ -596,129 +596,16 @@ namespace ConnectBot
             return movedColumn;
         }
 
-        private ScoredMoveIndex MaxValue(Node n, ref decimal alpha, ref decimal beta, int depth)
-        {
-            decimal maxVal = decimal.MinValue;
-            int ix = -1;
-            int colorMoved = LogicalBoardHelpers.ChangeTurnColor(n.ColorMoved);
-            
-            // TODO terminal check
-            if (depth <= 0)
-            {
-                decimal tempMaxVal = decimal.MinValue;
-
-                foreach (int openTerminalMove in GetOpenColumns(n.BoardDiscState))
-                {
-                    int[,] newState = GenerateBoardState(openTerminalMove, colorMoved, n.BoardDiscState);
-                    decimal newStateScore = EvaluateBoardState(newState);
-                    Node child = new Node(newState, openTerminalMove, colorMoved, newStateScore);
-
-                    Console.WriteLine($"Terminal Depth. Column: {openTerminalMove} Score: {newStateScore}");
-                    if (tempMaxVal < newStateScore)
-                    {
-                        tempMaxVal = newStateScore;
-                        ix = openTerminalMove;
-                    }
-                }
-
-                Console.WriteLine($"Terminal returned. Column: {ix} Score: {tempMaxVal}");
-                return new ScoredMoveIndex(tempMaxVal, ix);
-            }
-
-            foreach (int openMove in GetOpenColumns(n.BoardDiscState))
-            {
-                int[,] newState = GenerateBoardState(openMove, colorMoved, n.BoardDiscState);
-                decimal newStateScore = EvaluateBoardState(newState);
-                Node child = new Node(newState, openMove, colorMoved, newStateScore);
-
-                Console.WriteLine($"Depth: {depth} Column: {openMove} Score: {newStateScore}");
-
-                var minVal = MinValue(child, ref alpha, ref beta, depth - 1);
-
-                if (minVal.PositionScore > maxVal)
-                {
-                    maxVal = minVal.PositionScore;
-                    ix = openMove;
-                }
-
-                if (maxVal >= beta)
-                {
-                    return new ScoredMoveIndex(maxVal, ix);
-                }
-
-                alpha = Math.Max(alpha, maxVal);
-            }
-
-            return new ScoredMoveIndex(maxVal, ix);
-        }
-
-        private ScoredMoveIndex MinValue(Node n, ref decimal alpha, ref decimal beta, int depth)
-        {
-            decimal minVal = decimal.MaxValue;
-            int ix = -1;
-            int colorMoved = LogicalBoardHelpers.ChangeTurnColor(n.ColorMoved);
-
-            if (depth <= 0)
-            {
-                decimal tempMinVal = decimal.MaxValue;
-
-                foreach (int openTerminalMove in GetOpenColumns(n.BoardDiscState))
-                {
-                    int[,] newState = GenerateBoardState(openTerminalMove, colorMoved, n.BoardDiscState);
-                    decimal newStateScore = EvaluateBoardState(newState);
-                    Node child = new Node(newState, openTerminalMove, colorMoved, newStateScore);
-
-                    Console.WriteLine($"Terminal Depth. Column: {openTerminalMove} Score: {newStateScore}");
-                    if (tempMinVal > newStateScore)
-                    {
-                        tempMinVal = newStateScore;
-                        ix = openTerminalMove;
-                    }
-                }
-
-                Console.WriteLine($"Terminal returned. Column: {ix} Score: {tempMinVal}");
-                return new ScoredMoveIndex(tempMinVal, ix);
-            }
-
-
-            foreach (int openMove in GetOpenColumns(n.BoardDiscState))
-            {
-                int[,] newState = GenerateBoardState(openMove, colorMoved, n.BoardDiscState);
-                decimal newStateScore = EvaluateBoardState(newState);
-                Node child = new Node(newState, openMove, colorMoved, newStateScore);
-
-                Console.WriteLine($"Depth: {depth} Column: {openMove} Score: {newStateScore}");
-
-                var maxMove = MaxValue(child, ref alpha, ref beta, depth - 1);
-
-                if (maxMove.PositionScore < minVal)
-                {
-                    minVal = maxMove.PositionScore;
-                    ix = openMove;
-                }
-
-                if (minVal <= alpha)
-                {
-                    return new ScoredMoveIndex(minVal, openMove);
-                }
-
-                beta = Math.Min(beta, minVal);
-            }
-            
-            return new ScoredMoveIndex(minVal, ix);
-        }
-
-        private ScoredMoveIndex MaxValue(Node node, int depth)
+        private decimal MaxValue(Node node, int depth)
         {
             // TODO make this check and stop terminal states as well
             if (depth <= 0)
             {
                 decimal tempMaxVal = EvaluateBoardState(node.BoardDiscState);
-                return new ScoredMoveIndex(tempMaxVal, node.ColumnMoved);
+                return tempMaxVal;
             }
 
             decimal maxVal = decimal.MinValue;
-            int ix = -1;
             int colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
@@ -728,26 +615,24 @@ namespace ConnectBot
 
                 var minVal = MinValue(child, depth - 1);
 
-                if (minVal.PositionScore > maxVal)
+                if (minVal > maxVal)
                 {
-                    maxVal = minVal.PositionScore;
-                    ix = openMove;
+                    maxVal = minVal;
                 }
             }
 
-            return new ScoredMoveIndex(maxVal, ix);
+            return maxVal;
         }
 
-        private ScoredMoveIndex MinValue(Node node, int depth)
+        private decimal MinValue(Node node, int depth)
         {
             if (depth <= 0)
             {
                 var tempMinVal = EvaluateBoardState(node.BoardDiscState);
-                return new ScoredMoveIndex(tempMinVal, node.ColumnMoved);
+                return tempMinVal;
             }
 
             decimal minVal = decimal.MaxValue;
-            int ix = -1;
             int colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
@@ -757,14 +642,13 @@ namespace ConnectBot
 
                 var maxMove = MaxValue(child, depth - 1);
 
-                if (maxMove.PositionScore < minVal)
+                if (maxMove < minVal)
                 {
-                    minVal = maxMove.PositionScore;
-                    ix = openMove;
+                    minVal = maxMove;
                 }
             }
 
-            return new ScoredMoveIndex(minVal, ix);
+            return minVal;
         }
 
         /// <summary>
