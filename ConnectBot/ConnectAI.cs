@@ -66,7 +66,7 @@ namespace ConnectBot
 
             public List<Node> Children { get; set; }
             
-            public Node(int[,] board, int column, int turn, decimal score)
+            public Node(int[,] board, int column, int turn, decimal score = 0.0m)
             {
                 BoardDiscState = board;
                 ColumnMoved = column;
@@ -268,7 +268,7 @@ namespace ConnectBot
 
             Node n = new Node(GameDiscs, 0, AiColor, 0.0m);
             
-            int retMove = AlphaBetaSearch(n);
+            int retMove = MinimaxCutoffSearch(n);
 
             return retMove;
         }
@@ -560,17 +560,40 @@ namespace ConnectBot
         // Notes while debugging:
         // the terminal check is short circuiting those level evaluations and so the first
         // node at a terminal level will return it's score
-        private int AlphaBetaSearch(Node n)
+        private int MinimaxCutoffSearch(Node node)
         {
-            decimal alpha = decimal.MinValue;
-            decimal beta = decimal.MaxValue;
+            //decimal alpha = decimal.MinValue;
+            //decimal beta = decimal.MaxValue;
 
-            int totalDepth = 0;
+            int maxDepth = 0;
 
             // TODO change this based on the AI's color
-            var scoredColumn = MinValue(n, ref alpha, ref beta, totalDepth);
+            //var scoredColumn = MinValue(n, ref alpha, ref beta, maxDepth);
+            //var scoredColumn = MinValue(node, maxDepth);
 
-            return scoredColumn.MoveIndex;
+            // for all actions return min value of the result of the action
+            var minMove = decimal.MaxValue;
+            var movedColumn = -1;
+
+            // WOOHOO!! after more reading I finally got a much better understanding of
+            // how a minimax search should be working.
+            // left off here
+
+            foreach (int openMove in GetOpenColumns(node.BoardDiscState))
+            {
+                int[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
+                Node child = new Node(newState, openMove, AiColor);
+
+                var maxMove = MinValue(child, maxDepth);
+
+                if (maxMove.PositionScore < minMove)
+                {
+                    minMove = maxMove.PositionScore;
+                    movedColumn = openMove;
+                }
+            }
+
+            return movedColumn;
         }
 
         private ScoredMoveIndex MaxValue(Node n, ref decimal alpha, ref decimal beta, int depth)
@@ -682,6 +705,65 @@ namespace ConnectBot
                 beta = Math.Min(beta, minVal);
             }
             
+            return new ScoredMoveIndex(minVal, ix);
+        }
+
+        private ScoredMoveIndex MaxValue(Node node, int depth)
+        {
+            // TODO make this check and stop terminal states as well
+            if (depth <= 0)
+            {
+                decimal tempMaxVal = EvaluateBoardState(node.BoardDiscState);
+                return new ScoredMoveIndex(tempMaxVal, node.ColumnMoved);
+            }
+
+            decimal maxVal = decimal.MinValue;
+            int ix = -1;
+            int colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
+
+            foreach (int openMove in GetOpenColumns(node.BoardDiscState))
+            {
+                int[,] newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
+                Node child = new Node(newState, openMove, colorMoved);
+
+                var minVal = MinValue(child, depth - 1);
+
+                if (minVal.PositionScore > maxVal)
+                {
+                    maxVal = minVal.PositionScore;
+                    ix = openMove;
+                }
+            }
+
+            return new ScoredMoveIndex(maxVal, ix);
+        }
+
+        private ScoredMoveIndex MinValue(Node node, int depth)
+        {
+            if (depth <= 0)
+            {
+                var tempMinVal = EvaluateBoardState(node.BoardDiscState);
+                return new ScoredMoveIndex(tempMinVal, node.ColumnMoved);
+            }
+
+            decimal minVal = decimal.MaxValue;
+            int ix = -1;
+            int colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
+
+            foreach (int openMove in GetOpenColumns(node.BoardDiscState))
+            {
+                int[,] newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
+                Node child = new Node(newState, openMove, colorMoved);
+
+                var maxMove = MaxValue(child, depth - 1);
+
+                if (maxMove.PositionScore < minVal)
+                {
+                    minVal = maxMove.PositionScore;
+                    ix = openMove;
+                }
+            }
+
             return new ScoredMoveIndex(minVal, ix);
         }
 
