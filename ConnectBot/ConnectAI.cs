@@ -20,7 +20,6 @@ namespace ConnectBot
         /// </summary>
         protected int AiColor { get; set; }
         protected int OpponentColor { get; set; }
-        // TODO have best move variable updated as tree is explored? return when called upon?
 
         /// <summary>
         /// used for testing
@@ -64,95 +63,6 @@ namespace ConnectBot
                 PositionalScore = score;
                 ColorMoved = turn;// TODO will this pass the turn that just moved?
                 Children = new List<Node>();
-            }
-        }
-        #endregion
-
-        #region Class : ReversibleNode
-        /// <summary>
-        /// Node representing current game state that can reverse moves
-        /// in order to track back up the tree. Will be used in more
-        /// efficient searching.
-        /// </summary>
-        protected class ReversibleNode
-        {
-            private int[,] boardState;
-            private int colorToMove;
-            private Stack<int> moveHistory;
-            
-            /// <summary>
-            /// Initializes empty board state with black player to move.
-            /// </summary>
-            public ReversibleNode()
-            {
-                // Initialize game state and move history
-                boardState = new int[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
-                colorToMove = LogicalBoardHelpers.DISC_COLOR_BLACK;
-
-                for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
-                {
-                    for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
-                    {
-                        boardState[c, r] = 0;
-                    }
-                }
-
-                moveHistory = new Stack<int>();
-            }
-
-            /// <summary>
-            /// Perform move on the reversible board.
-            /// </summary>
-            /// <param name="column"></param>
-            /// <returns>Boolean to signify if the move was correct and performed or not.</returns>
-            public bool Move(int column)
-            {
-                // TODO resolve bug where AI thinks it is moving successfully but does not move. 
-                // the game should request moves from the AI until it gets a legal one.
-
-                // TODO does move history need to hold color or can it be implied?
-                if (boardState[column, LogicalBoardHelpers.NUM_ROWS - 1] == 0)
-                {
-                    int rowMoved = 0;
-
-                    while (boardState[column, rowMoved] != 0)
-                    {
-                        rowMoved++;
-                    }
-
-                    boardState[column, rowMoved] = colorToMove;
-                    colorToMove = LogicalBoardHelpers.ChangeTurnColor(colorToMove);
-                    moveHistory.Push(column);
-
-                    return true;
-                }
-                
-                return false;
-            }
-
-            /// <summary>
-            /// Reverses the last move performed.
-            /// </summary>
-            /// <returns>Boolean to signify if there was a move to reverse.</returns>
-            public bool ReverseMove()
-            {
-                if (moveHistory.Count > 0)
-                {
-                    int rowRemoved = LogicalBoardHelpers.NUM_ROWS - 1;
-                    int lastColumn = moveHistory.Pop();
-
-                    while (boardState[lastColumn, rowRemoved] == 0)
-                    {
-                        rowRemoved--;
-                    }
-
-                    boardState[lastColumn, rowRemoved] = 0;
-                    colorToMove = LogicalBoardHelpers.ChangeTurnColor(colorToMove);
-
-                    return true;
-                }
-
-                return false;
             }
         }
         #endregion
@@ -242,36 +152,28 @@ namespace ConnectBot
         {
             int move = -1;
 
-            for (int i = 0; i < LogicalBoardHelpers.NUM_COLUMNS; i++)
+            foreach (var openColumn in GetOpenColumns(boardState))
             {
                 // If the AI could win return that immediately.
-                var movedBoard = GenerateBoardState(i, AiColor, boardState);
+                var movedBoard = GenerateBoardState(openColumn, AiColor, boardState);
                 var winner = LogicalBoardHelpers.CheckVictory(movedBoard);
 
                 if (winner == AiColor)
-                    return i;
+                    return openColumn;
 
                 // If the opponent could win be sure to check the rest in case the AI could win
                 // at a column further down.
-                var oppMovedBoard = GenerateBoardState(i, OpponentColor, boardState);
+                var oppMovedBoard = GenerateBoardState(openColumn, OpponentColor, boardState);
                 var oppWinner = LogicalBoardHelpers.CheckVictory(oppMovedBoard);
 
                 if (oppWinner == OpponentColor)
-                    move = i;
+                    move = openColumn;
             }
 
             return move;
         }
 
-        /// <summary>
-        /// Generate a new board state based on a column index, disc color
-        /// and an existing board state.
-        /// </summary>
-        /// <param name="moveColumn"></param>
-        /// <param name="discColor"></param>
-        /// <param name="currState"></param>
-        /// <returns></returns>
-        protected int[,] GenerateBoardState(int moveColumn, int discColor, int[,] currState)
+        protected int[,] GenerateBoardState(int moveColumn, int discColor, int[,] currentBoard)
         {
             int[,] newState = new int[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
 
@@ -279,7 +181,7 @@ namespace ConnectBot
             {
                 for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
                 {
-                    newState[c, r] = currState[c, r];
+                    newState[c, r] = currentBoard[c, r];
                 }
             }
 
