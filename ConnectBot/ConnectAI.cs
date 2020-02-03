@@ -4,23 +4,14 @@ using System.Threading.Tasks;
 
 namespace ConnectBot
 {
-    class ConnectAI
+    public class ConnectAI
     {
-        // this shouldn't need a buffer
-        //
-        // Foremost indices in sub arrays represent 'bottom' spaces of Connect 4 board.
-        // 1 is a black disc, 2 is red.
-        // TODO I think black goes first
-
-        const int NumRows = 6;
-        const int NumColumns = 7;
-
         /// <summary>
         /// Multidimensional array of integers representing the board
         /// indexed by [column, row]. Lowest column index is left most 
         /// on the screen. Lowest row index is lowest in the column stack.
         /// </summary>
-        protected int[,] GameDiscs = new int[NumColumns, NumRows];
+        protected int[,] GameDiscs = new int[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
         
         /// <summary>
         /// Stores the AIs disc color. 
@@ -95,12 +86,12 @@ namespace ConnectBot
             public ReversibleNode()
             {
                 // Initialize game state and move history
-                boardState = new int[NumColumns, NumRows];
+                boardState = new int[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
                 colorToMove = LogicalBoardHelpers.DISC_COLOR_BLACK;
 
-                for (int c = 0; c < NumColumns; c++)
+                for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
                 {
-                    for (int r = 0; r < NumRows; r++)
+                    for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
                     {
                         boardState[c, r] = 0;
                     }
@@ -120,7 +111,7 @@ namespace ConnectBot
                 // the game should request moves from the AI until it gets a legal one.
 
                 // TODO does move history need to hold color or can it be implied?
-                if (boardState[column, NumRows - 1] == 0)
+                if (boardState[column, LogicalBoardHelpers.NUM_ROWS - 1] == 0)
                 {
                     int rowMoved = 0;
 
@@ -147,7 +138,7 @@ namespace ConnectBot
             {
                 if (moveHistory.Count > 0)
                 {
-                    int rowRemoved = NumRows - 1;
+                    int rowRemoved = LogicalBoardHelpers.NUM_ROWS - 1;
                     int lastColumn = moveHistory.Pop();
 
                     while (boardState[lastColumn, rowRemoved] == 0)
@@ -166,25 +157,6 @@ namespace ConnectBot
         }
         #endregion
 
-        #region Class : ScoredMoveIndex
-        /// <summary>
-        /// Lightweight class used to return the score of a 
-        /// position and the moved column that generated it.
-        /// </summary>
-        protected class ScoredMoveIndex
-        {
-            public decimal PositionScore { get; set; }
-
-            public int MoveIndex { get; set; }
-
-            public ScoredMoveIndex(decimal positionScore, int moveIndex)
-            {
-                PositionScore = positionScore;
-                MoveIndex = moveIndex;
-            }
-        }
-        #endregion
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -193,7 +165,6 @@ namespace ConnectBot
         {
             AiColor = color;
             OpponentColor = LogicalBoardHelpers.ChangeTurnColor(AiColor);
-            // TODO should the root only ever start on the AI's turn? yeah probably
 
             Rando = new Random();
         }
@@ -205,9 +176,9 @@ namespace ConnectBot
         /// <param name="lastMove">Last move made on the new board. Negative one signifies first board update.</param>
         public void UpdateBoard(int[,] newBoard, int lastMove)
         {
-            for (int c = 0; c < NumColumns; c++)
+            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
             {
-                for (int r = 0; r < NumRows; r++)
+                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
                 {
                     GameDiscs[c, r] = newBoard[c, r];
                 }
@@ -252,12 +223,6 @@ namespace ConnectBot
 
         public async Task<int> Move()
         {
-            // TODO left off here. because treeRoot doesn't change during update this will only ever return 3 
-            // (best move at start)
-            // update board needs to trim tree, update root and possilby start off background worker again.
-            // check open columns
-            // when player moves first AI is not taking that into account. tree should only start building on first update call i think
-
             //AISelfTest();
 
             // Look for wins before performing in depth searches
@@ -277,26 +242,22 @@ namespace ConnectBot
         {
             int move = -1;
 
-            for (int i = 0; i < NumColumns; i++)
+            for (int i = 0; i < LogicalBoardHelpers.NUM_COLUMNS; i++)
             {
-                try
-                {
-                    // If the AI could win return that immediately.
-                    var movedBoard = GenerateBoardState(i, AiColor, boardState);
-                    var winner = LogicalBoardHelpers.CheckVictory(movedBoard);
+                // If the AI could win return that immediately.
+                var movedBoard = GenerateBoardState(i, AiColor, boardState);
+                var winner = LogicalBoardHelpers.CheckVictory(movedBoard);
 
-                    if (winner == AiColor)
-                        return i;
+                if (winner == AiColor)
+                    return i;
 
-                    // If the opponent could win be sure to check the rest in case the AI could win
-                    // at a column further down.
-                    var oppMovedBoard = GenerateBoardState(i, OpponentColor, boardState);
-                    var oppWinner = LogicalBoardHelpers.CheckVictory(oppMovedBoard);
+                // If the opponent could win be sure to check the rest in case the AI could win
+                // at a column further down.
+                var oppMovedBoard = GenerateBoardState(i, OpponentColor, boardState);
+                var oppWinner = LogicalBoardHelpers.CheckVictory(oppMovedBoard);
 
-                    if (oppWinner == OpponentColor)
-                        move = i;
-                }
-                catch (InvalidOperationException _) { }
+                if (oppWinner == OpponentColor)
+                    move = i;
             }
 
             return move;
@@ -312,18 +273,18 @@ namespace ConnectBot
         /// <returns></returns>
         protected int[,] GenerateBoardState(int moveColumn, int discColor, int[,] currState)
         {
-            int[,] newState = new int[NumColumns, NumRows];
+            int[,] newState = new int[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
 
-            for (int c = 0; c < NumColumns; c++)
+            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
             {
-                for (int r = 0; r < NumRows; r++)
+                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
                 {
                     newState[c, r] = currState[c, r];
                 }
             }
 
             bool moveWasLegal = false;
-            for (int row = 0; row < NumRows; row++)
+            for (int row = 0; row < LogicalBoardHelpers.NUM_ROWS; row++)
             {
                 if (newState[moveColumn, row] == 0)
                 {
@@ -347,9 +308,9 @@ namespace ConnectBot
         {
             List<int> ret = new List<int>();
 
-            for (int c = 0; c < NumColumns; c++)
+            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
             {
-                if (board[c, NumRows - 1] == 0)
+                if (board[c, LogicalBoardHelpers.NUM_ROWS - 1] == 0)
                 {
                     ret.Add(c);
                 }
@@ -381,9 +342,9 @@ namespace ConnectBot
              */
             var ret = 0.0m;
 
-            for (int c = 0; c < NumColumns; c++)
+            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
             {
-                for (int r = 0; r < NumRows; r++)
+                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
                 {
                     if (boardState[c, r] != 0)
                     {
@@ -556,28 +517,19 @@ namespace ConnectBot
             return (participatedValue * participatedPossibles);
         }
 
-        // TODO
-        // Notes while debugging:
-        // the terminal check is short circuiting those level evaluations and so the first
-        // node at a terminal level will return it's score
+        /// <summary>
+        /// Min max searching algorithm with defined cutoff depth.
+        /// </summary>
+        /// <param name="node">Node representing the current board state.</param>
+        /// <returns>The column that will be moved played in.</returns>
         private int MinimaxCutoffSearch(Node node)
         {
-            //decimal alpha = decimal.MinValue;
-            //decimal beta = decimal.MaxValue;
-
-            int maxDepth = 0;
+            int maxDepth = 3;
 
             // TODO change this based on the AI's color
-            //var scoredColumn = MinValue(n, ref alpha, ref beta, maxDepth);
-            //var scoredColumn = MinValue(node, maxDepth);
-
             // for all actions return min value of the result of the action
             var minMove = decimal.MaxValue;
             var movedColumn = -1;
-
-            // WOOHOO!! after more reading I finally got a much better understanding of
-            // how a minimax search should be working.
-            // left off here
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
             {
@@ -601,8 +553,7 @@ namespace ConnectBot
             // TODO make this check and stop terminal states as well
             if (depth <= 0)
             {
-                decimal tempMaxVal = EvaluateBoardState(node.BoardDiscState);
-                return tempMaxVal;
+                return EvaluateBoardState(node.BoardDiscState);
             }
 
             decimal maxVal = decimal.MinValue;
@@ -628,8 +579,7 @@ namespace ConnectBot
         {
             if (depth <= 0)
             {
-                var tempMinVal = EvaluateBoardState(node.BoardDiscState);
-                return tempMinVal;
+                return EvaluateBoardState(node.BoardDiscState);
             }
 
             decimal minVal = decimal.MaxValue;

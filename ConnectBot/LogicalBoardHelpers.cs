@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ConnectBot
 {
@@ -19,7 +15,6 @@ namespace ConnectBot
         public static int DISC_COLOR_RED = -1;
         public static int DISC_COLOR_NONE = 0;
 
-        // TODO this should move to logical board
         /// <summary>
         /// Returns the winning color, otherwise zero to indicate no winner.
         /// </summary>
@@ -47,7 +42,6 @@ namespace ConnectBot
             int second;
             int third;
             int fourth;
-
 
             // check verticals
             for (int chkUpCol = 0; chkUpCol < NUM_COLUMNS; chkUpCol++)

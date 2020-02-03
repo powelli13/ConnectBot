@@ -60,11 +60,9 @@ namespace ConnectBot
             PlayAgain,
             SelectColor
         };
+
         private MenuState CurrentMenu { get; set; }
 
-        /// <summary>
-        /// Bot to play against.
-        /// </summary>
         private ConnectAI Bot { get; set; }
 
         // TODO remove this and check the thread result
@@ -105,20 +103,12 @@ namespace ConnectBot
             return retBoard;
         }
 
-        /// <summary>
-        /// Confirms victory to console and resets the game.
-        /// </summary>
-        /// <param name="winner"></param>
-        /// // TODO announce victory and prompt replay or something
         protected void VictoryConfirmed(int winner)
         {
             if (winner != 0)
                 ShowPlayAgainMenu();
         }
 
-        /// <summary>
-        /// Display the play again menu sprites.
-        /// </summary>
         protected void ShowPlayAgainMenu()
         {
             CurrentMenu = MenuState.PlayAgain;
@@ -313,9 +303,6 @@ namespace ConnectBot
             botThinking = false;
         }
 
-        /// <summary>
-        /// Updates the turn for the game.
-        /// </summary>
         protected void ChangeTurn()
         {
             CurrentTurn = LogicalBoardHelpers.ChangeTurnColor(CurrentTurn);
