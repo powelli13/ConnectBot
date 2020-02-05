@@ -55,17 +55,19 @@ namespace ConnectBot
             /// <summary>
             /// Draws the play again menu to the screen.
             /// </summary>
-            /// <param name="sb"></param>
-            /// <param name="images"></param>
-            public void Draw(SpriteBatch sb, Dictionary<string, Texture2D> images)
+            public void Draw(SpriteBatch sb, Dictionary<string, Texture2D> images, bool gameDrawn = false)
             {
                 sb.Draw(
                     images[ImageNames.PLAY_AGAIN_BACKGROUND], 
                     DrawingRectangles[ImageNames.PLAY_AGAIN_BACKGROUND], Color.Wheat);
-                sb.Draw(
-                    images[ImageNames.PLAY_AGAIN_QUESTION], 
-                    DrawingRectangles[ImageNames.PLAY_AGAIN_QUESTION], Color.Wheat);
 
+                var questionImageName = gameDrawn
+                    ? ImageNames.PLAY_AGAIN_DRAWN_QUESTION
+                    : ImageNames.PLAY_AGAIN_QUESTION;
+                sb.Draw(
+                    images[questionImageName],
+                    DrawingRectangles[questionImageName], Color.Wheat);
+                
                 sb.Draw(
                     images[ImageNames.YES_BUTTON], 
                     DrawingRectangles[ImageNames.YES_BUTTON], Color.Wheat);

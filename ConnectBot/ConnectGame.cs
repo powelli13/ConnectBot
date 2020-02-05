@@ -58,6 +58,7 @@ namespace ConnectBot
         {
             None,
             PlayAgain,
+            PlayAgainDrawn,
             SelectColor
         };
 
@@ -263,7 +264,7 @@ namespace ConnectBot
                     break;
 
                 case MenuState.PlayAgain:
-
+                case MenuState.PlayAgainDrawn:
                     // Detect a click on either of the buttons and respond accordingly.
                     if (LastMouseState.LeftButton == ButtonState.Pressed &&
                             MouseState.LeftButton == ButtonState.Released)
@@ -334,6 +335,9 @@ namespace ConnectBot
             {
                 case MenuState.PlayAgain:
                     playAgainMenu.Draw(spriteBatch, imageDict);
+                    break;
+                case MenuState.PlayAgainDrawn:
+                    playAgainMenu.Draw(spriteBatch, imageDict, true);
                     break;
             }
 
