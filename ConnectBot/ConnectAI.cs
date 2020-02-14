@@ -425,7 +425,7 @@ namespace ConnectBot
 
             // TODO change this based on the AI's color
             // for all actions return min value of the result of the action
-            var minMove = decimal.MaxValue;
+            var minimumMoveValue = decimal.MaxValue;
             var movedColumn = -1;
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
@@ -433,11 +433,11 @@ namespace ConnectBot
                 DiscColor[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
                 Node child = new Node(newState, openMove, AiColor);
 
-                var maxMove = MinValue(child, maxDepth);
+                var openMoveValue = MinValue(child, maxDepth);
 
-                if (maxMove < minMove)
+                if (openMoveValue < minimumMoveValue)
                 {
-                    minMove = maxMove;
+                    minimumMoveValue = openMoveValue;
                     movedColumn = openMove;
                 }
             }
@@ -453,7 +453,7 @@ namespace ConnectBot
                 return EvaluateBoardState(node.BoardDiscState);
             }
 
-            decimal maxVal = decimal.MinValue;
+            decimal maximumMoveValue = decimal.MinValue;
             DiscColor colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
@@ -461,15 +461,15 @@ namespace ConnectBot
                 DiscColor[,] newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
                 Node child = new Node(newState, openMove, colorMoved);
 
-                var minVal = MinValue(child, depth - 1);
+                var minimumMoveValue = MinValue(child, depth - 1);
 
-                if (minVal > maxVal)
+                if (minimumMoveValue > maximumMoveValue)
                 {
-                    maxVal = minVal;
+                    maximumMoveValue = minimumMoveValue;
                 }
             }
 
-            return maxVal;
+            return maximumMoveValue;
         }
 
         private decimal MinValue(Node node, int depth)
@@ -479,7 +479,7 @@ namespace ConnectBot
                 return EvaluateBoardState(node.BoardDiscState);
             }
 
-            decimal minVal = decimal.MaxValue;
+            decimal minimumMoveValue = decimal.MaxValue;
             DiscColor colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
@@ -487,15 +487,15 @@ namespace ConnectBot
                 DiscColor[,] newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
                 Node child = new Node(newState, openMove, colorMoved);
 
-                var maxMove = MaxValue(child, depth - 1);
+                var maximumMoveValue = MaxValue(child, depth - 1);
 
-                if (maxMove < minVal)
+                if (maximumMoveValue < minimumMoveValue)
                 {
-                    minVal = maxMove;
+                    minimumMoveValue = maximumMoveValue;
                 }
             }
 
-            return minVal;
+            return minimumMoveValue;
         }
 
         /// <summary>
