@@ -33,15 +33,10 @@ namespace ConnectBot
         /// </summary>
         Board.BoardColumn[] boardColumns = new Board.BoardColumn[LogicalBoardHelpers.NUM_COLUMNS];
 
-        /// <summary>
-        /// Represents which players turn it is, 1 for black, -1 for red.
-        /// For this games purposes as of now black will go first.
-        /// </summary>
-        protected int CurrentTurn { get; set; }
+        protected DiscColor CurrentTurn { get; set; }
         
-
-        protected int PlayerTurn { get; set; }
-        protected int BotTurn { get; set; }
+        protected DiscColor PlayerTurn { get; set; }
+        protected DiscColor BotTurn { get; set; }
 
         private double timeSinceLastMove;
 
@@ -89,9 +84,9 @@ namespace ConnectBot
         /// representing the current state of the board.
         /// </summary>
         /// <returns></returns>
-        public int[,] GetTextBoard()
+        public DiscColor[,] GetTextBoard()
         {
-            int[,] retBoard = new int[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
+            DiscColor[,] retBoard = new DiscColor[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
 
             for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
             {
@@ -104,9 +99,9 @@ namespace ConnectBot
             return retBoard;
         }
 
-        protected void VictoryConfirmed(int winner)
+        protected void VictoryConfirmed(DiscColor winner)
         {
-            if (winner != 0)
+            if (winner != DiscColor.None)
                 ShowPlayAgainMenu();
         }
 
@@ -148,8 +143,8 @@ namespace ConnectBot
             ResetGame();
             
             //TODO menu to decide which color bot plays
-            PlayerTurn = LogicalBoardHelpers.DISC_COLOR_BLACK;
-            BotTurn = LogicalBoardHelpers.DISC_COLOR_RED;
+            PlayerTurn = DiscColor.Black;
+            BotTurn = DiscColor.Red;
 
             // TODO what to pass as column here? how to show null move at board start?
             // TODO how to signify to AI that they should build for specific color does root node determine it?
@@ -242,7 +237,7 @@ namespace ConnectBot
                                         timeSinceLastMove = 0.0;
 
                                         ChangeTurn();
-                                        int winner = LogicalBoardHelpers.CheckVictory(GetTextBoard());
+                                        DiscColor winner = LogicalBoardHelpers.CheckVictory(GetTextBoard());
                                         VictoryConfirmed(winner);
 
                                         UpdateBotBoard(col);
@@ -298,7 +293,7 @@ namespace ConnectBot
             boardColumns[botMove].SetSpace(BotTurn);
 
             ChangeTurn();
-            int winner = LogicalBoardHelpers.CheckVictory(GetTextBoard());
+            DiscColor winner = LogicalBoardHelpers.CheckVictory(GetTextBoard());
             VictoryConfirmed(winner);
 
             botThinking = false;
@@ -350,7 +345,7 @@ namespace ConnectBot
         /// </summary>
         protected void ResetGame()
         {
-            CurrentTurn = 1;
+            CurrentTurn = DiscColor.Black;
             CurrentMenu = MenuState.None;
 
             for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
@@ -372,7 +367,7 @@ namespace ConnectBot
         /// </summary>
         protected void UpdateBotBoard(int columnMoved)
         {
-            int[,] botBoard = GetTextBoard();
+            DiscColor[,] botBoard = GetTextBoard();
             Bot.UpdateBoard(botBoard, columnMoved);
         }
     }

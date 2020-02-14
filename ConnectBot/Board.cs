@@ -27,12 +27,11 @@ namespace ConnectBot
         {
             // Rectangle that represents the space
             private Rectangle rect;
+
             // Rectangle used to draw discs falling over time
             private Rectangle drawRect;
 
-            //public Texture2D Texture { get; set; }
-
-            public int DiscColor { get; set; }
+            public DiscColor Disc { get; set; }
 
             public bool Falling { get; set; }
 
@@ -57,9 +56,11 @@ namespace ConnectBot
             /// // this is because the disc is different than the space, consider redesigning 
             public void Draw(SpriteBatch sb, Dictionary<string, Texture2D> images)
             {
-                string imageName = (DiscColor == 1 ? ImageNames.BLACK_DISC : ImageNames.RED_DISC);
+                string imageName = Disc == DiscColor.Black 
+                    ? ImageNames.BLACK_DISC 
+                    : ImageNames.RED_DISC;
                 
-                if (DiscColor != 0)
+                if (Disc != 0)
                 {
                     sb.Draw(images[imageName], drawRect, Color.Wheat);
 
@@ -77,7 +78,7 @@ namespace ConnectBot
 
             public void Reset()
             {
-                DiscColor = 0;
+                Disc = 0;
                 drawRect.Y = TopBuffer + SpaceSize;
             }
         }
@@ -141,14 +142,14 @@ namespace ConnectBot
             /// Sets the spaces at rowIndex in the column to be disc.
             /// </summary>
             /// <param name="disc"></param>
-            public void SetSpace(int disc)
+            public void SetSpace(DiscColor disc)
             {
                 // Fill the first available space with the given disc.
                 for (int t = 0; t < NumRows; t++)
                 {
-                    if (columnSpaces[t].DiscColor == 0)
+                    if (columnSpaces[t].Disc == 0)
                     {
-                        columnSpaces[t].DiscColor = disc;
+                        columnSpaces[t].Disc = disc;
 
                         // Determine if column is full or still movable.
                         if (t == NumRows - 1)
@@ -166,9 +167,9 @@ namespace ConnectBot
             /// </summary>
             /// <param name="row"></param>
             /// <returns></returns>
-            public int GetSpace(int row)
+            public DiscColor GetSpace(int row)
             {
-                return columnSpaces[row].DiscColor;
+                return columnSpaces[row].Disc;
             }
 
             /// <summary>

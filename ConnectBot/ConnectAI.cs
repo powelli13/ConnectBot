@@ -11,15 +11,10 @@ namespace ConnectBot
         /// indexed by [column, row]. Lowest column index is left most 
         /// on the screen. Lowest row index is lowest in the column stack.
         /// </summary>
-        protected int[,] GameDiscs = new int[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
-        
-        /// <summary>
-        /// Stores the AIs disc color. 
-        /// 1 is black, moves first with positive eval score.
-        /// -1 is red, moves second with negative eval score.
-        /// </summary>
-        protected int AiColor { get; set; }
-        protected int OpponentColor { get; set; }
+        protected DiscColor[,] GameDiscs = new DiscColor[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
+
+        protected DiscColor AiColor { get; set; }
+        protected DiscColor OpponentColor { get; set; }
 
         /// <summary>
         /// used for testing
@@ -40,12 +35,12 @@ namespace ConnectBot
         /// </summary>
         private class Node
         {
-            public int[,] BoardDiscState { get; set; }
+            public DiscColor[,] BoardDiscState { get; set; }
 
             /// <summary>
             /// Color to next move at that node.
             /// </summary>
-            public int ColorMoved { get; set; }
+            public DiscColor ColorMoved { get; set; }
 
             /// <summary>
             /// Column that was moved in to generate this node.
@@ -56,7 +51,7 @@ namespace ConnectBot
 
             public List<Node> Children { get; set; }
             
-            public Node(int[,] board, int column, int turn, decimal score = 0.0m)
+            public Node(DiscColor[,] board, int column, DiscColor turn, decimal score = 0.0m)
             {
                 BoardDiscState = board;
                 ColumnMoved = column;
@@ -71,7 +66,7 @@ namespace ConnectBot
         /// Constructor.
         /// </summary>
         /// <param name="color">Color for AI to play.</param>
-        public ConnectAI(int color)
+        public ConnectAI(DiscColor color)
         {
             AiColor = color;
             OpponentColor = LogicalBoardHelpers.ChangeTurnColor(AiColor);
@@ -84,7 +79,7 @@ namespace ConnectBot
         /// </summary>
         /// <param name="newBoard">Array representing updated board state.</param>
         /// <param name="lastMove">Last move made on the new board. Negative one signifies first board update.</param>
-        public void UpdateBoard(int[,] newBoard, int lastMove)
+        public void UpdateBoard(DiscColor[,] newBoard, int lastMove)
         {
             for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
             {
@@ -148,7 +143,7 @@ namespace ConnectBot
             return retMove;
         }
 
-        protected async Task<int> FindKillerMove(int[,] boardState)
+        protected async Task<int> FindKillerMove(DiscColor[,] boardState)
         {
             int move = -1;
 
@@ -173,9 +168,9 @@ namespace ConnectBot
             return move;
         }
 
-        protected int[,] GenerateBoardState(int moveColumn, int discColor, int[,] currentBoard)
+        protected DiscColor[,] GenerateBoardState(int moveColumn, DiscColor discColor, DiscColor[,] currentBoard)
         {
-            int[,] newState = new int[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
+            DiscColor[,] newState = new DiscColor[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
 
             for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
             {
@@ -206,7 +201,7 @@ namespace ConnectBot
         /// </summary>
         /// <param name="board"></param>
         /// <returns></returns>
-        protected List<int> GetOpenColumns(int[,] board)
+        protected List<int> GetOpenColumns(DiscColor[,] board)
         {
             List<int> ret = new List<int>();
 
@@ -231,7 +226,7 @@ namespace ConnectBot
         /// <param name="boardState"></param>
         /// <returns></returns>
         /// TODO there has to be a better way to structure board than all this rigorous checking
-        protected decimal EvaluateBoardState(int[,] boardState)
+        protected decimal EvaluateBoardState(DiscColor[,] boardState)
         {
             /*
              * For both colors scan the entire board.
@@ -267,7 +262,7 @@ namespace ConnectBot
         /// <param name="discColumn"></param>
         /// <param name="discRow"></param>
         /// <param name="val"></param>
-        private decimal ScorePossibles(int[,] board, int checkColor, int discColumn, int discRow)
+        private decimal ScorePossibles(DiscColor[,] board, DiscColor checkColor, int discColumn, int discRow)
         {
             /*
              * 4 in a row is worth as 1 point.
@@ -285,7 +280,7 @@ namespace ConnectBot
             // that the checked disc participates.
             int participatedPossibles = 0;
             decimal participatedValue = 0.25m;
-            int oppositeColor = LogicalBoardHelpers.ChangeTurnColor(checkColor);
+            DiscColor oppositeColor = LogicalBoardHelpers.ChangeTurnColor(checkColor);
 
             bool addPossible = true;
 
@@ -435,7 +430,7 @@ namespace ConnectBot
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
             {
-                int[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
+                DiscColor[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
                 Node child = new Node(newState, openMove, AiColor);
 
                 var maxMove = MinValue(child, maxDepth);
@@ -459,11 +454,11 @@ namespace ConnectBot
             }
 
             decimal maxVal = decimal.MinValue;
-            int colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
+            DiscColor colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
             {
-                int[,] newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
+                DiscColor[,] newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
                 Node child = new Node(newState, openMove, colorMoved);
 
                 var minVal = MinValue(child, depth - 1);
@@ -485,11 +480,11 @@ namespace ConnectBot
             }
 
             decimal minVal = decimal.MaxValue;
-            int colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
+            DiscColor colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
             {
-                int[,] newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
+                DiscColor[,] newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
                 Node child = new Node(newState, openMove, colorMoved);
 
                 var maxMove = MaxValue(child, depth - 1);

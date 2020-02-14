@@ -3,6 +3,17 @@
 namespace ConnectBot
 {
     /// <summary>
+    /// Stores game disc colors and a value for empty spaces. 
+    /// Black moves first.
+    /// </summary>
+    public enum DiscColor
+    {
+        Red = -1,
+        None = 0,
+        Black = 1
+    }
+
+    /// <summary>
     /// Common methods to perform on a 6x7 array of integers
     /// that represents the logical board state.
     /// </summary>
@@ -11,14 +22,14 @@ namespace ConnectBot
         public static int NUM_ROWS = 6;
         public static int NUM_COLUMNS = 7;
 
-        public static int DISC_COLOR_BLACK = 1;
-        public static int DISC_COLOR_RED = -1;
-        public static int DISC_COLOR_NONE = 0;
+        //public static int DISC_COLOR_BLACK = 1;
+        //public static int DISC_COLOR_RED = -1;
+        //public static int DISC_COLOR_NONE = 0;
 
         /// <summary>
         /// Returns the winning color, otherwise zero to indicate no winner.
         /// </summary>
-        public static int CheckVictory(int[,] board)
+        public static DiscColor CheckVictory(DiscColor[,] board)
         {
             if (board.Rank != 2) throw new ArgumentException("Must give a two dimensional array.", nameof(board));
             if (board.GetLength(0) != NUM_COLUMNS) throw new ArgumentException("Invalid number of columns.", nameof(board));
@@ -38,10 +49,10 @@ namespace ConnectBot
             //      check up right on columns 0 - 3
             //      check up right on rows 0 - 2
             // TODO could only check when latest move is in the mix
-            int first;
-            int second;
-            int third;
-            int fourth;
+            DiscColor first;
+            DiscColor second;
+            DiscColor third;
+            DiscColor fourth;
 
             // check verticals
             for (int chkUpCol = 0; chkUpCol < NUM_COLUMNS; chkUpCol++)
@@ -123,16 +134,16 @@ namespace ConnectBot
                 }
             }
 
-            return 0;
+            return DiscColor.None;
         }
 
-        public static int ChangeTurnColor(int color)
+        public static DiscColor ChangeTurnColor(DiscColor color)
         {
-            if (color != DISC_COLOR_RED &&
-                color != DISC_COLOR_BLACK)
+            if (color != DiscColor.Red &&
+                color != DiscColor.Black)
                 throw new ArgumentException("Must pass in a valid disc color.", nameof(color));
 
-            return color == DISC_COLOR_RED ? DISC_COLOR_BLACK : DISC_COLOR_RED;
+            return color == DiscColor.Red ? DiscColor.Black : DiscColor.Red;
         }
     }
 }
