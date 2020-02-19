@@ -22,6 +22,25 @@ namespace ConnectBot
         protected Random Rando { get; set; }
 
         /// <summary>
+        /// Used for counting the total number of nodes that were explored
+        /// during a given search iteration. Used for diagnostics and performance measuring.
+        /// </summary>
+        class NodeCounter
+        {
+            public int TotalNodes { get; private set; }
+
+            public NodeCounter()
+            {
+                TotalNodes = 0;
+            }
+
+            public void Increment()
+            {
+                TotalNodes++;
+            }
+        }
+
+        /// <summary>
         /// Index of the current best column to move to
         /// updated as the tree is built.
         /// </summary>
@@ -427,13 +446,14 @@ namespace ConnectBot
             // for all actions return min value of the result of the action
             var minimumMoveValue = decimal.MaxValue;
             var movedColumn = -1;
+            var nodeCounter = new NodeCounter();
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
             {
                 DiscColor[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
                 Node child = new Node(newState, openMove, AiColor);
 
-                var openMoveValue = MinValue(child, maxDepth);
+                var openMoveValue = MinValue(child, maxDepth, nodeCounter);
 
                 if (openMoveValue < minimumMoveValue)
                 {
@@ -442,11 +462,15 @@ namespace ConnectBot
                 }
             }
 
+            Console.WriteLine($"{nodeCounter.TotalNodes} were explored.");
+
             return movedColumn;
         }
 
-        private decimal MaxValue(Node node, int depth)
+        private decimal MaxValue(Node node, int depth, NodeCounter nodeCounter)
         {
+            nodeCounter.Increment();
+
             // TODO make this check and stop terminal states as well
             if (depth <= 0)
             {
@@ -458,10 +482,10 @@ namespace ConnectBot
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
             {
-                DiscColor[,] newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
-                Node child = new Node(newState, openMove, colorMoved);
+                var newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
+                var child = new Node(newState, openMove, colorMoved);
 
-                var minimumMoveValue = MinValue(child, depth - 1);
+                var minimumMoveValue = MinValue(child, depth - 1, nodeCounter);
 
                 if (minimumMoveValue > maximumMoveValue)
                 {
@@ -472,8 +496,10 @@ namespace ConnectBot
             return maximumMoveValue;
         }
 
-        private decimal MinValue(Node node, int depth)
+        private decimal MinValue(Node node, int depth, NodeCounter nodeCounter)
         {
+            nodeCounter.Increment();
+
             if (depth <= 0)
             {
                 return EvaluateBoardState(node.BoardDiscState);
@@ -484,10 +510,10 @@ namespace ConnectBot
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
             {
-                DiscColor[,] newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
-                Node child = new Node(newState, openMove, colorMoved);
+                var newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
+                var child = new Node(newState, openMove, colorMoved);
 
-                var maximumMoveValue = MaxValue(child, depth - 1);
+                var maximumMoveValue = MaxValue(child, depth - 1, nodeCounter);
 
                 if (maximumMoveValue < minimumMoveValue)
                 {
