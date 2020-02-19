@@ -41,10 +41,22 @@ namespace ConnectBot
         }
 
         /// <summary>
-        /// Index of the current best column to move to
-        /// updated as the tree is built.
+        /// Used to store the window edges Alpha and Beta
+        /// when performing an Alpha Beta search.
         /// </summary>
-        private int CurrentBestMoveColumn { get; set; }
+        private class AlphaBeta
+        {
+            public decimal Alpha { get; set; }
+            public decimal Beta { get; set; }
+
+            public AlphaBeta(
+                decimal alpha = decimal.MinValue, 
+                decimal beta = decimal.MaxValue)
+            {
+                Alpha = alpha;
+                Beta = beta;
+            }
+        }
 
         #region Class : Node
         /// <summary>
@@ -446,6 +458,7 @@ namespace ConnectBot
             // for all actions return min value of the result of the action
             var minimumMoveValue = decimal.MaxValue;
             var movedColumn = -1;
+            var alphaBeta = new AlphaBeta();
             var nodeCounter = new NodeCounter();
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
@@ -453,7 +466,7 @@ namespace ConnectBot
                 DiscColor[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
                 Node child = new Node(newState, openMove, AiColor);
 
-                var openMoveValue = MinValue(child, maxDepth, nodeCounter);
+                var openMoveValue = MinValue(child, maxDepth, alphaBeta, nodeCounter);
 
                 if (openMoveValue < minimumMoveValue)
                 {
@@ -467,7 +480,11 @@ namespace ConnectBot
             return movedColumn;
         }
 
-        private decimal MaxValue(Node node, int depth, NodeCounter nodeCounter)
+        private decimal MaxValue(
+            Node node, 
+            int depth, 
+            AlphaBeta alphaBeta,
+            NodeCounter nodeCounter)
         {
             nodeCounter.Increment();
 
@@ -485,18 +502,24 @@ namespace ConnectBot
                 var newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
                 var child = new Node(newState, openMove, colorMoved);
 
-                var minimumMoveValue = MinValue(child, depth - 1, nodeCounter);
+                maximumMoveValue = Math.Max(
+                    maximumMoveValue,
+                    MinValue(child, depth - 1, alphaBeta, nodeCounter));
 
-                if (minimumMoveValue > maximumMoveValue)
-                {
-                    maximumMoveValue = minimumMoveValue;
-                }
+                if (maximumMoveValue >= alphaBeta.Beta)
+                    return maximumMoveValue;
+
+                alphaBeta.Alpha = Math.Max(alphaBeta.Alpha, maximumMoveValue);
             }
 
             return maximumMoveValue;
         }
 
-        private decimal MinValue(Node node, int depth, NodeCounter nodeCounter)
+        private decimal MinValue(
+            Node node, 
+            int depth,
+            AlphaBeta alphaBeta,
+            NodeCounter nodeCounter)
         {
             nodeCounter.Increment();
 
@@ -513,12 +536,14 @@ namespace ConnectBot
                 var newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
                 var child = new Node(newState, openMove, colorMoved);
 
-                var maximumMoveValue = MaxValue(child, depth - 1, nodeCounter);
+                minimumMoveValue = Math.Min(
+                    minimumMoveValue,
+                    MaxValue(child, depth - 1, alphaBeta, nodeCounter));
 
-                if (maximumMoveValue < minimumMoveValue)
-                {
-                    minimumMoveValue = maximumMoveValue;
-                }
+                if (minimumMoveValue <= alphaBeta.Alpha)
+                    return minimumMoveValue;
+
+                alphaBeta.Beta = Math.Min(alphaBeta.Beta, minimumMoveValue);
             }
 
             return minimumMoveValue;
