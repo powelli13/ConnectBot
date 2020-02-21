@@ -62,7 +62,6 @@ namespace ConnectBot
 
         private ConnectAI Bot { get; set; }
 
-        // TODO remove this and check the thread result
         private bool botThinking = false;
 
         /// <summary>
@@ -288,15 +287,13 @@ namespace ConnectBot
 
         protected async void GetBotMove()
         {
-            // TODO double check that this is necessary. the commented await seems to block momentarily sometimes
-            //int botMove = await Bot.Move();
             int botMove = -1;
             await Task.Run(() => botMove = Bot.Move().Result);
 
-            if (botMove == -1) throw new InvalidOperationException("The bot did not return a valid column.");
-
             // TODO ensure bot made valid move if it tried to cheat request another
             // maybe the board state should be passed into the bot at move request
+            if (botMove == -1) throw new InvalidOperationException("The bot did not return a valid column.");
+
             boardColumns[botMove].SetSpace(BotTurn);
 
             ChangeTurn();

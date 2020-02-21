@@ -447,6 +447,7 @@ namespace ConnectBot
                 Node child = new Node(newState, openMove, AiColor);
 
                 var openMoveValue = MinValue(child, maxDepth, alphaBeta, nodeCounter);
+                Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
 
                 if (openMoveValue < minimumMoveValue)
                 {
