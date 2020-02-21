@@ -7,7 +7,7 @@ namespace ConnectBot
     // TODO should visual aspects of board be separated from logical?
     // I would like the logical parts of the board and AI functions to be unit testable
     // the easiest way to do this would be to put them in their own classes
-    class Board
+    public class Board
     {
         /// <summary>
         /// Spacing display constants.
@@ -78,7 +78,7 @@ namespace ConnectBot
 
             public void Reset()
             {
-                Disc = 0;
+                Disc = DiscColor.None;
                 drawRect.Y = TopBuffer + SpaceSize;
             }
         }

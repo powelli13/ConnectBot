@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ConnectBot
 {
@@ -136,6 +137,29 @@ namespace ConnectBot
 
             return DiscColor.None;
         }
+
+        /// <summary>
+        /// Returns list of column indices open to moves.
+        /// </summary>
+        /// <param name="board"></param>
+        /// <returns></returns>
+        public static List<int> GetOpenColumns(DiscColor[,] board)
+        {
+            List<int> ret = new List<int>();
+
+            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
+            {
+                if (board[c, LogicalBoardHelpers.NUM_ROWS - 1] == 0)
+                {
+                    ret.Add(c);
+                }
+            }
+
+            return ret;
+        }
+
+        public static bool InBounds(int col, int row) =>
+            (col > -1 && col < 7) && (row > -1 && row < 6);
 
         public static DiscColor ChangeTurnColor(DiscColor color)
         {

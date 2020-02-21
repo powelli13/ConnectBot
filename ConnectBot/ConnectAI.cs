@@ -162,7 +162,7 @@ namespace ConnectBot
             //AISelfTest();
 
             // Look for wins before performing in depth searches
-            int killerMove = await FindKillerMove(GameDiscs);
+            int killerMove = FindKillerMove(GameDiscs);
 
             if (killerMove != -1) 
                 return killerMove;
@@ -174,11 +174,11 @@ namespace ConnectBot
             return retMove;
         }
 
-        protected async Task<int> FindKillerMove(DiscColor[,] boardState)
+        protected int FindKillerMove(DiscColor[,] boardState)
         {
             int move = -1;
 
-            foreach (var openColumn in GetOpenColumns(boardState))
+            foreach (var openColumn in LogicalBoardHelpers.GetOpenColumns(boardState))
             {
                 // If the AI could win return that immediately.
                 var movedBoard = GenerateBoardState(openColumn, AiColor, boardState);
@@ -225,26 +225,6 @@ namespace ConnectBot
             if (!moveWasLegal) throw new InvalidOperationException($"Illegal move attempted for column {moveColumn}");
 
             return newState;
-        }
-
-        /// <summary>
-        /// Returns list of column indices open to moves.
-        /// </summary>
-        /// <param name="board"></param>
-        /// <returns></returns>
-        protected List<int> GetOpenColumns(DiscColor[,] board)
-        {
-            List<int> ret = new List<int>();
-
-            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
-            {
-                if (board[c, LogicalBoardHelpers.NUM_ROWS - 1] == 0)
-                {
-                    ret.Add(c);
-                }
-            }
-
-            return ret;
         }
 
         /// <summary>
@@ -328,7 +308,7 @@ namespace ConnectBot
 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (InBounds(discColumn + ch + trace, discRow))
+                    if (LogicalBoardHelpers.InBounds(discColumn + ch + trace, discRow))
                     {
                         if (board[discColumn + ch + trace, discRow] == oppositeColor)
                         {
@@ -360,7 +340,7 @@ namespace ConnectBot
 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (InBounds(discColumn, discRow + rh + trace))
+                    if (LogicalBoardHelpers.InBounds(discColumn, discRow + rh + trace))
                     {
                         if (board[discColumn, discRow + rh + trace] == oppositeColor)
                         {
@@ -390,7 +370,7 @@ namespace ConnectBot
                 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (InBounds(discColumn + ur + trace, discRow + ur + trace))
+                    if (LogicalBoardHelpers.InBounds(discColumn + ur + trace, discRow + ur + trace))
                     {
                         if (board[discColumn + ur + trace, discRow + ur + trace] == oppositeColor)
                         {
@@ -420,7 +400,7 @@ namespace ConnectBot
 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (InBounds(discColumn + (-1 * (ul + trace)), discRow + ul + trace))
+                    if (LogicalBoardHelpers.InBounds(discColumn + (-1 * (ul + trace)), discRow + ul + trace))
                     {
                         if (board[discColumn + (-1 * (ul + trace)), discRow + ul + trace] == oppositeColor)
                         {
@@ -452,7 +432,7 @@ namespace ConnectBot
         /// <returns>The column that will be moved played in.</returns>
         private int MinimaxCutoffSearch(Node node)
         {
-            int maxDepth = 3;
+            int maxDepth = 7;
 
             // TODO change this based on the AI's color
             // for all actions return min value of the result of the action
@@ -461,7 +441,7 @@ namespace ConnectBot
             var alphaBeta = new AlphaBeta();
             var nodeCounter = new NodeCounter();
 
-            foreach (int openMove in GetOpenColumns(node.BoardDiscState))
+            foreach (int openMove in LogicalBoardHelpers.GetOpenColumns(node.BoardDiscState))
             {
                 DiscColor[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
                 Node child = new Node(newState, openMove, AiColor);
@@ -488,8 +468,13 @@ namespace ConnectBot
         {
             nodeCounter.Increment();
 
+            var openColumns = LogicalBoardHelpers.GetOpenColumns(node.BoardDiscState);
+
             // TODO make this check and stop terminal states as well
-            if (depth <= 0)
+            if (depth <= 0 ||
+                // this should represent a drawn game, we may want to
+                // return something other than an evaluation here
+                openColumns.Count == 0)
             {
                 return EvaluateBoardState(node.BoardDiscState);
             }
@@ -497,7 +482,7 @@ namespace ConnectBot
             decimal maximumMoveValue = decimal.MinValue;
             DiscColor colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
 
-            foreach (int openMove in GetOpenColumns(node.BoardDiscState))
+            foreach (int openMove in openColumns)
             {
                 var newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
                 var child = new Node(newState, openMove, colorMoved);
@@ -523,7 +508,10 @@ namespace ConnectBot
         {
             nodeCounter.Increment();
 
-            if (depth <= 0)
+            var openColumns = LogicalBoardHelpers.GetOpenColumns(node.BoardDiscState);
+
+            if (depth <= 0 ||
+                openColumns.Count == 0)
             {
                 return EvaluateBoardState(node.BoardDiscState);
             }
@@ -531,7 +519,7 @@ namespace ConnectBot
             decimal minimumMoveValue = decimal.MaxValue;
             DiscColor colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
 
-            foreach (int openMove in GetOpenColumns(node.BoardDiscState))
+            foreach (int openMove in openColumns)
             {
                 var newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
                 var child = new Node(newState, openMove, colorMoved);
@@ -547,21 +535,6 @@ namespace ConnectBot
             }
 
             return minimumMoveValue;
-        }
-
-        /// <summary>
-        /// Determines if a [column, row] index pair
-        /// are in legal bounds of the board.
-        /// </summary>
-        /// <returns></returns>
-        private bool InBounds(int col, int row)
-        {
-            if ((col > -1 && col < 7) && (row > -1 && row < 6))
-            {
-                return true;
-            }
-            
-            return false;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -102,7 +103,21 @@ namespace ConnectBot
         protected void VictoryConfirmed(DiscColor winner)
         {
             if (winner != DiscColor.None)
+            {
                 ShowPlayAgainMenu();
+            }
+            else
+            {
+                if (LogicalBoardHelpers.GetOpenColumns(GetTextBoard()).Count == 0)
+                {
+                    ShowPlayAgainDrawnMenu();
+                }
+            }
+        }
+
+        protected void ShowPlayAgainDrawnMenu()
+        {
+            CurrentMenu = MenuState.PlayAgainDrawn;
         }
 
         protected void ShowPlayAgainMenu()
@@ -189,19 +204,11 @@ namespace ConnectBot
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            // TODO Escape doesn't completed stop execution. 
-            // TODO also AI needs to get stopped when the x button is clicked on the window.
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            // TODO Escape doesn't completed stop execution.
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || 
+                Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
                 EndGame();
-            }
-
-            if (Keyboard.GetState().IsKeyDown(Keys.J))
-            {
-                //if (bot != null)
-                //{
-                //    bot.Stop();
-                //}
             }
 
             timeSinceLastMove += gameTime.ElapsedGameTime.TotalSeconds;
@@ -212,9 +219,7 @@ namespace ConnectBot
             LastMouseState = MouseState;
             MouseState = Mouse.GetState();
             Point mousePosition = new Point(MouseState.X, MouseState.Y);
-            //Task<int> botMove;
-            //bool botMoveRunning = false;
-
+            
             switch (CurrentMenu)
             {
                 case MenuState.None:
@@ -287,6 +292,8 @@ namespace ConnectBot
             //int botMove = await Bot.Move();
             int botMove = -1;
             await Task.Run(() => botMove = Bot.Move().Result);
+
+            if (botMove == -1) throw new InvalidOperationException("The bot did not return a valid column.");
 
             // TODO ensure bot made valid move if it tried to cheat request another
             // maybe the board state should be passed into the bot at move request
@@ -367,8 +374,7 @@ namespace ConnectBot
         /// </summary>
         protected void UpdateBotBoard(int columnMoved)
         {
-            DiscColor[,] botBoard = GetTextBoard();
-            Bot.UpdateBoard(botBoard, columnMoved);
+            Bot.UpdateBoard(GetTextBoard(), columnMoved);
         }
     }
 }
