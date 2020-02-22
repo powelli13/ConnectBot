@@ -17,11 +17,6 @@ namespace ConnectBot
         protected DiscColor OpponentColor { get; set; }
 
         /// <summary>
-        /// used for testing
-        /// </summary>
-        protected Random Rando { get; set; }
-
-        /// <summary>
         /// Used for counting the total number of nodes that were explored
         /// during a given search iteration. Used for diagnostics and performance measuring.
         /// </summary>
@@ -44,7 +39,7 @@ namespace ConnectBot
         /// Used to store the window edges Alpha and Beta
         /// when performing an Alpha Beta search.
         /// </summary>
-        private class AlphaBeta
+        class AlphaBeta
         {
             public decimal Alpha { get; set; }
             public decimal Beta { get; set; }
@@ -58,20 +53,21 @@ namespace ConnectBot
             }
         }
 
-        #region Class : Node
         /// <summary>
         /// Node of the move tree stores a board state, 
         /// turn disc and column for move that generated this state
         /// and evaluation score of the board state.
         /// </summary>
-        private class Node
+        class Node
         {
             public DiscColor[,] BoardDiscState { get; set; }
 
             /// <summary>
-            /// Color to next move at that node.
+            /// Color that moved last to create the current state in the Node.
             /// </summary>
-            public DiscColor ColorMoved { get; set; }
+            public DiscColor ColorLastMoved { get; set; }
+
+            public DiscColor CurrentTurn { get; private set; }
 
             /// <summary>
             /// Column that was moved in to generate this node.
@@ -87,11 +83,22 @@ namespace ConnectBot
                 BoardDiscState = board;
                 ColumnMoved = column;
                 PositionalScore = score;
-                ColorMoved = turn;// TODO will this pass the turn that just moved?
+                ColorLastMoved = turn;
+                CurrentTurn = LogicalBoardHelpers.ChangeTurnColor(turn);
                 Children = new List<Node>();
             }
         }
-        #endregion
+
+        /// <summary>
+        /// Holds a killer (winning) move column and the
+        /// disc color that move would benefit.
+        /// </summary>
+        class KillerMove
+        {
+            public bool HasWinner => Column != -1;
+            public int Column { get; set; }
+            public DiscColor Color { get; set; }
+        }
 
         /// <summary>
         /// Constructor.
@@ -101,8 +108,6 @@ namespace ConnectBot
         {
             AiColor = color;
             OpponentColor = LogicalBoardHelpers.ChangeTurnColor(AiColor);
-
-            Rando = new Random();
         }
         
         /// <summary>
@@ -121,51 +126,22 @@ namespace ConnectBot
             }
         }
 
-        // Used to call and test methods within the AI class.
-        public void AISelfTest()
-        {
-            // evaluate and empty board
-            /*
-            int[,] emptyBoard = new int[numColumns, numRows];
-
-            for (int c = 0; c < numColumns; c++)
-            {
-                for (int r = 0; r < numRows; r++)
-                {
-                    emptyBoard[c, r] = 0;
-                }
-            }
-
-            double ts;
-            List<int> colors = new List<int>();
-            colors.Add(red);
-            colors.Add(black);
-
-            foreach (int tc in colors)
-            {
-                for (int ix = 0; ix < numColumns; ix++)
-                {
-                    int[,] newBoard = GenerateBoardState(ix, tc, emptyBoard);
-                    ts = EvaluateBoardState(newBoard);
-
-                    Console.WriteLine(String.Format("AI scored {0} for color {1} on colum {2} for empty board move.", ts, tc, ix));
-                }
-            }
-            */
-            //treeBuilder_GrowChildren(treeRoot, 4);
-            // TODO do we need a safety mechanism to not expand children too large?
-            System.Console.WriteLine("examine tree root here");
-        }
-
         public async Task<int> Move()
         {
             //AISelfTest();
 
             // Look for wins before performing in depth searches
-            int killerMove = FindKillerMove(GameDiscs);
+            var aiWinningMove = FindKillerMove(GameDiscs, AiColor);
 
-            if (killerMove != -1) 
-                return killerMove;
+            if (aiWinningMove.HasWinner) 
+                return aiWinningMove.Column;
+
+            // TODO consider refactoring FindKillerMove so that we only need to call once
+            // Ensure we block the opponents winning moves
+            var opponentWinningMove = FindKillerMove(GameDiscs, OpponentColor);
+
+            if (opponentWinningMove.HasWinner)
+                return opponentWinningMove.Column;
 
             Node n = new Node(GameDiscs, 0, AiColor, 0.0m);
             
@@ -174,29 +150,24 @@ namespace ConnectBot
             return retMove;
         }
 
-        protected int FindKillerMove(DiscColor[,] boardState)
+        KillerMove FindKillerMove(DiscColor[,] boardState, DiscColor checkColor)
         {
-            int move = -1;
-
             foreach (var openColumn in LogicalBoardHelpers.GetOpenColumns(boardState))
             {
-                // If the AI could win return that immediately.
-                var movedBoard = GenerateBoardState(openColumn, AiColor, boardState);
-                var winner = LogicalBoardHelpers.CheckVictory(movedBoard);
-
-                if (winner == AiColor)
-                    return openColumn;
-
-                // If the opponent could win be sure to check the rest in case the AI could win
-                // at a column further down.
-                var oppMovedBoard = GenerateBoardState(openColumn, OpponentColor, boardState);
-                var oppWinner = LogicalBoardHelpers.CheckVictory(oppMovedBoard);
-
-                if (oppWinner == OpponentColor)
-                    move = openColumn;
+                var movedBoard = GenerateBoardState(openColumn, checkColor, boardState);
+                
+                if (LogicalBoardHelpers.CheckVictory(movedBoard) == checkColor)
+                    return new KillerMove(){
+                        Column = openColumn,
+                        Color = checkColor
+                    };
             }
 
-            return move;
+            return new KillerMove()
+            {
+                Column = -1,
+                Color = DiscColor.None
+            };
         }
 
         protected DiscColor[,] GenerateBoardState(int moveColumn, DiscColor discColor, DiscColor[,] currentBoard)
@@ -273,7 +244,7 @@ namespace ConnectBot
         /// <param name="discColumn"></param>
         /// <param name="discRow"></param>
         /// <param name="val"></param>
-        private decimal ScorePossibles(DiscColor[,] board, DiscColor checkColor, int discColumn, int discRow)
+        decimal ScorePossibles(DiscColor[,] board, DiscColor checkColor, int discColumn, int discRow)
         {
             /*
              * 4 in a row is worth as 1 point.
@@ -289,7 +260,7 @@ namespace ConnectBot
 
             // The total number of possible open scoring combinations 
             // that the checked disc participates.
-            int participatedPossibles = 0;
+            decimal participatedPossibles = 0.0m;
             decimal participatedValue = 0.25m;
             DiscColor oppositeColor = LogicalBoardHelpers.ChangeTurnColor(checkColor);
 
@@ -315,6 +286,10 @@ namespace ConnectBot
                             addPossible = false;
                             break;
                         }
+                        else if (board[discColumn + ch + trace, discRow] == checkColor)
+                        {
+                            participatedPossibles += 0.2m;
+                        }
                     }
                     else
                     {
@@ -325,7 +300,7 @@ namespace ConnectBot
 
                 if (addPossible)
                 {
-                    participatedPossibles++;
+                    participatedPossibles += 1.0m;
                 }
             }
 
@@ -347,6 +322,10 @@ namespace ConnectBot
                             addPossible = false;
                             break;
                         }
+                        else if (board[discColumn, discRow + rh + trace] == checkColor)
+                        {
+                            participatedPossibles += 0.2m;
+                        }
                     }
                     else
                     {
@@ -357,7 +336,7 @@ namespace ConnectBot
 
                 if (addPossible)
                 {
-                    participatedPossibles++;
+                    participatedPossibles += 1.0m;
                 }
             }
 
@@ -377,6 +356,10 @@ namespace ConnectBot
                             addPossible = false;
                             break;
                         }
+                        else if (board[discColumn + ur + trace, discRow + ur + trace] == checkColor)
+                        {
+                            participatedPossibles += 0.2m;
+                        }
                     }
                     else
                     {
@@ -387,7 +370,7 @@ namespace ConnectBot
 
                 if (addPossible)
                 {
-                    participatedPossibles += 1;
+                    participatedPossibles += 1.0m;
                 }
             }
 
@@ -407,6 +390,10 @@ namespace ConnectBot
                             addPossible = false;
                             break;
                         }
+                        else if (board[discColumn + (-1 * (ul + trace)), discRow + ul + trace] == checkColor)
+                        {
+                            participatedPossibles += 0.2m;
+                        }
                     }
                     else
                     {
@@ -417,12 +404,21 @@ namespace ConnectBot
 
                 if (addPossible)
                 {
-                    participatedPossibles += 1;
+                    participatedPossibles += 1.0m;
                 }
             }
 
             // TODO double check this if we ever move to a negamax algo
             return (participatedValue * participatedPossibles);
+        }
+
+        // TODO consider changing this if negamax is used
+        decimal LosingStateScore()
+        {
+            if (AiColor == DiscColor.Red)
+                return Decimal.MaxValue;
+
+            return Decimal.MinValue;
         }
 
         /// <summary>
@@ -445,17 +441,38 @@ namespace ConnectBot
             {
                 DiscColor[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
                 Node child = new Node(newState, openMove, AiColor);
+                
+                // TODO improve this use of a bool
+                //bool opponentWinning = false;
 
                 var openMoveValue = MinValue(child, maxDepth, alphaBeta, nodeCounter);
                 Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
 
-                if (openMoveValue < minimumMoveValue)
+                // TODO do more reading because this feels unnecessary. the danger of 
+                // an opponent having an imminent win should be able to be captured in the heuristic
+
+                // final depth search to ensure that a move doesn't leave the 
+                // opponent with an opportunity to win
+                var killer = FindKillerMove(child.BoardDiscState, OpponentColor);
+
+                if (killer.HasWinner)
+                {
+                    // TODO still could probably be improved. this reflects
+                    // the worst possible move but will ensure that the bot
+                    // moves when every move gives the opponent a win
+                    openMoveValue = decimal.MaxValue - 1.0m;
+                }
+
+                if (openMoveValue < minimumMoveValue) //&&
+
+                    //!opponentWinning)
                 {
                     minimumMoveValue = openMoveValue;
                     movedColumn = openMove;
                 }
             }
 
+            Console.WriteLine($"Column {movedColumn} was chosen.");
             Console.WriteLine($"{nodeCounter.TotalNodes} were explored.");
 
             return movedColumn;
@@ -471,9 +488,8 @@ namespace ConnectBot
 
             var openColumns = LogicalBoardHelpers.GetOpenColumns(node.BoardDiscState);
 
-            // TODO make this check and stop terminal states as well
             if (depth <= 0 ||
-                // this should represent a drawn game, we may want to
+                // TODO this should represent a drawn game, we may want to
                 // return something other than an evaluation here
                 openColumns.Count == 0)
             {
@@ -481,12 +497,11 @@ namespace ConnectBot
             }
 
             decimal maximumMoveValue = decimal.MinValue;
-            DiscColor colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
 
             foreach (int openMove in openColumns)
             {
-                var newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
-                var child = new Node(newState, openMove, colorMoved);
+                var newState = GenerateBoardState(openMove, node.CurrentTurn, node.BoardDiscState);
+                var child = new Node(newState, openMove, node.CurrentTurn);
 
                 maximumMoveValue = Math.Max(
                     maximumMoveValue,
@@ -518,12 +533,11 @@ namespace ConnectBot
             }
 
             decimal minimumMoveValue = decimal.MaxValue;
-            DiscColor colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
 
             foreach (int openMove in openColumns)
             {
-                var newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
-                var child = new Node(newState, openMove, colorMoved);
+                var newState = GenerateBoardState(openMove, node.CurrentTurn, node.BoardDiscState);
+                var child = new Node(newState, openMove, node.CurrentTurn);
 
                 minimumMoveValue = Math.Min(
                     minimumMoveValue,
