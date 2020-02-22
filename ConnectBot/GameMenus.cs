@@ -31,6 +31,7 @@ namespace ConnectBot
                 DrawingRectangles = new Dictionary<string, Rectangle>();
 
                 DrawingRectangles[ImageNames.PLAY_AGAIN_BACKGROUND] = new Rectangle(XBuffer, YBuffer, 320, 160);
+                DrawingRectangles[ImageNames.PLAY_AGAIN_DRAWN_QUESTION] = new Rectangle(XBuffer, YBuffer, 320, 160);
 
                 DrawingRectangles[ImageNames.PLAY_AGAIN_QUESTION] = new Rectangle(
                     XBuffer + XQuestionBuffer,

@@ -443,10 +443,13 @@ namespace ConnectBot
                 Node child = new Node(newState, openMove, AiColor);
                 
                 // TODO improve this use of a bool
-                bool opponentWinning = false;
+                //bool opponentWinning = false;
 
                 var openMoveValue = MinValue(child, maxDepth, alphaBeta, nodeCounter);
                 Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
+
+                // TODO do more reading because this feels unnecessary. the danger of 
+                // an opponent having an imminent win should be able to be captured in the heuristic
 
                 // final depth search to ensure that a move doesn't leave the 
                 // opponent with an opportunity to win
@@ -454,18 +457,22 @@ namespace ConnectBot
 
                 if (killer.HasWinner)
                 {
-                    opponentWinning = true;
-                    break;
+                    // TODO still could probably be improved. this reflects
+                    // the worst possible move but will ensure that the bot
+                    // moves when every move gives the opponent a win
+                    openMoveValue = decimal.MaxValue - 1.0m;
                 }
 
-                if (openMoveValue < minimumMoveValue &&
-                    !opponentWinning)
+                if (openMoveValue < minimumMoveValue) //&&
+
+                    //!opponentWinning)
                 {
                     minimumMoveValue = openMoveValue;
                     movedColumn = openMove;
                 }
             }
 
+            Console.WriteLine($"Column {movedColumn} was chosen.");
             Console.WriteLine($"{nodeCounter.TotalNodes} were explored.");
 
             return movedColumn;
