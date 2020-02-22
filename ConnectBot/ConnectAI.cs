@@ -64,14 +64,16 @@ namespace ConnectBot
         /// turn disc and column for move that generated this state
         /// and evaluation score of the board state.
         /// </summary>
-        private class Node
+        class Node
         {
             public DiscColor[,] BoardDiscState { get; set; }
 
             /// <summary>
-            /// Color to next move at that node.
+            /// Color that moved last to create the current state in the Node.
             /// </summary>
-            public DiscColor ColorMoved { get; set; }
+            public DiscColor ColorLastMoved { get; set; }
+
+            public DiscColor CurrentTurn { get; private set; }
 
             /// <summary>
             /// Column that was moved in to generate this node.
@@ -87,7 +89,8 @@ namespace ConnectBot
                 BoardDiscState = board;
                 ColumnMoved = column;
                 PositionalScore = score;
-                ColorMoved = turn;// TODO will this pass the turn that just moved?
+                ColorLastMoved = turn;
+                CurrentTurn = LogicalBoardHelpers.ChangeTurnColor(turn);
                 Children = new List<Node>();
             }
         }
@@ -119,42 +122,6 @@ namespace ConnectBot
                     GameDiscs[c, r] = newBoard[c, r];
                 }
             }
-        }
-
-        // Used to call and test methods within the AI class.
-        public void AISelfTest()
-        {
-            // evaluate and empty board
-            /*
-            int[,] emptyBoard = new int[numColumns, numRows];
-
-            for (int c = 0; c < numColumns; c++)
-            {
-                for (int r = 0; r < numRows; r++)
-                {
-                    emptyBoard[c, r] = 0;
-                }
-            }
-
-            double ts;
-            List<int> colors = new List<int>();
-            colors.Add(red);
-            colors.Add(black);
-
-            foreach (int tc in colors)
-            {
-                for (int ix = 0; ix < numColumns; ix++)
-                {
-                    int[,] newBoard = GenerateBoardState(ix, tc, emptyBoard);
-                    ts = EvaluateBoardState(newBoard);
-
-                    Console.WriteLine(String.Format("AI scored {0} for color {1} on colum {2} for empty board move.", ts, tc, ix));
-                }
-            }
-            */
-            //treeBuilder_GrowChildren(treeRoot, 4);
-            // TODO do we need a safety mechanism to not expand children too large?
-            System.Console.WriteLine("examine tree root here");
         }
 
         public async Task<int> Move()
@@ -481,12 +448,11 @@ namespace ConnectBot
             }
 
             decimal maximumMoveValue = decimal.MinValue;
-            DiscColor colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
 
             foreach (int openMove in openColumns)
             {
-                var newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
-                var child = new Node(newState, openMove, colorMoved);
+                var newState = GenerateBoardState(openMove, node.CurrentTurn, node.BoardDiscState);
+                var child = new Node(newState, openMove, node.CurrentTurn);
 
                 maximumMoveValue = Math.Max(
                     maximumMoveValue,
@@ -518,12 +484,11 @@ namespace ConnectBot
             }
 
             decimal minimumMoveValue = decimal.MaxValue;
-            DiscColor colorMoved = LogicalBoardHelpers.ChangeTurnColor(node.ColorMoved);
 
             foreach (int openMove in openColumns)
             {
-                var newState = GenerateBoardState(openMove, colorMoved, node.BoardDiscState);
-                var child = new Node(newState, openMove, colorMoved);
+                var newState = GenerateBoardState(openMove, node.CurrentTurn, node.BoardDiscState);
+                var child = new Node(newState, openMove, node.CurrentTurn);
 
                 minimumMoveValue = Math.Min(
                     minimumMoveValue,
