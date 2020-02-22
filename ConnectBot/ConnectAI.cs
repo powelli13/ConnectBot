@@ -17,11 +17,6 @@ namespace ConnectBot
         protected DiscColor OpponentColor { get; set; }
 
         /// <summary>
-        /// used for testing
-        /// </summary>
-        protected Random Rando { get; set; }
-
-        /// <summary>
         /// Used for counting the total number of nodes that were explored
         /// during a given search iteration. Used for diagnostics and performance measuring.
         /// </summary>
@@ -44,7 +39,7 @@ namespace ConnectBot
         /// Used to store the window edges Alpha and Beta
         /// when performing an Alpha Beta search.
         /// </summary>
-        private class AlphaBeta
+        class AlphaBeta
         {
             public decimal Alpha { get; set; }
             public decimal Beta { get; set; }
@@ -58,7 +53,6 @@ namespace ConnectBot
             }
         }
 
-        #region Class : Node
         /// <summary>
         /// Node of the move tree stores a board state, 
         /// turn disc and column for move that generated this state
@@ -94,7 +88,17 @@ namespace ConnectBot
                 Children = new List<Node>();
             }
         }
-        #endregion
+
+        /// <summary>
+        /// Holds a killer (winning) move column and the
+        /// disc color that move would benefit.
+        /// </summary>
+        class KillerMove
+        {
+            public bool HasWinner => Column != -1;
+            public int Column { get; set; }
+            public DiscColor Color { get; set; }
+        }
 
         /// <summary>
         /// Constructor.
@@ -104,8 +108,6 @@ namespace ConnectBot
         {
             AiColor = color;
             OpponentColor = LogicalBoardHelpers.ChangeTurnColor(AiColor);
-
-            Rando = new Random();
         }
         
         /// <summary>
@@ -129,10 +131,10 @@ namespace ConnectBot
             //AISelfTest();
 
             // Look for wins before performing in depth searches
-            int killerMove = FindKillerMove(GameDiscs);
+            var killerMove = FindKillerMove(GameDiscs);
 
-            if (killerMove != -1) 
-                return killerMove;
+            if (killerMove.HasWinner) 
+                return killerMove.Column;
 
             Node n = new Node(GameDiscs, 0, AiColor, 0.0m);
             
@@ -141,7 +143,7 @@ namespace ConnectBot
             return retMove;
         }
 
-        protected int FindKillerMove(DiscColor[,] boardState)
+        KillerMove FindKillerMove(DiscColor[,] boardState)
         {
             int move = -1;
 
@@ -152,10 +154,13 @@ namespace ConnectBot
                 var winner = LogicalBoardHelpers.CheckVictory(movedBoard);
 
                 if (winner == AiColor)
-                    return openColumn;
+                    return new KillerMove(){
+                        Column = openColumn,
+                        Color = AiColor
+                    };
 
                 // If the opponent could win be sure to check the rest in case the AI could win
-                // at a column further down.
+                // at a column further along.
                 var oppMovedBoard = GenerateBoardState(openColumn, OpponentColor, boardState);
                 var oppWinner = LogicalBoardHelpers.CheckVictory(oppMovedBoard);
 
@@ -163,7 +168,11 @@ namespace ConnectBot
                     move = openColumn;
             }
 
-            return move;
+            return new KillerMove()
+            {
+                Column = move,
+                Color = OpponentColor
+            };
         }
 
         protected DiscColor[,] GenerateBoardState(int moveColumn, DiscColor discColor, DiscColor[,] currentBoard)
@@ -240,7 +249,7 @@ namespace ConnectBot
         /// <param name="discColumn"></param>
         /// <param name="discRow"></param>
         /// <param name="val"></param>
-        private decimal ScorePossibles(DiscColor[,] board, DiscColor checkColor, int discColumn, int discRow)
+        decimal ScorePossibles(DiscColor[,] board, DiscColor checkColor, int discColumn, int discRow)
         {
             /*
              * 4 in a row is worth as 1 point.
@@ -256,7 +265,7 @@ namespace ConnectBot
 
             // The total number of possible open scoring combinations 
             // that the checked disc participates.
-            int participatedPossibles = 0;
+            decimal participatedPossibles = 0.0m;
             decimal participatedValue = 0.25m;
             DiscColor oppositeColor = LogicalBoardHelpers.ChangeTurnColor(checkColor);
 
@@ -282,6 +291,10 @@ namespace ConnectBot
                             addPossible = false;
                             break;
                         }
+                        else if (board[discColumn + ch + trace, discRow] == checkColor)
+                        {
+                            participatedPossibles += 0.2m;
+                        }
                     }
                     else
                     {
@@ -292,7 +305,7 @@ namespace ConnectBot
 
                 if (addPossible)
                 {
-                    participatedPossibles++;
+                    participatedPossibles += 1.0m;
                 }
             }
 
@@ -314,6 +327,10 @@ namespace ConnectBot
                             addPossible = false;
                             break;
                         }
+                        else if (board[discColumn, discRow + rh + trace] == checkColor)
+                        {
+                            participatedPossibles += 0.2m;
+                        }
                     }
                     else
                     {
@@ -324,7 +341,7 @@ namespace ConnectBot
 
                 if (addPossible)
                 {
-                    participatedPossibles++;
+                    participatedPossibles += 1.0m;
                 }
             }
 
@@ -344,6 +361,10 @@ namespace ConnectBot
                             addPossible = false;
                             break;
                         }
+                        else if (board[discColumn + ur + trace, discRow + ur + trace] == checkColor)
+                        {
+                            participatedPossibles += 0.2m;
+                        }
                     }
                     else
                     {
@@ -354,7 +375,7 @@ namespace ConnectBot
 
                 if (addPossible)
                 {
-                    participatedPossibles += 1;
+                    participatedPossibles += 1.0m;
                 }
             }
 
@@ -374,6 +395,10 @@ namespace ConnectBot
                             addPossible = false;
                             break;
                         }
+                        else if (board[discColumn + (-1 * (ul + trace)), discRow + ul + trace] == checkColor)
+                        {
+                            participatedPossibles += 0.2m;
+                        }
                     }
                     else
                     {
@@ -384,12 +409,21 @@ namespace ConnectBot
 
                 if (addPossible)
                 {
-                    participatedPossibles += 1;
+                    participatedPossibles += 1.0m;
                 }
             }
 
             // TODO double check this if we ever move to a negamax algo
             return (participatedValue * participatedPossibles);
+        }
+
+        // TODO consider changing this if negamax is used
+        decimal LosingStateScore()
+        {
+            if (AiColor == DiscColor.Red)
+                return Decimal.MaxValue;
+
+            return Decimal.MinValue;
         }
 
         /// <summary>
@@ -412,11 +446,31 @@ namespace ConnectBot
             {
                 DiscColor[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
                 Node child = new Node(newState, openMove, AiColor);
+                // TODO improve this
+                bool opponentWinning = false;
 
                 var openMoveValue = MinValue(child, maxDepth, alphaBeta, nodeCounter);
                 Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
 
-                if (openMoveValue < minimumMoveValue)
+                // final depth search to ensure that a move doesn't leave the 
+                // opponent with an opportunity to win
+                foreach (int quietOpenMove in LogicalBoardHelpers.GetOpenColumns(child.BoardDiscState))
+                {
+                    nodeCounter.Increment();
+
+                    var bottomState = GenerateBoardState(quietOpenMove, node.CurrentTurn, node.BoardDiscState);
+                    var killer = FindKillerMove(bottomState);
+
+                    if (killer.HasWinner &&
+                        killer.Color == OpponentColor)
+                    {
+                        opponentWinning = true;
+                        break;
+                    }
+                }               
+
+                if (openMoveValue < minimumMoveValue &&
+                    !opponentWinning)
                 {
                     minimumMoveValue = openMoveValue;
                     movedColumn = openMove;
@@ -438,9 +492,8 @@ namespace ConnectBot
 
             var openColumns = LogicalBoardHelpers.GetOpenColumns(node.BoardDiscState);
 
-            // TODO make this check and stop terminal states as well
             if (depth <= 0 ||
-                // this should represent a drawn game, we may want to
+                // TODO this should represent a drawn game, we may want to
                 // return something other than an evaluation here
                 openColumns.Count == 0)
             {
