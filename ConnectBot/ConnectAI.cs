@@ -131,10 +131,17 @@ namespace ConnectBot
             //AISelfTest();
 
             // Look for wins before performing in depth searches
-            var killerMove = FindKillerMove(GameDiscs);
+            var aiWinningMove = FindKillerMove(GameDiscs, AiColor);
 
-            if (killerMove.HasWinner) 
-                return killerMove.Column;
+            if (aiWinningMove.HasWinner) 
+                return aiWinningMove.Column;
+
+            // TODO consider refactoring FindKillerMove so that we only need to call once
+            // Ensure we block the opponents winning moves
+            var opponentWinningMove = FindKillerMove(GameDiscs, OpponentColor);
+
+            if (opponentWinningMove.HasWinner)
+                return opponentWinningMove.Column;
 
             Node n = new Node(GameDiscs, 0, AiColor, 0.0m);
             
@@ -143,35 +150,23 @@ namespace ConnectBot
             return retMove;
         }
 
-        KillerMove FindKillerMove(DiscColor[,] boardState)
+        KillerMove FindKillerMove(DiscColor[,] boardState, DiscColor checkColor)
         {
-            int move = -1;
-
             foreach (var openColumn in LogicalBoardHelpers.GetOpenColumns(boardState))
             {
-                // If the AI could win return that immediately.
-                var movedBoard = GenerateBoardState(openColumn, AiColor, boardState);
-                var winner = LogicalBoardHelpers.CheckVictory(movedBoard);
-
-                if (winner == AiColor)
+                var movedBoard = GenerateBoardState(openColumn, checkColor, boardState);
+                
+                if (LogicalBoardHelpers.CheckVictory(movedBoard) == checkColor)
                     return new KillerMove(){
                         Column = openColumn,
-                        Color = AiColor
+                        Color = checkColor
                     };
-
-                // If the opponent could win be sure to check the rest in case the AI could win
-                // at a column further along.
-                var oppMovedBoard = GenerateBoardState(openColumn, OpponentColor, boardState);
-                var oppWinner = LogicalBoardHelpers.CheckVictory(oppMovedBoard);
-
-                if (oppWinner == OpponentColor)
-                    move = openColumn;
             }
 
             return new KillerMove()
             {
-                Column = move,
-                Color = OpponentColor
+                Column = -1,
+                Color = DiscColor.None
             };
         }
 
@@ -446,7 +441,8 @@ namespace ConnectBot
             {
                 DiscColor[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
                 Node child = new Node(newState, openMove, AiColor);
-                // TODO improve this
+                
+                // TODO improve this use of a bool
                 bool opponentWinning = false;
 
                 var openMoveValue = MinValue(child, maxDepth, alphaBeta, nodeCounter);
@@ -454,20 +450,13 @@ namespace ConnectBot
 
                 // final depth search to ensure that a move doesn't leave the 
                 // opponent with an opportunity to win
-                foreach (int quietOpenMove in LogicalBoardHelpers.GetOpenColumns(child.BoardDiscState))
+                var killer = FindKillerMove(child.BoardDiscState, OpponentColor);
+
+                if (killer.HasWinner)
                 {
-                    nodeCounter.Increment();
-
-                    var bottomState = GenerateBoardState(quietOpenMove, node.CurrentTurn, node.BoardDiscState);
-                    var killer = FindKillerMove(bottomState);
-
-                    if (killer.HasWinner &&
-                        killer.Color == OpponentColor)
-                    {
-                        opponentWinning = true;
-                        break;
-                    }
-                }               
+                    opponentWinning = true;
+                    break;
+                }
 
                 if (openMoveValue < minimumMoveValue &&
                     !opponentWinning)
