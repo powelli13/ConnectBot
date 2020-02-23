@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static ConnectBot.LogicalBoardHelpers;
 
 namespace ConnectBot
 {
@@ -11,7 +12,7 @@ namespace ConnectBot
         /// indexed by [column, row]. Lowest column index is left most 
         /// on the screen. Lowest row index is lowest in the column stack.
         /// </summary>
-        protected DiscColor[,] GameDiscs = new DiscColor[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
+        protected DiscColor[,] GameDiscs = new DiscColor[NUM_COLUMNS, NUM_ROWS];
 
         protected DiscColor AiColor { get; set; }
         protected DiscColor OpponentColor { get; set; }
@@ -84,7 +85,7 @@ namespace ConnectBot
                 ColumnMoved = column;
                 PositionalScore = score;
                 ColorLastMoved = turn;
-                CurrentTurn = LogicalBoardHelpers.ChangeTurnColor(turn);
+                CurrentTurn = ChangeTurnColor(turn);
                 Children = new List<Node>();
             }
         }
@@ -107,7 +108,7 @@ namespace ConnectBot
         public ConnectAI(DiscColor color)
         {
             AiColor = color;
-            OpponentColor = LogicalBoardHelpers.ChangeTurnColor(AiColor);
+            OpponentColor = ChangeTurnColor(AiColor);
         }
         
         /// <summary>
@@ -117,9 +118,9 @@ namespace ConnectBot
         /// <param name="lastMove">Last move made on the new board. Negative one signifies first board update.</param>
         public void UpdateBoard(DiscColor[,] newBoard, int lastMove)
         {
-            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
+            for (int c = 0; c < NUM_COLUMNS; c++)
             {
-                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
+                for (int r = 0; r < NUM_ROWS; r++)
                 {
                     GameDiscs[c, r] = newBoard[c, r];
                 }
@@ -152,11 +153,11 @@ namespace ConnectBot
 
         KillerMove FindKillerMove(DiscColor[,] boardState, DiscColor checkColor)
         {
-            foreach (var openColumn in LogicalBoardHelpers.GetOpenColumns(boardState))
+            foreach (var openColumn in GetOpenColumns(boardState))
             {
                 var movedBoard = GenerateBoardState(openColumn, checkColor, boardState);
                 
-                if (LogicalBoardHelpers.CheckVictory(movedBoard) == checkColor)
+                if (CheckVictory(movedBoard) == checkColor)
                     return new KillerMove(){
                         Column = openColumn,
                         Color = checkColor
@@ -172,18 +173,18 @@ namespace ConnectBot
 
         protected DiscColor[,] GenerateBoardState(int moveColumn, DiscColor discColor, DiscColor[,] currentBoard)
         {
-            DiscColor[,] newState = new DiscColor[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
+            DiscColor[,] newState = new DiscColor[NUM_COLUMNS, NUM_ROWS];
 
-            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
+            for (int c = 0; c < NUM_COLUMNS; c++)
             {
-                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
+                for (int r = 0; r < NUM_ROWS; r++)
                 {
                     newState[c, r] = currentBoard[c, r];
                 }
             }
 
             bool moveWasLegal = false;
-            for (int row = 0; row < LogicalBoardHelpers.NUM_ROWS; row++)
+            for (int row = 0; row < NUM_ROWS; row++)
             {
                 if (newState[moveColumn, row] == 0)
                 {
@@ -212,9 +213,9 @@ namespace ConnectBot
         {
             //var ret = 0.0m;
 
-            //for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
+            //for (int c = 0; c < NUM_COLUMNS; c++)
             //{
-            //    for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
+            //    for (int r = 0; r < NUM_ROWS; r++)
             //    {
             //        if (boardState[c, r] != 0)
             //        {
@@ -223,11 +224,13 @@ namespace ConnectBot
             //    }
             //}
 
-            // TODO adjust when moving to negamax
-            var redPossibles = CountAllPossibles(boardState, DiscColor.Red);
-            var blackPossibles = CountAllPossibles(boardState, DiscColor.Black);
+            //return ret;
 
-            return blackPossibles + (redPossibles * -1.0m);
+            // TODO adjust when moving to negamax
+            var redPossiblesValue = CountAllPossibles(boardState, DiscColor.Red);
+            var blackPossiblesValue = CountAllPossibles(boardState, DiscColor.Black);
+
+            return blackPossiblesValue + (redPossiblesValue * -1.0m);
         }
 
         decimal CountAllPossibles(DiscColor[,] boardState, DiscColor checkColor)
@@ -240,17 +243,13 @@ namespace ConnectBot
             return ret;
         }
 
-        /// <summary>
-        /// Determine how many potentially scoring horizontal combinations
-        /// of four could happen for the discs of <param name="checkColor" />.
-        /// </summary>
         decimal PossibleHorizontals(DiscColor[,] boardState, DiscColor checkColor)
         {
             decimal ret = 0.0m;
 
-            for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
+            for (int r = 0; r < NUM_ROWS; r++)
             {
-                for (int trace = 0; trace < LogicalBoardHelpers.NUM_COLUMNS - 3; trace++)
+                for (int trace = 0; trace < NUM_COLUMNS - 3; trace++)
                 {
                     if (IsFourScorable(
                         checkColor,
@@ -259,7 +258,11 @@ namespace ConnectBot
                         boardState[trace + 2, r],
                         boardState[trace + 3, r]))
                     {
-                        ret++;
+                        ret += PossibleFourValue(
+                            boardState[trace, r],
+                            boardState[trace + 1, r],
+                            boardState[trace + 2, r],
+                            boardState[trace + 3, r]);
                     }
                 }
             }
@@ -272,9 +275,9 @@ namespace ConnectBot
         {
             decimal ret = 0.0m;
 
-            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
+            for (int c = 0; c < NUM_COLUMNS; c++)
             {
-                for (int trace = 0; trace < LogicalBoardHelpers.NUM_ROWS - 3; trace++)
+                for (int trace = 0; trace < NUM_ROWS - 3; trace++)
                 {
                     if (IsFourScorable(
                         checkColor,
@@ -283,7 +286,11 @@ namespace ConnectBot
                         boardState[c, trace + 2],
                         boardState[c, trace + 3]))
                     {
-                        ret++;
+                        ret += PossibleFourValue(
+                            boardState[c, trace],
+                            boardState[c, trace + 1],
+                            boardState[c, trace + 2],
+                            boardState[c, trace + 3]);
                     }
                 }
             }
@@ -299,9 +306,9 @@ namespace ConnectBot
             // for the first three rows
             // statically check up to the right
             // note that highest index of a row is at the top
-            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS - 3; c++)
+            for (int c = 0; c < NUM_COLUMNS - 3; c++)
             {
-                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS - 3; r++)
+                for (int r = 0; r < NUM_ROWS - 3; r++)
                 {
                     if (IsFourScorable(
                         checkColor,
@@ -310,7 +317,11 @@ namespace ConnectBot
                         boardState[c + 2, r + 2],
                         boardState[c + 3, r + 3]))
                     {
-                        ret++;
+                        ret += PossibleFourValue(
+                            boardState[c, r],
+                            boardState[c + 1, r + 1],
+                            boardState[c + 2, r + 2],
+                            boardState[c + 3, r + 3]);
                     }
                 }
             }
@@ -325,9 +336,9 @@ namespace ConnectBot
             // for first four columns
             // for top 3 rows
             // statically check down right
-            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS - 3; c++)
+            for (int c = 0; c < NUM_COLUMNS - 3; c++)
             {
-                for (int r = LogicalBoardHelpers.NUM_ROWS - 1; r > LogicalBoardHelpers.NUM_ROWS - 4; r--)
+                for (int r = NUM_ROWS - 1; r > NUM_ROWS - 4; r--)
                 {
                     if (IsFourScorable(
                         checkColor,
@@ -336,7 +347,11 @@ namespace ConnectBot
                         boardState[c + 2, r - 2],
                         boardState[c + 3, r - 3]))
                     {
-                        ret++;
+                        ret += PossibleFourValue(
+                            boardState[c, r],
+                            boardState[c + 1, r - 1],
+                            boardState[c + 2, r - 2],
+                            boardState[c + 3, r - 3]);
                     }
                 }
             }
@@ -351,7 +366,7 @@ namespace ConnectBot
             DiscColor third,
             DiscColor fourth)
         {
-            DiscColor opponentColor = LogicalBoardHelpers.ChangeTurnColor(friendlyColor);
+            DiscColor opponentColor = ChangeTurnColor(friendlyColor);
 
             // there is an opponent disc blocking
             if (first == opponentColor ||
@@ -368,6 +383,42 @@ namespace ConnectBot
                 return false;
 
             return true;
+        }
+
+        decimal PossibleFourValue(
+            DiscColor first,
+            DiscColor second,
+            DiscColor third,
+            DiscColor fourth)
+        {
+            int discCount = 0;
+
+            if (first != DiscColor.None)
+                discCount++;
+
+            if (second != DiscColor.None)
+                discCount++;
+
+            if (third != DiscColor.None)
+                discCount++;
+
+            if (fourth != DiscColor.None)
+                discCount++;
+
+            switch (discCount)
+            {
+                case 1:
+                    return 0.2m;
+                case 2:
+                    return 0.6m;
+                case 3:
+                    return 1.2m;
+                // TODO is this needed with killer move checking?
+                case 4:
+                    return 4.0m;
+                default:
+                    return 0.0m;
+            }
         }
 
         /// <summary>
@@ -397,7 +448,7 @@ namespace ConnectBot
             // that the checked disc participates.
             decimal participatedPossibles = 0.0m;
             decimal participatedValue = 0.25m;
-            DiscColor oppositeColor = LogicalBoardHelpers.ChangeTurnColor(checkColor);
+            DiscColor oppositeColor = ChangeTurnColor(checkColor);
 
             bool addPossible = true;
 
@@ -414,7 +465,7 @@ namespace ConnectBot
 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (LogicalBoardHelpers.InBounds(discColumn + ch + trace, discRow))
+                    if (InBounds(discColumn + ch + trace, discRow))
                     {
                         if (board[discColumn + ch + trace, discRow] == oppositeColor)
                         {
@@ -450,7 +501,7 @@ namespace ConnectBot
 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (LogicalBoardHelpers.InBounds(discColumn, discRow + rh + trace))
+                    if (InBounds(discColumn, discRow + rh + trace))
                     {
                         if (board[discColumn, discRow + rh + trace] == oppositeColor)
                         {
@@ -484,7 +535,7 @@ namespace ConnectBot
                 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (LogicalBoardHelpers.InBounds(discColumn + ur + trace, discRow + ur + trace))
+                    if (InBounds(discColumn + ur + trace, discRow + ur + trace))
                     {
                         if (board[discColumn + ur + trace, discRow + ur + trace] == oppositeColor)
                         {
@@ -518,7 +569,7 @@ namespace ConnectBot
 
                 for (int trace = 0; trace < 4; trace++)
                 {
-                    if (LogicalBoardHelpers.InBounds(discColumn + (-1 * (ul + trace)), discRow + ul + trace))
+                    if (InBounds(discColumn + (-1 * (ul + trace)), discRow + ul + trace))
                     {
                         if (board[discColumn + (-1 * (ul + trace)), discRow + ul + trace] == oppositeColor)
                         {
@@ -572,7 +623,7 @@ namespace ConnectBot
             var alphaBeta = new AlphaBeta();
             var nodeCounter = new NodeCounter();
 
-            foreach (int openMove in LogicalBoardHelpers.GetOpenColumns(node.BoardDiscState))
+            foreach (int openMove in GetOpenColumns(node.BoardDiscState))
             {
                 DiscColor[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
                 Node child = new Node(newState, openMove, AiColor);
@@ -621,7 +672,7 @@ namespace ConnectBot
         {
             nodeCounter.Increment();
 
-            var openColumns = LogicalBoardHelpers.GetOpenColumns(node.BoardDiscState);
+            var openColumns = GetOpenColumns(node.BoardDiscState);
 
             if (depth <= 0 ||
                 // TODO this should represent a drawn game, we may want to
@@ -659,7 +710,7 @@ namespace ConnectBot
         {
             nodeCounter.Increment();
 
-            var openColumns = LogicalBoardHelpers.GetOpenColumns(node.BoardDiscState);
+            var openColumns = GetOpenColumns(node.BoardDiscState);
 
             if (depth <= 0 ||
                 openColumns.Count == 0)
