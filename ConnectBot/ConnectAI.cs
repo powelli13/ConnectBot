@@ -385,6 +385,8 @@ namespace ConnectBot
             return true;
         }
 
+        // TODO the problem with this approach is that it doesn't
+        // take into account open spaces at the ends of a connection.
         decimal PossibleFourValue(
             DiscColor first,
             DiscColor second,
