@@ -210,29 +210,164 @@ namespace ConnectBot
         /// TODO there has to be a better way to structure board than all this rigorous checking
         protected decimal EvaluateBoardState(DiscColor[,] boardState)
         {
-            /*
-             * For both colors scan the entire board.
-             * From each space reach out in scorable
-             * directions adding on more value for free
-             * spaces that could be used to score,
-             * even more value for same color discs
-             * and breaking on opponents blocking
-             * dics.
-             */
-            var ret = 0.0m;
+            //var ret = 0.0m;
+
+            //for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
+            //{
+            //    for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
+            //    {
+            //        if (boardState[c, r] != 0)
+            //        {
+            //            ret += ScorePossibles(boardState, boardState[c, r], c, r);
+            //        }
+            //    }
+            //}
+
+            // TODO adjust when moving to negamax
+            var redPossibles = CountAllPossibles(boardState, DiscColor.Red);
+            var blackPossibles = CountAllPossibles(boardState, DiscColor.Black);
+
+            return blackPossibles + (redPossibles * -1.0m);
+        }
+
+        decimal CountAllPossibles(DiscColor[,] boardState, DiscColor checkColor)
+        {
+            decimal ret = PossibleHorizontals(boardState, checkColor);
+            ret += PossibleVerticals(boardState, checkColor);
+            ret += PossibleDiagonalRising(boardState, checkColor);
+            ret += PossibleDiagonalDescending(boardState, checkColor);
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Determine how many potentially scoring horizontal combinations
+        /// of four could happen for the discs of <param name="checkColor" />.
+        /// </summary>
+        decimal PossibleHorizontals(DiscColor[,] boardState, DiscColor checkColor)
+        {
+            decimal ret = 0.0m;
+
+            for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
+            {
+                for (int trace = 0; trace < LogicalBoardHelpers.NUM_COLUMNS - 3; trace++)
+                {
+                    if (IsFourScorable(
+                        checkColor,
+                        boardState[trace, r],
+                        boardState[trace + 1, r],
+                        boardState[trace + 2, r],
+                        boardState[trace + 3, r]))
+                    {
+                        ret++;
+                    }
+                }
+            }
+
+
+            return ret;
+        }
+
+        decimal PossibleVerticals(DiscColor[,] boardState, DiscColor checkColor)
+        {
+            decimal ret = 0.0m;
 
             for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
             {
-                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
+                for (int trace = 0; trace < LogicalBoardHelpers.NUM_ROWS - 3; trace++)
                 {
-                    if (boardState[c, r] != 0)
+                    if (IsFourScorable(
+                        checkColor,
+                        boardState[c, trace],
+                        boardState[c, trace + 1],
+                        boardState[c, trace + 2],
+                        boardState[c, trace + 3]))
                     {
-                        ret += ScorePossibles(boardState, boardState[c, r], c, r);
+                        ret++;
                     }
                 }
             }
 
             return ret;
+        }
+
+        decimal PossibleDiagonalRising(DiscColor[,] boardState, DiscColor checkColor)
+        {
+            decimal ret = 0.0m;
+
+            // for the first four columns
+            // for the first three rows
+            // statically check up to the right
+            // note that highest index of a row is at the top
+            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS - 3; c++)
+            {
+                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS - 3; r++)
+                {
+                    if (IsFourScorable(
+                        checkColor,
+                        boardState[c, r],
+                        boardState[c + 1, r + 1],
+                        boardState[c + 2, r + 2],
+                        boardState[c + 3, r + 3]))
+                    {
+                        ret++;
+                    }
+                }
+            }
+
+            return ret;
+        }
+
+        decimal PossibleDiagonalDescending(DiscColor[,] boardState, DiscColor checkColor)
+        {
+            decimal ret = 0.0m;
+
+            // for first four columns
+            // for top 3 rows
+            // statically check down right
+            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS - 3; c++)
+            {
+                for (int r = LogicalBoardHelpers.NUM_ROWS - 1; r > LogicalBoardHelpers.NUM_ROWS - 4; r--)
+                {
+                    if (IsFourScorable(
+                        checkColor,
+                        boardState[c, r],
+                        boardState[c + 1, r - 1],
+                        boardState[c + 2, r - 2],
+                        boardState[c + 3, r - 3]))
+                    {
+                        ret++;
+                    }
+                }
+            }
+
+            return ret;
+        }
+
+        bool IsFourScorable(
+            DiscColor friendlyColor,
+            DiscColor first,
+            DiscColor second,
+            DiscColor third,
+            DiscColor fourth)
+        {
+            DiscColor opponentColor = LogicalBoardHelpers.ChangeTurnColor(friendlyColor);
+
+            // there is an opponent disc blocking
+            if (first == opponentColor ||
+                second == opponentColor ||
+                third == opponentColor ||
+                fourth == opponentColor)
+                return false;
+
+            // there are no friendly discs
+            if (first == DiscColor.None &&
+                second == DiscColor.None &&
+                third == DiscColor.None &&
+                fourth == DiscColor.None)
+                return false;
+
+            return true;
         }
 
         /// <summary>

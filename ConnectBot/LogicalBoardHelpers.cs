@@ -149,7 +149,7 @@ namespace ConnectBot
 
             for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
             {
-                if (board[c, LogicalBoardHelpers.NUM_ROWS - 1] == 0)
+                if (board[c, LogicalBoardHelpers.NUM_ROWS - 1] == DiscColor.None)
                 {
                     ret.Add(c);
                 }
