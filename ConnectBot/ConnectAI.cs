@@ -684,6 +684,15 @@ namespace ConnectBot
                 return EvaluateBoardState(node.BoardDiscState);
             }
 
+            // TODO verify that these return values are what are wanted
+            var possibleWinner = CheckVictory(node.BoardDiscState);
+
+            if (possibleWinner == DiscColor.Black)
+                return decimal.MaxValue - 1;
+
+            if (possibleWinner == DiscColor.Red)
+                return decimal.MinusOne + 1;
+
             decimal maximumMoveValue = decimal.MinValue;
 
             foreach (int openMove in openColumns)
@@ -719,6 +728,15 @@ namespace ConnectBot
             {
                 return EvaluateBoardState(node.BoardDiscState);
             }
+
+            // TODO verify that these return values are what are wanted
+            var possibleWinner = CheckVictory(node.BoardDiscState);
+
+            if (possibleWinner == DiscColor.Black)
+                return decimal.MaxValue - 1;
+
+            if (possibleWinner == DiscColor.Red)
+                return decimal.MinusOne + 1;
 
             decimal minimumMoveValue = decimal.MaxValue;
 
