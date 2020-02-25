@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static ConnectBot.LogicalBoardHelpers;
 
 namespace ConnectBot
 {
@@ -11,7 +12,7 @@ namespace ConnectBot
         /// indexed by [column, row]. Lowest column index is left most 
         /// on the screen. Lowest row index is lowest in the column stack.
         /// </summary>
-        protected DiscColor[,] GameDiscs = new DiscColor[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
+        protected DiscColor[,] GameDiscs = new DiscColor[NUM_COLUMNS, NUM_ROWS];
 
         protected DiscColor AiColor { get; set; }
         protected DiscColor OpponentColor { get; set; }
@@ -84,7 +85,7 @@ namespace ConnectBot
                 ColumnMoved = column;
                 PositionalScore = score;
                 ColorLastMoved = turn;
-                CurrentTurn = LogicalBoardHelpers.ChangeTurnColor(turn);
+                CurrentTurn = ChangeTurnColor(turn);
                 Children = new List<Node>();
             }
         }
@@ -107,7 +108,7 @@ namespace ConnectBot
         public ConnectAI(DiscColor color)
         {
             AiColor = color;
-            OpponentColor = LogicalBoardHelpers.ChangeTurnColor(AiColor);
+            OpponentColor = ChangeTurnColor(AiColor);
         }
         
         /// <summary>
@@ -117,9 +118,9 @@ namespace ConnectBot
         /// <param name="lastMove">Last move made on the new board. Negative one signifies first board update.</param>
         public void UpdateBoard(DiscColor[,] newBoard, int lastMove)
         {
-            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
+            for (int c = 0; c < NUM_COLUMNS; c++)
             {
-                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
+                for (int r = 0; r < NUM_ROWS; r++)
                 {
                     GameDiscs[c, r] = newBoard[c, r];
                 }
@@ -152,11 +153,11 @@ namespace ConnectBot
 
         KillerMove FindKillerMove(DiscColor[,] boardState, DiscColor checkColor)
         {
-            foreach (var openColumn in LogicalBoardHelpers.GetOpenColumns(boardState))
+            foreach (var openColumn in GetOpenColumns(boardState))
             {
                 var movedBoard = GenerateBoardState(openColumn, checkColor, boardState);
                 
-                if (LogicalBoardHelpers.CheckVictory(movedBoard) == checkColor)
+                if (CheckVictory(movedBoard) == checkColor)
                     return new KillerMove(){
                         Column = openColumn,
                         Color = checkColor
@@ -172,18 +173,18 @@ namespace ConnectBot
 
         protected DiscColor[,] GenerateBoardState(int moveColumn, DiscColor discColor, DiscColor[,] currentBoard)
         {
-            DiscColor[,] newState = new DiscColor[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
+            DiscColor[,] newState = new DiscColor[NUM_COLUMNS, NUM_ROWS];
 
-            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
+            for (int c = 0; c < NUM_COLUMNS; c++)
             {
-                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
+                for (int r = 0; r < NUM_ROWS; r++)
                 {
                     newState[c, r] = currentBoard[c, r];
                 }
             }
 
             bool moveWasLegal = false;
-            for (int row = 0; row < LogicalBoardHelpers.NUM_ROWS; row++)
+            for (int row = 0; row < NUM_ROWS; row++)
             {
                 if (newState[moveColumn, row] == 0)
                 {
@@ -210,24 +211,71 @@ namespace ConnectBot
         /// TODO there has to be a better way to structure board than all this rigorous checking
         protected decimal EvaluateBoardState(DiscColor[,] boardState)
         {
-            /*
-             * For both colors scan the entire board.
-             * From each space reach out in scorable
-             * directions adding on more value for free
-             * spaces that could be used to score,
-             * even more value for same color discs
-             * and breaking on opponents blocking
-             * dics.
-             */
-            var ret = 0.0m;
+            // TODO adjust when moving to negamax
+            var redPossiblesValue = CountAllPossibles(boardState, DiscColor.Red);
+            var blackPossiblesValue = CountAllPossibles(boardState, DiscColor.Black);
 
-            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
+            return blackPossiblesValue + (redPossiblesValue * -1.0m);
+        }
+
+        decimal CountAllPossibles(DiscColor[,] boardState, DiscColor checkColor)
+        {
+            decimal ret = PossibleHorizontals(boardState, checkColor);
+            ret += PossibleVerticals(boardState, checkColor);
+            ret += PossibleDiagonalRising(boardState, checkColor);
+            ret += PossibleDiagonalDescending(boardState, checkColor);
+
+            return ret;
+        }
+
+        decimal PossibleHorizontals(DiscColor[,] boardState, DiscColor checkColor)
+        {
+            decimal ret = 0.0m;
+
+            for (int r = 0; r < NUM_ROWS; r++)
             {
-                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
+                for (int trace = 0; trace < NUM_COLUMNS - 3; trace++)
                 {
-                    if (boardState[c, r] != 0)
+                    if (IsFourScorable(
+                        checkColor,
+                        boardState[trace, r],
+                        boardState[trace + 1, r],
+                        boardState[trace + 2, r],
+                        boardState[trace + 3, r]))
                     {
-                        ret += ScorePossibles(boardState, boardState[c, r], c, r);
+                        ret += PossibleFourValue(
+                            boardState[trace, r],
+                            boardState[trace + 1, r],
+                            boardState[trace + 2, r],
+                            boardState[trace + 3, r]);
+                    }
+                }
+            }
+
+
+            return ret;
+        }
+
+        decimal PossibleVerticals(DiscColor[,] boardState, DiscColor checkColor)
+        {
+            decimal ret = 0.0m;
+
+            for (int c = 0; c < NUM_COLUMNS; c++)
+            {
+                for (int trace = 0; trace < NUM_ROWS - 3; trace++)
+                {
+                    if (IsFourScorable(
+                        checkColor,
+                        boardState[c, trace],
+                        boardState[c, trace + 1],
+                        boardState[c, trace + 2],
+                        boardState[c, trace + 3]))
+                    {
+                        ret += PossibleFourValue(
+                            boardState[c, trace],
+                            boardState[c, trace + 1],
+                            boardState[c, trace + 2],
+                            boardState[c, trace + 3]);
                     }
                 }
             }
@@ -235,190 +283,143 @@ namespace ConnectBot
             return ret;
         }
 
-        /// <summary>
-        /// Return the board positional score based on scoring
-        /// potentials of both sides.
-        /// </summary>
-        /// <param name="board"></param>
-        /// <param name="checkColor"></param>
-        /// <param name="discColumn"></param>
-        /// <param name="discRow"></param>
-        /// <param name="val"></param>
-        decimal ScorePossibles(DiscColor[,] board, DiscColor checkColor, int discColumn, int discRow)
+        decimal PossibleDiagonalRising(DiscColor[,] boardState, DiscColor checkColor)
         {
-            /*
-             * 4 in a row is worth as 1 point.
-             * Each like colored disc in a possible 
-             * (only open or same color, free from opposing color)
-             * 4 long sequence of spaces, is worth 0.25 points.
-             * 
-             * Reach out in all eight directions and move rolling
-             * 4 long sequence through spot being checked to determine total value.
-             * short circuit when opposing pieces are hit.
-             * 
-             */
+            decimal ret = 0.0m;
 
-            // The total number of possible open scoring combinations 
-            // that the checked disc participates.
-            decimal participatedPossibles = 0.0m;
-            decimal participatedValue = 0.25m;
-            DiscColor oppositeColor = LogicalBoardHelpers.ChangeTurnColor(checkColor);
-
-            bool addPossible = true;
-
-            // Horizontal scan
-            // same row
-            // column +- 3
-            // The square looks from three to the left to zero, zero being itself.
-            // For each of these spaces to the left it scans four to the right. 
-            // This will examine all four potential horizontal scorings depending 
-            // on board position.
-            for (int ch = -3; ch < 1; ch++)
+            // for the first four columns
+            // for the first three rows
+            // statically check up to the right
+            // note that highest index of a row is at the top
+            for (int c = 0; c < NUM_COLUMNS - 3; c++)
             {
-                addPossible = true;
-
-                for (int trace = 0; trace < 4; trace++)
+                for (int r = 0; r < NUM_ROWS - 3; r++)
                 {
-                    if (LogicalBoardHelpers.InBounds(discColumn + ch + trace, discRow))
+                    if (IsFourScorable(
+                        checkColor,
+                        boardState[c, r],
+                        boardState[c + 1, r + 1],
+                        boardState[c + 2, r + 2],
+                        boardState[c + 3, r + 3]))
                     {
-                        if (board[discColumn + ch + trace, discRow] == oppositeColor)
-                        {
-                            addPossible = false;
-                            break;
-                        }
-                        else if (board[discColumn + ch + trace, discRow] == checkColor)
-                        {
-                            participatedPossibles += 0.2m;
-                        }
+                        ret += PossibleFourValue(
+                            boardState[c, r],
+                            boardState[c + 1, r + 1],
+                            boardState[c + 2, r + 2],
+                            boardState[c + 3, r + 3]);
                     }
-                    else
-                    {
-                        addPossible = false;
-                        break;
-                    }
-                }
-
-                if (addPossible)
-                {
-                    participatedPossibles += 1.0m;
                 }
             }
 
-            // Vertical scan
-            // same column
-            // row +- 3
-            // Look down three spaces.
-            // For each space count up four and add possibles when clear.
-            for (int rh = -3; rh < 1; rh++)
+            return ret;
+        }
+
+        decimal PossibleDiagonalDescending(DiscColor[,] boardState, DiscColor checkColor)
+        {
+            decimal ret = 0.0m;
+
+            // for first four columns
+            // for top 3 rows
+            // statically check down right
+            for (int c = 0; c < NUM_COLUMNS - 3; c++)
             {
-                addPossible = true;
-
-                for (int trace = 0; trace < 4; trace++)
+                for (int r = NUM_ROWS - 1; r > NUM_ROWS - 4; r--)
                 {
-                    if (LogicalBoardHelpers.InBounds(discColumn, discRow + rh + trace))
+                    if (IsFourScorable(
+                        checkColor,
+                        boardState[c, r],
+                        boardState[c + 1, r - 1],
+                        boardState[c + 2, r - 2],
+                        boardState[c + 3, r - 3]))
                     {
-                        if (board[discColumn, discRow + rh + trace] == oppositeColor)
-                        {
-                            addPossible = false;
-                            break;
-                        }
-                        else if (board[discColumn, discRow + rh + trace] == checkColor)
-                        {
-                            participatedPossibles += 0.2m;
-                        }
+                        ret += PossibleFourValue(
+                            boardState[c, r],
+                            boardState[c + 1, r - 1],
+                            boardState[c + 2, r - 2],
+                            boardState[c + 3, r - 3]);
                     }
-                    else
-                    {
-                        addPossible = false;
-                        break;
-                    }
-                }
-
-                if (addPossible)
-                {
-                    participatedPossibles += 1.0m;
                 }
             }
 
-            // Angled up right scan
-            // row and column +- 3 always same difference for row and column
-            // row + when column + and row - when column -
-            for (int ur = -3; ur < 1; ur++)
+            return ret;
+        }
+
+        bool IsFourScorable(
+            DiscColor friendlyColor,
+            DiscColor first,
+            DiscColor second,
+            DiscColor third,
+            DiscColor fourth)
+        {
+            DiscColor opponentColor = ChangeTurnColor(friendlyColor);
+
+            // there is an opponent disc blocking
+            if (first == opponentColor ||
+                second == opponentColor ||
+                third == opponentColor ||
+                fourth == opponentColor)
+                return false;
+
+            // there are no friendly discs
+            if (first == DiscColor.None &&
+                second == DiscColor.None &&
+                third == DiscColor.None &&
+                fourth == DiscColor.None)
+                return false;
+
+            return true;
+        }
+
+        // TODO the problem with this approach is that it doesn't
+        // take into account open spaces at the ends of a connection.
+        decimal PossibleFourValue(
+            DiscColor first,
+            DiscColor second,
+            DiscColor third,
+            DiscColor fourth)
+        {
+            int discCount = 0;
+
+            if (first != DiscColor.None)
+                discCount++;
+
+            if (second != DiscColor.None)
+                discCount++;
+
+            if (third != DiscColor.None)
+                discCount++;
+
+            if (fourth != DiscColor.None)
+                discCount++;
+
+            switch (discCount)
             {
-                addPossible = true;
-                
-                for (int trace = 0; trace < 4; trace++)
-                {
-                    if (LogicalBoardHelpers.InBounds(discColumn + ur + trace, discRow + ur + trace))
-                    {
-                        if (board[discColumn + ur + trace, discRow + ur + trace] == oppositeColor)
-                        {
-                            addPossible = false;
-                            break;
-                        }
-                        else if (board[discColumn + ur + trace, discRow + ur + trace] == checkColor)
-                        {
-                            participatedPossibles += 0.2m;
-                        }
-                    }
-                    else
-                    {
-                        addPossible = false;
-                        break;
-                    }
-                }
-
-                if (addPossible)
-                {
-                    participatedPossibles += 1.0m;
-                }
+                case 1:
+                    return 0.2m;
+                case 2:
+                    return 0.6m;
+                case 3:
+                    return 1.2m;
+                // TODO is this needed with killer move checking?
+                // TODO consider using some extremely large value that isn't max/min
+                // for victory states and when they are discovered through this evaluation
+                case 4:
+                    return 1000.0m;
+                default:
+                    return 0.0m;
             }
-
-            // Angled up left scan
-            // row and column +- 3 always same difference for row and column
-            // row - when column + and row + when column -
-            for (int ul = -3; ul < 1; ul++)
-            {
-                addPossible = true;
-
-                for (int trace = 0; trace < 4; trace++)
-                {
-                    if (LogicalBoardHelpers.InBounds(discColumn + (-1 * (ul + trace)), discRow + ul + trace))
-                    {
-                        if (board[discColumn + (-1 * (ul + trace)), discRow + ul + trace] == oppositeColor)
-                        {
-                            addPossible = false;
-                            break;
-                        }
-                        else if (board[discColumn + (-1 * (ul + trace)), discRow + ul + trace] == checkColor)
-                        {
-                            participatedPossibles += 0.2m;
-                        }
-                    }
-                    else
-                    {
-                        addPossible = false;
-                        break;
-                    }
-                }
-
-                if (addPossible)
-                {
-                    participatedPossibles += 1.0m;
-                }
-            }
-
-            // TODO double check this if we ever move to a negamax algo
-            return (participatedValue * participatedPossibles);
         }
 
         // TODO consider changing this if negamax is used
-        decimal LosingStateScore()
+        decimal EndgameStateScore(DiscColor winner)
         {
-            if (AiColor == DiscColor.Red)
-                return Decimal.MaxValue;
+            if (winner == DiscColor.None) 
+                throw new ArgumentException("Disc color to check cannot be None.", nameof(winner));
 
-            return Decimal.MinValue;
+            if (winner == DiscColor.Black)
+                return Decimal.MaxValue - 1.0m;
+
+            return Decimal.MinValue + 1.0m;
         }
 
         /// <summary>
@@ -437,7 +438,7 @@ namespace ConnectBot
             var alphaBeta = new AlphaBeta();
             var nodeCounter = new NodeCounter();
 
-            foreach (int openMove in LogicalBoardHelpers.GetOpenColumns(node.BoardDiscState))
+            foreach (int openMove in GetOpenColumns(node.BoardDiscState))
             {
                 DiscColor[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
                 Node child = new Node(newState, openMove, AiColor);
@@ -463,9 +464,7 @@ namespace ConnectBot
                     openMoveValue = decimal.MaxValue - 1.0m;
                 }
 
-                if (openMoveValue < minimumMoveValue) //&&
-
-                    //!opponentWinning)
+                if (openMoveValue < minimumMoveValue)
                 {
                     minimumMoveValue = openMoveValue;
                     movedColumn = openMove;
@@ -486,7 +485,7 @@ namespace ConnectBot
         {
             nodeCounter.Increment();
 
-            var openColumns = LogicalBoardHelpers.GetOpenColumns(node.BoardDiscState);
+            var openColumns = GetOpenColumns(node.BoardDiscState);
 
             if (depth <= 0 ||
                 // TODO this should represent a drawn game, we may want to
@@ -495,6 +494,12 @@ namespace ConnectBot
             {
                 return EvaluateBoardState(node.BoardDiscState);
             }
+
+            // TODO verify that these return values are what are wanted
+            var possibleWinner = CheckVictory(node.BoardDiscState);
+
+            if (possibleWinner != DiscColor.None)
+                return EndgameStateScore(possibleWinner);
 
             decimal maximumMoveValue = decimal.MinValue;
 
@@ -524,13 +529,19 @@ namespace ConnectBot
         {
             nodeCounter.Increment();
 
-            var openColumns = LogicalBoardHelpers.GetOpenColumns(node.BoardDiscState);
+            var openColumns = GetOpenColumns(node.BoardDiscState);
 
             if (depth <= 0 ||
                 openColumns.Count == 0)
             {
                 return EvaluateBoardState(node.BoardDiscState);
             }
+
+            // TODO verify that these return values are what are wanted
+            var possibleWinner = CheckVictory(node.BoardDiscState);
+
+            if (possibleWinner != DiscColor.None)
+                return EndgameStateScore(possibleWinner);
 
             decimal minimumMoveValue = decimal.MaxValue;
 

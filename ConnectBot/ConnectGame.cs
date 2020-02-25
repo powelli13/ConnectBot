@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static ConnectBot.LogicalBoardHelpers;
 
 namespace ConnectBot
 {
@@ -32,7 +33,7 @@ namespace ConnectBot
         /// Array of board column objects, contains game board state
         /// and drawing functionality.
         /// </summary>
-        Board.BoardColumn[] boardColumns = new Board.BoardColumn[LogicalBoardHelpers.NUM_COLUMNS];
+        Board.BoardColumn[] boardColumns = new Board.BoardColumn[NUM_COLUMNS];
 
         protected DiscColor CurrentTurn { get; set; }
         
@@ -86,11 +87,11 @@ namespace ConnectBot
         /// <returns></returns>
         public DiscColor[,] GetTextBoard()
         {
-            DiscColor[,] retBoard = new DiscColor[LogicalBoardHelpers.NUM_COLUMNS, LogicalBoardHelpers.NUM_ROWS];
+            DiscColor[,] retBoard = new DiscColor[NUM_COLUMNS, NUM_ROWS];
 
-            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
+            for (int c = 0; c < NUM_COLUMNS; c++)
             {
-                for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
+                for (int r = 0; r < NUM_ROWS; r++)
                 {
                     retBoard[c, r] = boardColumns[c].GetSpace(r);
                 }
@@ -107,7 +108,7 @@ namespace ConnectBot
             }
             else
             {
-                if (LogicalBoardHelpers.GetOpenColumns(GetTextBoard()).Count == 0)
+                if (GetOpenColumns(GetTextBoard()).Count == 0)
                 {
                     ShowPlayAgainDrawnMenu();
                 }
@@ -142,7 +143,7 @@ namespace ConnectBot
             // Add space size added to account for blue arrow
             int yPos = YBoardBuffer + SpaceSize;
 
-            for (int col = 0; col < LogicalBoardHelpers.NUM_COLUMNS; col++)
+            for (int col = 0; col < NUM_COLUMNS; col++)
             {
                 boardColumns[col] = new Board.BoardColumn(
                     xPos, 
@@ -228,7 +229,7 @@ namespace ConnectBot
                         if (CurrentTurn == PlayerTurn)
                         {
                             //bot.AISelfTest();
-                            for (int col = 0; col < LogicalBoardHelpers.NUM_COLUMNS; col++)
+                            for (int col = 0; col < NUM_COLUMNS; col++)
                             {
                                 if (boardColumns[col].ContainMouse(mousePosition))
                                 {
@@ -241,7 +242,7 @@ namespace ConnectBot
                                         timeSinceLastMove = 0.0;
 
                                         ChangeTurn();
-                                        DiscColor winner = LogicalBoardHelpers.CheckVictory(GetTextBoard());
+                                        DiscColor winner = CheckVictory(GetTextBoard());
                                         VictoryConfirmed(winner);
 
                                         UpdateBotBoard(col);
@@ -297,7 +298,7 @@ namespace ConnectBot
             boardColumns[botMove].SetSpace(BotTurn);
 
             ChangeTurn();
-            DiscColor winner = LogicalBoardHelpers.CheckVictory(GetTextBoard());
+            DiscColor winner = CheckVictory(GetTextBoard());
             VictoryConfirmed(winner);
 
             botThinking = false;
@@ -305,7 +306,7 @@ namespace ConnectBot
 
         protected void ChangeTurn()
         {
-            CurrentTurn = LogicalBoardHelpers.ChangeTurnColor(CurrentTurn);
+            CurrentTurn = ChangeTurnColor(CurrentTurn);
         }
 
         /// <summary>
@@ -325,7 +326,7 @@ namespace ConnectBot
                 drawBlueArrow = true;
             }
 
-            for (int col = 0; col < LogicalBoardHelpers.NUM_COLUMNS; col++)
+            for (int col = 0; col < NUM_COLUMNS; col++)
             {
                 boardColumns[col].Draw(spriteBatch, imageDict, drawBlueArrow);
             }
@@ -352,7 +353,7 @@ namespace ConnectBot
             CurrentTurn = DiscColor.Black;
             CurrentMenu = MenuState.None;
 
-            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
+            for (int c = 0; c < NUM_COLUMNS; c++)
             {
                 boardColumns[c].ResetSpaces();
             }
