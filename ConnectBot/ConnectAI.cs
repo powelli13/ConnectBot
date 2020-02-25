@@ -211,21 +211,6 @@ namespace ConnectBot
         /// TODO there has to be a better way to structure board than all this rigorous checking
         protected decimal EvaluateBoardState(DiscColor[,] boardState)
         {
-            //var ret = 0.0m;
-
-            //for (int c = 0; c < NUM_COLUMNS; c++)
-            //{
-            //    for (int r = 0; r < NUM_ROWS; r++)
-            //    {
-            //        if (boardState[c, r] != 0)
-            //        {
-            //            ret += ScorePossibles(boardState, boardState[c, r], c, r);
-            //        }
-            //    }
-            //}
-
-            //return ret;
-
             // TODO adjust when moving to negamax
             var redPossiblesValue = CountAllPossibles(boardState, DiscColor.Red);
             var blackPossiblesValue = CountAllPossibles(boardState, DiscColor.Black);
@@ -416,6 +401,7 @@ namespace ConnectBot
                 case 3:
                     return 1.2m;
                 // TODO is this needed with killer move checking?
+                // TODO changing this to 1000 made it worse??
                 case 4:
                     return 4.0m;
                 default:
@@ -423,190 +409,16 @@ namespace ConnectBot
             }
         }
 
-        /// <summary>
-        /// Return the board positional score based on scoring
-        /// potentials of both sides.
-        /// </summary>
-        /// <param name="board"></param>
-        /// <param name="checkColor"></param>
-        /// <param name="discColumn"></param>
-        /// <param name="discRow"></param>
-        /// <param name="val"></param>
-        decimal ScorePossibles(DiscColor[,] board, DiscColor checkColor, int discColumn, int discRow)
-        {
-            /*
-             * 4 in a row is worth as 1 point.
-             * Each like colored disc in a possible 
-             * (only open or same color, free from opposing color)
-             * 4 long sequence of spaces, is worth 0.25 points.
-             * 
-             * Reach out in all eight directions and move rolling
-             * 4 long sequence through spot being checked to determine total value.
-             * short circuit when opposing pieces are hit.
-             * 
-             */
-
-            // The total number of possible open scoring combinations 
-            // that the checked disc participates.
-            decimal participatedPossibles = 0.0m;
-            decimal participatedValue = 0.25m;
-            DiscColor oppositeColor = ChangeTurnColor(checkColor);
-
-            bool addPossible = true;
-
-            // Horizontal scan
-            // same row
-            // column +- 3
-            // The square looks from three to the left to zero, zero being itself.
-            // For each of these spaces to the left it scans four to the right. 
-            // This will examine all four potential horizontal scorings depending 
-            // on board position.
-            for (int ch = -3; ch < 1; ch++)
-            {
-                addPossible = true;
-
-                for (int trace = 0; trace < 4; trace++)
-                {
-                    if (InBounds(discColumn + ch + trace, discRow))
-                    {
-                        if (board[discColumn + ch + trace, discRow] == oppositeColor)
-                        {
-                            addPossible = false;
-                            break;
-                        }
-                        else if (board[discColumn + ch + trace, discRow] == checkColor)
-                        {
-                            participatedPossibles += 0.2m;
-                        }
-                    }
-                    else
-                    {
-                        addPossible = false;
-                        break;
-                    }
-                }
-
-                if (addPossible)
-                {
-                    participatedPossibles += 1.0m;
-                }
-            }
-
-            // Vertical scan
-            // same column
-            // row +- 3
-            // Look down three spaces.
-            // For each space count up four and add possibles when clear.
-            for (int rh = -3; rh < 1; rh++)
-            {
-                addPossible = true;
-
-                for (int trace = 0; trace < 4; trace++)
-                {
-                    if (InBounds(discColumn, discRow + rh + trace))
-                    {
-                        if (board[discColumn, discRow + rh + trace] == oppositeColor)
-                        {
-                            addPossible = false;
-                            break;
-                        }
-                        else if (board[discColumn, discRow + rh + trace] == checkColor)
-                        {
-                            participatedPossibles += 0.2m;
-                        }
-                    }
-                    else
-                    {
-                        addPossible = false;
-                        break;
-                    }
-                }
-
-                if (addPossible)
-                {
-                    participatedPossibles += 1.0m;
-                }
-            }
-
-            // Angled up right scan
-            // row and column +- 3 always same difference for row and column
-            // row + when column + and row - when column -
-            for (int ur = -3; ur < 1; ur++)
-            {
-                addPossible = true;
-                
-                for (int trace = 0; trace < 4; trace++)
-                {
-                    if (InBounds(discColumn + ur + trace, discRow + ur + trace))
-                    {
-                        if (board[discColumn + ur + trace, discRow + ur + trace] == oppositeColor)
-                        {
-                            addPossible = false;
-                            break;
-                        }
-                        else if (board[discColumn + ur + trace, discRow + ur + trace] == checkColor)
-                        {
-                            participatedPossibles += 0.2m;
-                        }
-                    }
-                    else
-                    {
-                        addPossible = false;
-                        break;
-                    }
-                }
-
-                if (addPossible)
-                {
-                    participatedPossibles += 1.0m;
-                }
-            }
-
-            // Angled up left scan
-            // row and column +- 3 always same difference for row and column
-            // row - when column + and row + when column -
-            for (int ul = -3; ul < 1; ul++)
-            {
-                addPossible = true;
-
-                for (int trace = 0; trace < 4; trace++)
-                {
-                    if (InBounds(discColumn + (-1 * (ul + trace)), discRow + ul + trace))
-                    {
-                        if (board[discColumn + (-1 * (ul + trace)), discRow + ul + trace] == oppositeColor)
-                        {
-                            addPossible = false;
-                            break;
-                        }
-                        else if (board[discColumn + (-1 * (ul + trace)), discRow + ul + trace] == checkColor)
-                        {
-                            participatedPossibles += 0.2m;
-                        }
-                    }
-                    else
-                    {
-                        addPossible = false;
-                        break;
-                    }
-                }
-
-                if (addPossible)
-                {
-                    participatedPossibles += 1.0m;
-                }
-            }
-
-            // TODO double check this if we ever move to a negamax algo
-            return (participatedValue * participatedPossibles);
-        }
-
         // TODO consider changing this if negamax is used
-        decimal LosingStateScore()
+        decimal EndgameStateScore(DiscColor winner)
         {
-            if (AiColor == DiscColor.Red)
-                return Decimal.MaxValue;
+            if (winner == DiscColor.None) 
+                throw new ArgumentException("Disc color to check cannot be None.", nameof(winner));
 
-            return Decimal.MinValue;
+            if (winner == DiscColor.Black)
+                return Decimal.MaxValue - 1.0m;
+
+            return Decimal.MinValue + 1.0m;
         }
 
         /// <summary>
@@ -651,9 +463,7 @@ namespace ConnectBot
                     openMoveValue = decimal.MaxValue - 1.0m;
                 }
 
-                if (openMoveValue < minimumMoveValue) //&&
-
-                    //!opponentWinning)
+                if (openMoveValue < minimumMoveValue)
                 {
                     minimumMoveValue = openMoveValue;
                     movedColumn = openMove;
@@ -687,11 +497,8 @@ namespace ConnectBot
             // TODO verify that these return values are what are wanted
             var possibleWinner = CheckVictory(node.BoardDiscState);
 
-            if (possibleWinner == DiscColor.Black)
-                return decimal.MaxValue - 1;
-
-            if (possibleWinner == DiscColor.Red)
-                return decimal.MinusOne + 1;
+            if (possibleWinner != DiscColor.None)
+                return EndgameStateScore(possibleWinner);
 
             decimal maximumMoveValue = decimal.MinValue;
 
@@ -732,11 +539,8 @@ namespace ConnectBot
             // TODO verify that these return values are what are wanted
             var possibleWinner = CheckVictory(node.BoardDiscState);
 
-            if (possibleWinner == DiscColor.Black)
-                return decimal.MaxValue - 1;
-
-            if (possibleWinner == DiscColor.Red)
-                return decimal.MinusOne + 1;
+            if (possibleWinner != DiscColor.None)
+                return EndgameStateScore(possibleWinner);
 
             decimal minimumMoveValue = decimal.MaxValue;
 
