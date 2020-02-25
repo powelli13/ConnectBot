@@ -401,9 +401,10 @@ namespace ConnectBot
                 case 3:
                     return 1.2m;
                 // TODO is this needed with killer move checking?
-                // TODO changing this to 1000 made it worse??
+                // TODO consider using some extremely large value that isn't max/min
+                // for victory states and when they are discovered through this evaluation
                 case 4:
-                    return 4.0m;
+                    return 1000.0m;
                 default:
                     return 0.0m;
             }
