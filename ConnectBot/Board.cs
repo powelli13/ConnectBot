@@ -208,6 +208,7 @@ namespace ConnectBot
                     columnSpaces[i].Draw(sb, images);
                 }
 
+                // TODO left off here is where the column holder is drawn
                 sb.Draw(ColumnHolder, ColumnHolderRect, Color.White);
                 if (Movable && drawBlueArrow)
                 {

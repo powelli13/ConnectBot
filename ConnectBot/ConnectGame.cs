@@ -36,7 +36,6 @@ namespace ConnectBot
         Board.BoardColumn[] boardColumns = new Board.BoardColumn[NUM_COLUMNS];
 
         protected DiscColor CurrentTurn { get; set; }
-        
         protected DiscColor PlayerTurn { get; set; }
         protected DiscColor BotTurn { get; set; }
 

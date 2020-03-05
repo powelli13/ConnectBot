@@ -61,6 +61,18 @@
 /processorParam:TextureFormat=Color
 /build:game_drawn_declare.png
 
+#begin highlighted_column_holder.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:highlighted_column_holder.png
+
 #begin no_button.png
 /importer:TextureImporter
 /processor:TextureProcessor
