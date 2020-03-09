@@ -74,19 +74,13 @@ namespace ConnectBot
             /// Column that was moved in to generate this node.
             /// </summary>
             public int ColumnMoved { get; set; }
-
-            public decimal PositionalScore { get; set; }
-
-            public List<Node> Children { get; set; }
             
-            public Node(DiscColor[,] board, int column, DiscColor turn, decimal score = 0.0m)
+            public Node(DiscColor[,] board, int column, DiscColor lastMoved)
             {
                 BoardDiscState = board;
                 ColumnMoved = column;
-                PositionalScore = score;
-                ColorLastMoved = turn;
-                CurrentTurn = ChangeTurnColor(turn);
-                Children = new List<Node>();
+                ColorLastMoved = lastMoved;
+                CurrentTurn = ChangeTurnColor(lastMoved);
             }
         }
 
@@ -116,7 +110,7 @@ namespace ConnectBot
         /// </summary>
         /// <param name="newBoard">Array representing updated board state.</param>
         /// <param name="lastMove">Last move made on the new board. Negative one signifies first board update.</param>
-        public void UpdateBoard(DiscColor[,] newBoard, int lastMove)
+        public void UpdateBoard(DiscColor[,] newBoard)
         {
             for (int c = 0; c < NUM_COLUMNS; c++)
             {
@@ -129,8 +123,6 @@ namespace ConnectBot
 
         public async Task<int> Move()
         {
-            //AISelfTest();
-
             // Look for wins before performing in depth searches
             var aiWinningMove = FindKillerMove(GameDiscs, AiColor);
 
@@ -144,7 +136,7 @@ namespace ConnectBot
             if (opponentWinningMove.HasWinner)
                 return opponentWinningMove.Column;
 
-            Node n = new Node(GameDiscs, 0, AiColor, 0.0m);
+            Node n = new Node(GameDiscs, 0, ChangeTurnColor(AiColor));
             
             int retMove = MinimaxCutoffSearch(n);
 
@@ -194,7 +186,8 @@ namespace ConnectBot
                 }
             }
 
-            if (!moveWasLegal) throw new InvalidOperationException($"Illegal move attempted for column {moveColumn}");
+            if (!moveWasLegal) 
+                throw new InvalidOperationException($"Illegal move attempted for column {moveColumn}");
 
             return newState;
         }
@@ -404,7 +397,7 @@ namespace ConnectBot
                 // TODO consider using some extremely large value that isn't max/min
                 // for victory states and when they are discovered through this evaluation
                 case 4:
-                    return 1000.0m;
+                    return 10000.0m;
                 default:
                     return 0.0m;
             }
@@ -417,9 +410,11 @@ namespace ConnectBot
                 throw new ArgumentException("Disc color to check cannot be None.", nameof(winner));
 
             if (winner == DiscColor.Black)
-                return Decimal.MaxValue - 1.0m;
+                //return Decimal.MaxValue - 1.0m;
+                return 10000.0m;
 
-            return Decimal.MinValue + 1.0m;
+            //return Decimal.MinValue + 1.0m;
+            return -10000.0m;
         }
 
         /// <summary>
@@ -429,7 +424,7 @@ namespace ConnectBot
         /// <returns>The column that will be moved played in.</returns>
         private int MinimaxCutoffSearch(Node node)
         {
-            int maxDepth = 7;
+            int maxDepth = 9;
 
             // TODO change this based on the AI's color
             // for all actions return min value of the result of the action
@@ -443,26 +438,22 @@ namespace ConnectBot
                 DiscColor[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
                 Node child = new Node(newState, openMove, AiColor);
                 
-                // TODO improve this use of a bool
-                //bool opponentWinning = false;
-
-                var openMoveValue = MinValue(child, maxDepth, alphaBeta, nodeCounter);
+                var openMoveValue = MaxValue(child, maxDepth, alphaBeta, nodeCounter);
                 Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
 
                 // TODO do more reading because this feels unnecessary. the danger of 
                 // an opponent having an imminent win should be able to be captured in the heuristic
-
                 // final depth search to ensure that a move doesn't leave the 
                 // opponent with an opportunity to win
-                var killer = FindKillerMove(child.BoardDiscState, OpponentColor);
+                //var killer = FindKillerMove(child.BoardDiscState, OpponentColor);
 
-                if (killer.HasWinner)
-                {
-                    // TODO still could probably be improved. this reflects
-                    // the worst possible move but will ensure that the bot
-                    // moves when every move gives the opponent a win
-                    openMoveValue = decimal.MaxValue - 1.0m;
-                }
+                //if (killer.HasWinner)
+                //{
+                //    // TODO still could probably be improved. this reflects
+                //    // the worst possible move but will ensure that the bot
+                //    // moves when every move gives the opponent a win
+                //    openMoveValue = decimal.MaxValue - 1.0m;
+                //}
 
                 if (openMoveValue < minimumMoveValue)
                 {
@@ -479,7 +470,7 @@ namespace ConnectBot
 
         private decimal MaxValue(
             Node node, 
-            int depth, 
+            int depth,
             AlphaBeta alphaBeta,
             NodeCounter nodeCounter)
         {

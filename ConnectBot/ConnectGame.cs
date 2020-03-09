@@ -73,7 +73,7 @@ namespace ConnectBot
         }
         
         /// <summary>
-        /// Returns multi dimensional array of integers
+        /// Returns multi dimensional array of DiscColor enums
         /// representing the current state of the board.
         /// </summary>
         /// <returns></returns>
@@ -154,7 +154,7 @@ namespace ConnectBot
             BotTurn = DiscColor.Red;
 
             Bot = new ConnectAI(BotTurn);
-            UpdateBotBoard(-1);
+            UpdateBotBoard();
 
             playAgainMenu = new GameMenus.PlayAgainMenu();
 
@@ -236,7 +236,7 @@ namespace ConnectBot
                                         DiscColor winner = CheckVictory(GetTextBoard());
                                         VictoryConfirmed(winner);
 
-                                        UpdateBotBoard(col);
+                                        UpdateBotBoard();
                                     }
                                 }
                                 // TODO is there a way to improve this using some object with a mouse enters event or something?
@@ -364,9 +364,9 @@ namespace ConnectBot
         /// <summary>
         /// Send the updated boardstate to the bot.
         /// </summary>
-        protected void UpdateBotBoard(int columnMoved)
+        protected void UpdateBotBoard()
         {
-            Bot.UpdateBoard(GetTextBoard(), columnMoved);
+            Bot.UpdateBoard(GetTextBoard());
         }
     }
 }
