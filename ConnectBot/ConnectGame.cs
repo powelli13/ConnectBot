@@ -13,13 +13,6 @@ namespace ConnectBot
     /// </summary>
     public class ConnectGame : Game
     {
-        /// <summary>
-        /// Spacing display constants.
-        /// </summary>
-        const int SpaceSize = 80;
-        const int XBoardBuffer = 80;
-        const int YBoardBuffer = 100;
-
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         
@@ -33,7 +26,7 @@ namespace ConnectBot
         /// Array of board column objects, contains game board state
         /// and drawing functionality.
         /// </summary>
-        Board.BoardColumn[] boardColumns = new Board.BoardColumn[NUM_COLUMNS];
+        BoardColumn[] boardColumns = new BoardColumn[NUM_COLUMNS];
 
         protected DiscColor CurrentTurn { get; set; }
         protected DiscColor PlayerTurn { get; set; }
@@ -133,35 +126,33 @@ namespace ConnectBot
         protected override void Initialize()
         {
             base.Initialize();
-            // TODO figure out how to resize the window. looks terrible on my new laptop
+            // TODO figure out how to resize the window
             IsMouseVisible = true;
 
             // Create and load space objects
-            int xPos = XBoardBuffer;
+            int xPos = DrawingConstants.XBoardBuffer;
 
             // Add space size added to account for blue arrow
-            int yPos = YBoardBuffer + SpaceSize;
+            int yPos = DrawingConstants.YBoardBuffer + DrawingConstants.SpaceSize;
 
             for (int col = 0; col < NUM_COLUMNS; col++)
             {
-                boardColumns[col] = new Board.BoardColumn(
+                boardColumns[col] = new BoardColumn(
                     xPos, 
                     yPos, 
-                    imageDict[ImageNames.COLUMN_HOLDER], 
+                    imageDict[ImageNames.COLUMN_HOLDER],
+                    imageDict[ImageNames.HIGHLIGHTED_COLUMN_HOLDER],
                     imageDict[ImageNames.BLUE_ARROW]);
 
                 // Move to next column.
-                xPos += SpaceSize;
+                xPos += DrawingConstants.SpaceSize;
             }
 
             ResetGame();
             
-            //TODO menu to decide which color bot plays
             PlayerTurn = DiscColor.Black;
             BotTurn = DiscColor.Red;
 
-            // TODO what to pass as column here? how to show null move at board start?
-            // TODO how to signify to AI that they should build for specific color does root node determine it?
             Bot = new ConnectAI(BotTurn);
             UpdateBotBoard(-1);
 
@@ -227,17 +218,18 @@ namespace ConnectBot
                     {
                         if (CurrentTurn == PlayerTurn)
                         {
-                            //bot.AISelfTest();
                             for (int col = 0; col < NUM_COLUMNS; col++)
                             {
                                 if (boardColumns[col].ContainMouse(mousePosition))
                                 {
+                                    boardColumns[col].IsFocused = true;
+
                                     if (LastMouseState.LeftButton == ButtonState.Pressed &&
                                         MouseState.LeftButton == ButtonState.Released)
                                     {
-                                        //bot.AISelfTest();
                                         //Perform move and change turn.
                                         boardColumns[col].SetSpace(PlayerTurn);
+                                        boardColumns[col].IsFocused = false;
                                         timeSinceLastMove = 0.0;
 
                                         ChangeTurn();
@@ -247,12 +239,15 @@ namespace ConnectBot
                                         UpdateBotBoard(col);
                                     }
                                 }
+                                // TODO is there a way to improve this using some object with a mouse enters event or something?
+                                else
+                                {
+                                    boardColumns[col].IsFocused = false;
+                                }
                             }
                         }
                         else if (CurrentTurn == BotTurn)
                         {
-                            //bot.AISelfTest();
-
                             if (!botThinking)
                             {
                                 botThinking = true;
