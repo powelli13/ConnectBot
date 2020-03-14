@@ -59,6 +59,7 @@
     <StartupObject>ConnectBot.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BitBoard.cs" />
     <Compile Include="DrawingConstants.cs" />
     <Compile Include="BoardColumn.cs" />
     <Compile Include="ConnectAI.cs" />

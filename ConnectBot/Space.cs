@@ -13,11 +13,11 @@ namespace ConnectBot
         private Rectangle rect;
 
         // Rectangle used to draw discs falling over time
-        private Rectangle drawRect;
+        private Rectangle discDrawRect;
+
+        //private Rectangle holderDrawRect;
 
         public DiscColor Disc { get; set; }
-
-        public bool Falling { get; set; }
 
         /// <summary>
         /// Constructor requires the rect placement in pixels.
@@ -28,10 +28,11 @@ namespace ConnectBot
 
             // Draw rectangle starting y is the top most disc space for a column
             // Top buffer of board to edge of screen add space size to account for blue arrows
-            drawRect = new Rectangle(x,
+            discDrawRect = new Rectangle(x,
                 DrawingConstants.TopBuffer + DrawingConstants.SpaceSize,
                 DrawingConstants.SpaceSize,
                 DrawingConstants.SpaceSize);
+
         }
 
         /// <summary>
@@ -49,24 +50,28 @@ namespace ConnectBot
                 
             if (Disc != 0)
             {
-                sb.Draw(images[imageName], drawRect, Color.Wheat);
+                sb.Draw(images[imageName], discDrawRect, Color.Wheat);
 
-                if (drawRect.Y < rect.Y)
+                if (discDrawRect.Y < rect.Y)
                 {
-                    drawRect.Y += 8;
+                    discDrawRect.Y += 8;
                 }
 
-                if (drawRect.Y >= rect.Y)
+                if (discDrawRect.Y >= rect.Y)
                 {
-                    drawRect.Y = rect.Y;
+                    discDrawRect.Y = rect.Y;
                 }
+            }
+            else
+            {
+                sb.Draw(images[ImageNames.PLACE_HOLDER], rect, Color.Wheat);
             }
         }
 
         public void Reset()
         {
             Disc = DiscColor.None;
-            drawRect.Y = DrawingConstants.TopBuffer + DrawingConstants.SpaceSize;
+            discDrawRect.Y = DrawingConstants.TopBuffer + DrawingConstants.SpaceSize;
         }
     }
 }
