@@ -77,6 +77,7 @@ namespace ConnectBot
         /// representing the current state of the board.
         /// </summary>
         /// <returns></returns>
+        /// // TODO update this to return a bit board
         public DiscColor[,] GetTextBoard()
         {
             DiscColor[,] retBoard = new DiscColor[NUM_COLUMNS, NUM_ROWS];
