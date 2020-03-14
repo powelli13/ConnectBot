@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using static ConnectBot.LogicalBoardHelpers;
 
@@ -432,6 +433,8 @@ namespace ConnectBot
             var movedColumn = -1;
             var alphaBeta = new AlphaBeta();
             var nodeCounter = new NodeCounter();
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
 
             foreach (int openMove in GetOpenColumns(node.BoardDiscState))
             {
@@ -461,6 +464,13 @@ namespace ConnectBot
                     movedColumn = openMove;
                 }
             }
+
+            stopWatch.Stop();
+            var elapsed = stopWatch.Elapsed;
+
+            var elapsedTime = String.Format("Searched for {0:00}.{1:0000} seconds",
+                elapsed.Seconds, elapsed.Milliseconds);
+            Console.WriteLine(elapsedTime);
 
             Console.WriteLine($"Column {movedColumn} was chosen.");
             Console.WriteLine($"{nodeCounter.TotalNodes} were explored.");
