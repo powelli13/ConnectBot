@@ -1,116 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ConnectBot
+﻿namespace ConnectBot
 {
+    /*
+    * Below is a map of indices on the ulong bits with where 
+    * on the board they represent. Each ulong property on a
+    * BitBoard only saves the discs of that color.
+    * To find the available space in a column OR the two
+    * discs sets together.
+    * 
+    * 5  11  17  23  29  35  41
+    * 4  10  16  22  28  34  40
+    * 3   9  15  21  27  33  39
+    * 2   8  14  20  26  32  38
+    * 1   7  13  19  25  31  37
+    * 0   6  12  18  24  30  36
+    * 
+    * To move over a column add 7.
+    */
     /// <summary>
-    /// Collection of helper methods used to manipulate ulong
-    /// that hold bit representations of the Connect 4 board.
-    /// Columns are laid out consecutively with a bit at the 
-    /// end to designate whether the column is movable 1 or not 0.
-    /// If a column is open a 1 is used to designate the lowest 
-    /// most open space, everything above that 1 should be zeroes
-    /// and anything below should represent the discs in the column.
-    /// In a closed column, or in an open column below the top 1:
-    /// 1 represents black and 0 represents red
+    /// A struct used to store the state of the board as
+    /// two ulongs. One for each column of disc. The 1 bits
+    /// for a color represent a disc there. The lower left
+    /// space is the first bit and it counts up as it moves
+    /// up the columns. 
     /// </summary>
-    public static class BitBoard
+    public struct BitBoard
     {
-        /*
-         * Below is a map of indices on the ulong bits with where 
-         * on the board they represent. Tops of columns are flags
-         * indicating if the columns is open 1 or closed 0.
-         * 
-         * 6  13  20  27  34  41  48
-         * 5  12  19  26  33  40  47
-         * 4  11  18  25  32  39  46
-         * 3  10  17  24  31  38  45
-         * 2   9  16  23  30  37  44
-         * 1   8  15  22  29  36  43
-         * 0   7  14  21  28  35  42
-         * 
-         * To move over a column add 7.
-         */
+        public ulong RedDiscs { get; }
+        public ulong BlackDiscs { get; }
+        public ulong FullBoard { get; }
 
-        static int ColumnOneOpenFlagIndex = 6;
-        static int ColumnTwoOpenFlagIndex = 13;
-        static int ColumnThreeOpenFlagIndex = 20;
-        static int ColumnFourOpenFlagIndex = 27;
-        static int ColumnFiveOpenFlagIndex = 34;
-        static int ColumnSixOpenFlagIndex = 41;
-        static int ColumnSevenOpenFlagIndex = 48;
-        
-        // TODO this may never be used because the board will come from the
-        // ConnectGame's columns
-        public static ulong GetNewBoard()
+        public BitBoard(ulong redDiscs, ulong blackDiscs)
         {
-            ulong board = 0;
-
-            // Indicate that all columns are open
-            board = SetSingleBit(board, ColumnOneOpenFlagIndex);
-            board = SetSingleBit(board, ColumnTwoOpenFlagIndex);
-            board = SetSingleBit(board, ColumnThreeOpenFlagIndex);
-            board = SetSingleBit(board, ColumnFourOpenFlagIndex);
-            board = SetSingleBit(board, ColumnFiveOpenFlagIndex);
-            board = SetSingleBit(board, ColumnSixOpenFlagIndex);
-            board = SetSingleBit(board, ColumnSevenOpenFlagIndex);
-
-            // Set the bottom spaces for each column as open
-            board = SetSingleBit(board, 0);
-            board = SetSingleBit(board, 7);
-            board = SetSingleBit(board, 14);
-            board = SetSingleBit(board, 21);
-            board = SetSingleBit(board, 28);
-            board = SetSingleBit(board, 35);
-            board = SetSingleBit(board, 42);
-
-            return board;
+            RedDiscs = redDiscs;
+            BlackDiscs = blackDiscs;
+            FullBoard = redDiscs | blackDiscs;
         }
-
-        public static bool CheckSingleBit(ulong board, int index)
-            => (board & (1ul << index)) != 0;
-
-        public static ulong SetSingleBit(ulong board, int index)
-            => (board | (1ul << index));
-
-        // Checks for whether or not individual columns are open
-        public static bool IsColumnOneOpen(ulong board)
-            => CheckSingleBit(board, ColumnOneOpenFlagIndex);
-
-        public static bool IsColumnTwoOpen(ulong board)
-            => CheckSingleBit(board, ColumnTwoOpenFlagIndex);
-
-        public static bool IsColumnThreeOpen(ulong board)
-            => CheckSingleBit(board, ColumnThreeOpenFlagIndex);
-
-        public static bool IsColumnFourOpen(ulong board)
-            => CheckSingleBit(board, ColumnFourOpenFlagIndex);
-
-        public static bool IsColumnFiveOpen(ulong board)
-            => CheckSingleBit(board, ColumnFiveOpenFlagIndex);
-
-        public static bool IsColumnSixOpen(ulong board)
-            => CheckSingleBit(board, ColumnSixOpenFlagIndex);
-
-        public static bool IsColumnSevenOpen(ulong board)
-            => CheckSingleBit(board, ColumnSevenOpenFlagIndex);
-
-
-        // find highest open spot in a column
-        // move into an open column given index and color
-
-
-        // retrieve open columns
-        // copy a board
-        // populate an entire column at once, used when given bot a bit board
-
-        // check horizontal four
-        // check vertical four
-        // check rising diagonal four
-        // check falling diagonal four
-        // five disc color given row column, take into account openness
     }
 }
