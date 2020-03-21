@@ -21,62 +21,47 @@ namespace ConnectBotTests
             Assert.IsTrue(BitBoardHelpers.IsColumnOpen(board, 6));
         }
 
-        [TestMethod]
-        public void Move_ShouldReturnFullColumn_GivenSixMovesInSameColumn()
+        [DataTestMethod]
+        [DataRow(0)]
+        [DataRow(1)]
+        [DataRow(2)]
+        [DataRow(3)]
+        [DataRow(4)]
+        [DataRow(5)]
+        [DataRow(6)]
+        public void Move_ShouldReturnFullColumn_GivenSixMovesInSameColumn(int column)
         {
             var board = BitBoardHelpers.GetNewBoard();
 
-            board = BitBoardHelpers.Move(board, 0, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 0, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 0, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 0, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 0, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 0, DiscColor.Red);
+            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
 
-            Assert.IsFalse(BitBoardHelpers.IsColumnOpen(board, 0));
+            Assert.IsFalse(BitBoardHelpers.IsColumnOpen(board, column));
         }
 
-        [TestMethod]
-        public void Move_ShouldReturnOpenColumn_GivenFiveMovesInSameColumn()
+        [DataTestMethod]
+        [DataRow(0)]
+        [DataRow(1)]
+        [DataRow(2)]
+        [DataRow(3)]
+        [DataRow(4)]
+        [DataRow(5)]
+        [DataRow(6)]
+        public void Move_ShouldReturnOpenColumn_GivenFiveMovesInSameColumn(int column)
         {
             var board = BitBoardHelpers.GetNewBoard();
 
-            board = BitBoardHelpers.Move(board, 0, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 0, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 0, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 0, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 0, DiscColor.Red);
+            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
 
-            Assert.IsTrue(BitBoardHelpers.IsColumnOpen(board, 0));
-        }
-
-        [TestMethod]
-        public void Move_ShouldReturnOpenColumn_GivenFiveMovesInLastColumn()
-        {
-            var board = BitBoardHelpers.GetNewBoard();
-
-            board = BitBoardHelpers.Move(board, 6, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 6, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 6, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 6, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 6, DiscColor.Red);
-
-            Assert.IsTrue(BitBoardHelpers.IsColumnOpen(board, 6));
-        }
-
-        [TestMethod]
-        public void Move_ShouldReturnFullColumn_GivenSixMovesInLastColumn()
-        {
-            var board = BitBoardHelpers.GetNewBoard();
-
-            board = BitBoardHelpers.Move(board, 6, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 6, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 6, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 6, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 6, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, 6, DiscColor.Red);
-
-            Assert.IsFalse(BitBoardHelpers.IsColumnOpen(board, 6));
+            Assert.IsTrue(BitBoardHelpers.IsColumnOpen(board, column));
         }
     }
 }

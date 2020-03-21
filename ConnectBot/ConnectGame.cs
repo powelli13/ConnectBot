@@ -93,6 +93,21 @@ namespace ConnectBot
             return retBoard;
         }
 
+        // TODO unit tests around this
+        public BitBoard GetBitBoard()
+        {
+            ulong redDiscs = 0;
+            ulong blackDiscs = 0;
+
+            for (int column = 0; column < NUM_COLUMNS; column++)
+            {
+                redDiscs |= (boardColumns[column].GetBitColumn().RedDiscs << (column * 6));
+                blackDiscs |= (boardColumns[column].GetBitColumn().BlackDiscs << (column * 6));
+            }
+
+            return new BitBoard(redDiscs, blackDiscs);
+        }
+
         protected void VictoryConfirmed(DiscColor winner)
         {
             if (winner != DiscColor.None)

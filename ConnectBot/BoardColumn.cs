@@ -37,6 +37,7 @@ namespace ConnectBot
             ColumnHolderRect = new Rectangle(x, y, 
                 DrawingConstants.SpaceSize, 
                 DrawingConstants.SpaceSize * LogicalBoardHelpers.NUM_ROWS);
+
             BlueArrowRect = new Rectangle(x, 
                 y - DrawingConstants.SpaceSize,
                 DrawingConstants.SpaceSize,
@@ -147,6 +148,36 @@ namespace ConnectBot
                 sb.Draw(BlueArrow, BlueArrowRect, Color.White);
             }
         }
+
+        /// <summary>
+        /// Returns the current column's state represented 
+        /// in the first six positions of a BitBoard. These bits
+        /// should be shifted according to the columns position
+        /// and then OR'ed to get the board position.
+        /// </summary>
+        // TODO unit tests around this
+        public BitBoard GetBitColumn()
+        {
+            ulong redDiscs = 0;
+            ulong blackDiscs = 0;
+
+            for (int row = 0; row < LogicalBoardHelpers.NUM_ROWS; row++)
+            {
+                if (GetSpace(row) == DiscColor.Red)
+                {
+                    redDiscs = BitBoardHelpers.SetSingleBit(redDiscs, row);
+                }
+                else if (GetSpace(row) == DiscColor.Black)
+                {
+                    blackDiscs = BitBoardHelpers.SetSingleBit(blackDiscs, row);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return new BitBoard(redDiscs, blackDiscs);
+        }
     }
-    
 }
