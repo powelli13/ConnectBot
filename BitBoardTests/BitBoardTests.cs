@@ -1,5 +1,4 @@
-﻿using System;
-using ConnectBot;
+﻿using ConnectBot;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ConnectBotTests

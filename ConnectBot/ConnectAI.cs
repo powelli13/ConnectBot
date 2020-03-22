@@ -246,7 +246,6 @@ namespace ConnectBot
                 }
             }
 
-
             return ret;
         }
 

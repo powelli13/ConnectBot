@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using static ConnectBot.LogicalBoardHelpers;
 
 namespace ConnectBot
 {
@@ -25,6 +26,126 @@ namespace ConnectBot
         public static int ColumnFiveTop = 29;  
         public static int ColumnSixTop = 35;  
         public static int ColumnSevenTop = 41;
+
+        /* 
+         * Below are precalculated ulongs used to quickly
+         * check scoring fours on the bit board.
+         */
+        public static ulong[][] RowHorizontals = new ulong[][]
+        {
+            FirstRowHorizontals,
+            SecondRowHorizontals,
+            ThirdRowHorizontals,
+            FourthRowHorizontals,
+            FifthRowHorizontals,
+            SixthRowHorizontals
+        };
+
+        // TODO should these be | instead of +? would it make a performance difference?
+        public static ulong[] FirstRowHorizontals = new ulong[4]
+        {
+            1 + (1ul << 6) + (1ul << 12) + (1ul << 18),
+            (1ul << 6) + (1ul << 12) + (1ul << 18) + (1ul << 24),
+            (1ul << 12) + (1ul << 18) + (1ul << 24) + (1ul << 30),
+            (1ul << 18) + (1ul << 24) + (1ul << 30) + (1ul << 36)
+        };
+
+        public static ulong[] SecondRowHorizontals = new ulong[4]
+        {
+            (1ul << 1) + (1ul << 7) + (1ul << 13) + (1ul << 19),
+            (1ul << 7) + (1ul << 13) + (1ul << 19) + (1ul << 25),
+            (1ul << 13) + (1ul << 19) + (1ul << 25) + (1ul << 31),
+            (1ul << 19) + (1ul << 25) + (1ul << 31) + (1ul << 37)
+        };
+
+        public static ulong[] ThirdRowHorizontals = new ulong[4]
+        {
+            (1ul << 2) + (1ul << 8) + (1ul << 14) + (1ul << 20),
+            (1ul << 8) + (1ul << 14) + (1ul << 20) + (1ul << 26),
+            (1ul << 14) + (1ul << 20) + (1ul << 26) + (1ul << 32),
+            (1ul << 20) + (1ul << 26) + (1ul << 32) + (1ul << 38)
+        };
+
+        public static ulong[] FourthRowHorizontals = new ulong[4]
+        {
+            (1ul << 3) + (1ul << 9) + (1ul << 15) + (1ul << 21),
+            (1ul << 9) + (1ul << 15) + (1ul << 21) + (1ul << 27),
+            (1ul << 15) + (1ul << 21) + (1ul << 27) + (1ul << 33),
+            (1ul << 21) + (1ul << 27) + (1ul << 33) + (1ul << 39)
+        };
+
+        public static ulong[] FifthRowHorizontals = new ulong[4]
+        {
+            (1ul << 4) + (1ul << 10) + (1ul << 16) + (1ul << 22),
+            (1ul << 10) + (1ul << 16) + (1ul << 22) + (1ul << 28),
+            (1ul << 16) + (1ul << 22) + (1ul << 28) + (1ul << 34),
+            (1ul << 22) + (1ul << 28) + (1ul << 34) + (1ul << 40)
+        };
+
+        public static ulong[] SixthRowHorizontals = new ulong[4]
+        {
+            (1ul << 5) + (1ul << 11) + (1ul << 17) + (1ul << 23),
+            (1ul << 11) + (1ul << 17) + (1ul << 23) + (1ul << 29),
+            (1ul << 17) + (1ul << 23) + (1ul << 29) + (1ul << 35),
+            (1ul << 23) + (1ul << 29) + (1ul << 35) + (1ul << 41)
+        };
+
+        public static ulong[][] ColumnVerticals = new ulong[][]
+        { 
+            new ulong []
+            { 
+                1 + (1ul << 1) + (1ul << 2) + (1ul << 3),
+                (1ul << 1) + (1ul << 2) + (1ul << 3) + (1ul << 4),
+                (1ul << 2) + (1ul << 3) + (1ul << 4) + (1ul << 5)
+            },
+            new ulong []
+            {
+                (1ul << 6) + (1ul << 7) + (1ul << 8) + (1ul << 9),
+                (1ul << 7) + (1ul << 8) + (1ul << 9) + (1ul << 10),
+                (1ul << 8) + (1ul << 9) + (1ul << 10) + (1ul << 11)
+            },
+            new ulong []
+            {
+                (1ul << 12) + (1ul << 13) + (1ul << 14) + (1ul << 15),
+                (1ul << 13) + (1ul << 14) + (1ul << 15) + (1ul << 16),
+                (1ul << 14) + (1ul << 15) + (1ul << 16) + (1ul << 17)
+            },
+            new ulong []
+            {
+                (1ul << 18) + (1ul << 19) + (1ul << 20) + (1ul << 21),
+                (1ul << 19) + (1ul << 20) + (1ul << 21) + (1ul << 22),
+                (1ul << 20) + (1ul << 21) + (1ul << 22) + (1ul << 23)
+            },
+            new ulong []
+            {
+                (1ul << 24) + (1ul << 25) + (1ul << 26) + (1ul << 27),
+                (1ul << 25) + (1ul << 26) + (1ul << 27) + (1ul << 28),
+                (1ul << 26) + (1ul << 27) + (1ul << 28) + (1ul << 29)
+            },
+            new ulong []
+            {
+                (1ul << 30) + (1ul << 31) + (1ul << 32) + (1ul << 33),
+                (1ul << 31) + (1ul << 32) + (1ul << 33) + (1ul << 34),
+                (1ul << 32) + (1ul << 33) + (1ul << 34) + (1ul << 35)
+            },
+            new ulong []
+            {
+                (1ul << 36) + (1ul << 37) + (1ul << 38) + (1ul << 39),
+                (1ul << 37) + (1ul << 38) + (1ul << 39) + (1ul << 40),
+                (1ul << 38) + (1ul << 39) + (1ul << 40) + (1ul << 41)
+            },
+        };
+
+        public static ulong[][] FallingDiagonals = new ulong[][]
+        {
+            new ulong[]
+            { 
+                (1ul << 3) + (1ul << 8) + (1ul << 13) + (1ul << 18),
+                (1ul << 4) + (1ul << 9) + (1ul << 14) + (1ul << 19),
+                (1ul << 5) + (1ul << 10) + (1ul << 15) + (1ul << 20)
+            } // TODO left off
+
+        };
 
         public static bool CheckSingleBit(ulong board, int index)
             => (board & (1ul << index)) != 0;
@@ -58,7 +179,7 @@ namespace ConnectBot
             // TODO find or think of a more clever way to do with with some bit masks
             int openBitIndex = 6 * column;
 
-            for (int r = 0; r < LogicalBoardHelpers.NUM_ROWS; r++)
+            for (int r = 0; r < NUM_ROWS; r++)
             {
                 if (!CheckSingleBit(board.FullBoard, openBitIndex))
                     break;
@@ -80,7 +201,7 @@ namespace ConnectBot
         {
             var openColumns = new List<int>();
 
-            for (int c = 0; c < LogicalBoardHelpers.NUM_COLUMNS; c++)
+            for (int c = 0; c < NUM_COLUMNS; c++)
             {
                 if (IsColumnOpen(board, c))
                     openColumns.Add(c);
@@ -89,15 +210,108 @@ namespace ConnectBot
             return openColumns;
         }
 
-        // copy a board
-        // populate an entire column at once, used when given bot a bit board
+        public static bool IsScorable(DiscColor disc, BitBoard board, ulong possibleFour)
+        {
+            if (disc == DiscColor.Red)
+            {
+                // opponent discs
+                if ((board.BlackDiscs & possibleFour) != 0)
+                    return false;
 
+                // there are no friendly discs
+                if ((board.RedDiscs & possibleFour) == 0)
+                    return false;
+            }
+            else
+            {
+                // opponent discs
+                if ((board.RedDiscs & possibleFour) != 0)
+                    return false;
 
+                // there are no friendly discs
+                if ((board.BlackDiscs & possibleFour) == 0)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public static decimal PossibleFourValue(ulong possibleFour)
+        {
+            ulong count = 0;
+
+            while (possibleFour > 0)
+            {
+                count += possibleFour & 1;
+                possibleFour >>= 1;
+            }
+
+            switch (count)
+            {
+                case 1:
+                    return 0.2m;
+                case 2:
+                    return 0.6m;
+                case 3:
+                    return 1.2m;
+                // TODO is this needed with killer move checking?
+                // TODO consider using some extremely large value that isn't max/min
+                // for victory states and when they are discovered through this evaluation
+                case 4:
+                    return 10000.0m;
+                default:
+                    return 0.0m;
+            }
+        }
 
         // check horizontal four
+        public static decimal PossibleHorizontals(BitBoard board, DiscColor disc)
+            => ScorePossibleFours(board, disc, RowHorizontals);
+
         // check vertical four
+        public static decimal PossibleVerticals(BitBoard board, DiscColor disc)
+            => ScorePossibleFours(board, disc, ColumnVerticals);
+
         // check rising diagonal four
+
+
         // check falling diagonal four
+
+
+        /// <summary>
+        /// Generic possible score generator that calculates using alignments 
+        /// and groupings of possible fours within each alignment group.
+        /// e.g. all horizontal rows, all vertical columns
+        /// </summary>
+        /// <param name="board"></param>
+        /// <param name="disc"></param>
+        /// <param name="scoringAlignments"></param>
+        /// <returns></returns>
+        public static decimal ScorePossibleFours(BitBoard board, DiscColor disc, ulong[][] scoringAlignments)
+        {
+            decimal ret = 0.0m;
+
+            foreach (ulong[] alignment in scoringAlignments)
+            {
+                foreach (ulong grouping in alignment)
+                {
+                    if (disc == DiscColor.Red)
+                    {
+                        if (IsScorable(disc, board, grouping))
+                            ret += PossibleFourValue(board.RedDiscs & grouping);
+                    }
+                    else
+                    {
+                        if (IsScorable(disc, board, grouping))
+                            ret += PossibleFourValue(board.BlackDiscs & grouping);
+                    }
+                }
+            }
+
+            return ret;
+        }
+
+        
         // five disc color given row column, take into account openness
     }
 }
