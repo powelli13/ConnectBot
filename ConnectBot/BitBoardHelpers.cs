@@ -31,63 +31,51 @@ namespace ConnectBot
          * Below are precalculated ulongs used to quickly
          * check scoring fours on the bit board.
          */
+        // TODO should these be | instead of +? would it make a performance difference?
         public static ulong[][] RowHorizontals = new ulong[][]
         {
-            FirstRowHorizontals,
-            SecondRowHorizontals,
-            ThirdRowHorizontals,
-            FourthRowHorizontals,
-            FifthRowHorizontals,
-            SixthRowHorizontals
-        };
-
-        // TODO should these be | instead of +? would it make a performance difference?
-        public static ulong[] FirstRowHorizontals = new ulong[4]
-        {
-            1 + (1ul << 6) + (1ul << 12) + (1ul << 18),
-            (1ul << 6) + (1ul << 12) + (1ul << 18) + (1ul << 24),
-            (1ul << 12) + (1ul << 18) + (1ul << 24) + (1ul << 30),
-            (1ul << 18) + (1ul << 24) + (1ul << 30) + (1ul << 36)
-        };
-
-        public static ulong[] SecondRowHorizontals = new ulong[4]
-        {
-            (1ul << 1) + (1ul << 7) + (1ul << 13) + (1ul << 19),
-            (1ul << 7) + (1ul << 13) + (1ul << 19) + (1ul << 25),
-            (1ul << 13) + (1ul << 19) + (1ul << 25) + (1ul << 31),
-            (1ul << 19) + (1ul << 25) + (1ul << 31) + (1ul << 37)
-        };
-
-        public static ulong[] ThirdRowHorizontals = new ulong[4]
-        {
-            (1ul << 2) + (1ul << 8) + (1ul << 14) + (1ul << 20),
-            (1ul << 8) + (1ul << 14) + (1ul << 20) + (1ul << 26),
-            (1ul << 14) + (1ul << 20) + (1ul << 26) + (1ul << 32),
-            (1ul << 20) + (1ul << 26) + (1ul << 32) + (1ul << 38)
-        };
-
-        public static ulong[] FourthRowHorizontals = new ulong[4]
-        {
-            (1ul << 3) + (1ul << 9) + (1ul << 15) + (1ul << 21),
-            (1ul << 9) + (1ul << 15) + (1ul << 21) + (1ul << 27),
-            (1ul << 15) + (1ul << 21) + (1ul << 27) + (1ul << 33),
-            (1ul << 21) + (1ul << 27) + (1ul << 33) + (1ul << 39)
-        };
-
-        public static ulong[] FifthRowHorizontals = new ulong[4]
-        {
-            (1ul << 4) + (1ul << 10) + (1ul << 16) + (1ul << 22),
-            (1ul << 10) + (1ul << 16) + (1ul << 22) + (1ul << 28),
-            (1ul << 16) + (1ul << 22) + (1ul << 28) + (1ul << 34),
-            (1ul << 22) + (1ul << 28) + (1ul << 34) + (1ul << 40)
-        };
-
-        public static ulong[] SixthRowHorizontals = new ulong[4]
-        {
-            (1ul << 5) + (1ul << 11) + (1ul << 17) + (1ul << 23),
-            (1ul << 11) + (1ul << 17) + (1ul << 23) + (1ul << 29),
-            (1ul << 17) + (1ul << 23) + (1ul << 29) + (1ul << 35),
-            (1ul << 23) + (1ul << 29) + (1ul << 35) + (1ul << 41)
+            new ulong[4]
+            {
+                1 + (1ul << 6) + (1ul << 12) + (1ul << 18),
+                (1ul << 6) + (1ul << 12) + (1ul << 18) + (1ul << 24),
+                (1ul << 12) + (1ul << 18) + (1ul << 24) + (1ul << 30),
+                (1ul << 18) + (1ul << 24) + (1ul << 30) + (1ul << 36)
+            },
+            new ulong[4]
+            {
+                (1ul << 1) + (1ul << 7) + (1ul << 13) + (1ul << 19),
+                (1ul << 7) + (1ul << 13) + (1ul << 19) + (1ul << 25),
+                (1ul << 13) + (1ul << 19) + (1ul << 25) + (1ul << 31),
+                (1ul << 19) + (1ul << 25) + (1ul << 31) + (1ul << 37)
+            },
+            new ulong[4]
+            {
+                (1ul << 2) + (1ul << 8) + (1ul << 14) + (1ul << 20),
+                (1ul << 8) + (1ul << 14) + (1ul << 20) + (1ul << 26),
+                (1ul << 14) + (1ul << 20) + (1ul << 26) + (1ul << 32),
+                (1ul << 20) + (1ul << 26) + (1ul << 32) + (1ul << 38)
+            },
+            new ulong[4]
+            {
+                (1ul << 3) + (1ul << 9) + (1ul << 15) + (1ul << 21),
+                (1ul << 9) + (1ul << 15) + (1ul << 21) + (1ul << 27),
+                (1ul << 15) + (1ul << 21) + (1ul << 27) + (1ul << 33),
+                (1ul << 21) + (1ul << 27) + (1ul << 33) + (1ul << 39)
+            },
+            new ulong[4]
+            {
+                (1ul << 4) + (1ul << 10) + (1ul << 16) + (1ul << 22),
+                (1ul << 10) + (1ul << 16) + (1ul << 22) + (1ul << 28),
+                (1ul << 16) + (1ul << 22) + (1ul << 28) + (1ul << 34),
+                (1ul << 22) + (1ul << 28) + (1ul << 34) + (1ul << 40)
+            },
+            new ulong[4]
+            {
+                (1ul << 5) + (1ul << 11) + (1ul << 17) + (1ul << 23),
+                (1ul << 11) + (1ul << 17) + (1ul << 23) + (1ul << 29),
+                (1ul << 17) + (1ul << 23) + (1ul << 29) + (1ul << 35),
+                (1ul << 23) + (1ul << 29) + (1ul << 35) + (1ul << 41)
+            }
         };
 
         public static ulong[][] ColumnVerticals = new ulong[][]
@@ -310,18 +298,20 @@ namespace ConnectBot
         }
 
         // check horizontal four
-        public static decimal PossibleHorizontals(BitBoard board, DiscColor disc)
+        public static decimal ScorePossibleHorizontals(BitBoard board, DiscColor disc)
             => ScorePossibleFours(board, disc, RowHorizontals);
 
         // check vertical four
-        public static decimal PossibleVerticals(BitBoard board, DiscColor disc)
+        public static decimal ScorePossibleVerticals(BitBoard board, DiscColor disc)
             => ScorePossibleFours(board, disc, ColumnVerticals);
 
         // check rising diagonal four
-
+        public static decimal ScorePossibleRisingDiagonals(BitBoard board, DiscColor disc)
+            => ScorePossibleFours(board, disc, RisingDiagonals);
 
         // check falling diagonal four
-
+        public static decimal ScorePossibleFallingDiagonals(BitBoard board, DiscColor disc)
+            => ScorePossibleFours(board, disc, FallingDiagonals);
 
         /// <summary>
         /// Generic possible score generator that calculates using alignments 
@@ -356,7 +346,50 @@ namespace ConnectBot
             return ret;
         }
 
-        
-        // five disc color given row column, take into account openness
+        static DiscColor CheckGroupingsVictory(BitBoard board, ulong[][] scoringAlignments)
+        {
+            foreach (var groupings in scoringAlignments)
+            {
+                foreach (var grouping in groupings)
+                {
+                    if ((grouping & board.RedDiscs) == grouping)
+                        return DiscColor.Red;
+
+                    if ((grouping & board.BlackDiscs) == grouping)
+                        return DiscColor.Black;
+                }
+            }
+
+            return DiscColor.None;
+        }
+
+        public static DiscColor CheckVictory(BitBoard board)
+        {
+            // This would represent both colors
+            // having discs on the same space so it
+            // is an invalid board state.
+            if ((board.RedDiscs & board.BlackDiscs) != 0ul)
+                throw new ArgumentException("Invalid board state, both color discs on same space", nameof(board));
+
+            var check = DiscColor.None;
+
+            check = CheckGroupingsVictory(board, RowHorizontals);
+            if (check != DiscColor.None)
+                return check;
+
+            check = CheckGroupingsVictory(board, ColumnVerticals);
+            if (check != DiscColor.None)
+                return check;
+
+            check = CheckGroupingsVictory(board, FallingDiagonals);
+            if (check != DiscColor.None)
+                return check;
+
+            check = CheckGroupingsVictory(board, RisingDiagonals);
+            if (check != DiscColor.None)
+                return check;
+
+            return DiscColor.None;
+        }
     }
 }
