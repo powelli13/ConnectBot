@@ -204,7 +204,31 @@ namespace ConnectBot
 
         // find highest open spot in a column
         // move into an open column given index and color
-        public static BitBoard BitBoardMove(BitBoard board, int column, DiscColor disc)
+        //public static BitBoard BitBoardMove(BitBoard board, int column, DiscColor disc)
+        //{
+        //    if (!IsColumnOpen(board, column))
+        //        throw new InvalidOperationException($"Column {column} is unavailable for movement.");
+
+        //    // TODO find or think of a more clever way to do with with some bit masks
+        //    int openBitIndex = 6 * column;
+
+        //    for (int r = 0; r < NUM_ROWS; r++)
+        //    {
+        //        if (!CheckSingleBit(board.FullBoard, openBitIndex))
+        //            break;
+
+        //        openBitIndex++;
+        //    }
+
+        //    if (disc == DiscColor.Red)
+        //    {
+        //        return new BitBoard(SetSingleBit(board.RedDiscs, openBitIndex), board.BlackDiscs);
+        //    }
+
+        //    return new BitBoard(board.RedDiscs, SetSingleBit(board.BlackDiscs, openBitIndex));
+        //}
+
+        public static void BitBoardMove(BitBoard board, int column, DiscColor disc)
         {
             if (!IsColumnOpen(board, column))
                 throw new InvalidOperationException($"Column {column} is unavailable for movement.");
@@ -217,15 +241,17 @@ namespace ConnectBot
                 if (!CheckSingleBit(board.FullBoard, openBitIndex))
                     break;
 
-                openBitIndex++;    
+                openBitIndex++;
             }
 
             if (disc == DiscColor.Red)
             {
-                return new BitBoard(SetSingleBit(board.RedDiscs, openBitIndex), board.BlackDiscs);
+                board.RedDiscs = SetSingleBit(board.RedDiscs, openBitIndex);   
             }
-
-            return new BitBoard(board.RedDiscs, SetSingleBit(board.BlackDiscs, openBitIndex));
+            else
+            {
+                board.BlackDiscs = SetSingleBit(board.BlackDiscs, openBitIndex);
+            }
         }
 
         // retrieve open columns

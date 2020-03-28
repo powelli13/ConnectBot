@@ -132,17 +132,17 @@ namespace ConnectBot
         public async Task<int> Move()
         {
             // Look for wins before performing in depth searches
-            var aiWinningMove = FindKillerMove(GameDiscs, AiColor);
+            //var aiWinningMove = FindKillerMove(GameDiscs, AiColor);
 
-            if (aiWinningMove.HasWinner) 
-                return aiWinningMove.Column;
+            //if (aiWinningMove.HasWinner) 
+            //    return aiWinningMove.Column;
 
-            // TODO consider refactoring FindKillerMove so that we only need to call once
-            // Ensure we block the opponents winning moves
-            var opponentWinningMove = FindKillerMove(GameDiscs, OpponentColor);
+            //// TODO consider refactoring FindKillerMove so that we only need to call once
+            //// Ensure we block the opponents winning moves
+            //var opponentWinningMove = FindKillerMove(GameDiscs, OpponentColor);
 
-            if (opponentWinningMove.HasWinner)
-                return opponentWinningMove.Column;
+            //if (opponentWinningMove.HasWinner)
+            //    return opponentWinningMove.Column;
 
             // Node n = new Node(GameDiscs, 0, ChangeTurnColor(AiColor));
             
@@ -431,7 +431,7 @@ namespace ConnectBot
         /// <returns>The column that will be moved played in.</returns>
         private int MinimaxCutoffSearch(BitBoard board)
         {
-            int maxDepth = 13;
+            int maxDepth = 11;
 
             // TODO change this based on the AI's color
             // for all actions return min value of the result of the action
@@ -446,7 +446,10 @@ namespace ConnectBot
             {
                 // DiscColor[,] newState = GenerateBoardState(openMove, AiColor, board.BoardDiscState);
                 // Node child = new Node(newState, openMove, AiColor);
-                var newState = BitBoardMove(board, openMove, AiColor);
+
+                // TODO consider a way to undo each move?
+                var newState = new BitBoard(board.RedDiscs, board.BlackDiscs);
+                BitBoardMove(newState, openMove, AiColor);
                 
                 // prompt for opponents first move in the searching
                 var openMoveValue = MaxValue(newState, maxDepth, alphaBeta /*, nodeCounter, ChangeTurnColor(AiColor)*/);
@@ -514,8 +517,8 @@ namespace ConnectBot
 
             foreach (int openMove in openColumns)
             {
-                var newState = BitBoardMove(board, openMove, OpponentColor);
-                // var child = new Node(newState, openMove, node.CurrentTurn);
+                var newState = new BitBoard(board.RedDiscs, board.BlackDiscs);
+                BitBoardMove(newState, openMove, AiColor);
 
                 maximumMoveValue = Math.Max(
                     maximumMoveValue,
@@ -557,8 +560,8 @@ namespace ConnectBot
 
             foreach (int openMove in openColumns)
             {
-                var newState = BitBoardMove(board, openMove, AiColor);
-                // var child = new Node(newState, openMove, node.CurrentTurn);
+                var newState = new BitBoard(board.RedDiscs, board.BlackDiscs);
+                BitBoardMove(newState, openMove, AiColor);
 
                 minimumMoveValue = Math.Min(
                     minimumMoveValue,
