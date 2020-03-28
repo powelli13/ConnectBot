@@ -228,7 +228,6 @@ namespace ConnectBot
             return new BitBoard(board.RedDiscs, SetSingleBit(board.BlackDiscs, openBitIndex));
         }
 
-
         // retrieve open columns
         public static List<int> GetOpenColumns(BitBoard board)
         {
@@ -297,8 +296,27 @@ namespace ConnectBot
             }
         }
 
+        public static decimal EvaluateBoardState(BitBoard board)
+        {
+            // TODO adjust when moving to negamax
+            var redPossiblesValue = CountAllPossibles(board, DiscColor.Red);
+            var blackPossiblesValue = CountAllPossibles(board, DiscColor.Black);
+
+            return blackPossiblesValue + (redPossiblesValue * -1.0m);
+        }
+
+        //decimal CountAllPossibles(DiscColor[,] boardState, DiscColor checkColor)
+        //{
+        //    decimal ret = PossibleHorizontals(boardState, checkColor);
+        //    ret += PossibleVerticals(boardState, checkColor);
+        //    ret += PossibleDiagonalRising(boardState, checkColor);
+        //    ret += PossibleDiagonalDescending(boardState, checkColor);
+
+        //    return ret;
+        //}
+
         // TODO put the turn as a bit on the board
-        public static decimal EvaluateBoardState(BitBoard board, DiscColor disc)
+        public static decimal CountAllPossibles(BitBoard board, DiscColor disc)
         {
             var ret = ScorePossibleHorizontals(board, disc);
             ret += ScorePossibleVerticals(board, disc);

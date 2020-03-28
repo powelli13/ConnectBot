@@ -431,14 +431,14 @@ namespace ConnectBot
         /// <returns>The column that will be moved played in.</returns>
         private int MinimaxCutoffSearch(BitBoard board)
         {
-            int maxDepth = 9;
+            int maxDepth = 11;
 
             // TODO change this based on the AI's color
             // for all actions return min value of the result of the action
             var minimumMoveValue = decimal.MaxValue;
             var movedColumn = -1;
             var alphaBeta = new AlphaBeta();
-            var nodeCounter = new NodeCounter();
+            //var nodeCounter = new NodeCounter();
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
@@ -449,7 +449,7 @@ namespace ConnectBot
                 var newState = BitBoardMove(board, openMove, AiColor);
                 
                 // prompt for opponents first move in the searching
-                var openMoveValue = MaxValue(newState, maxDepth, alphaBeta, nodeCounter, ChangeTurnColor(AiColor));
+                var openMoveValue = MaxValue(newState, maxDepth, alphaBeta /*, nodeCounter, ChangeTurnColor(AiColor)*/);
                 Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
 
                 // TODO do more reading because this feels unnecessary. the danger of 
@@ -481,7 +481,7 @@ namespace ConnectBot
             Console.WriteLine(elapsedTime);
 
             Console.WriteLine($"Column {movedColumn} was chosen.");
-            Console.WriteLine($"{nodeCounter.TotalNodes} were explored.");
+            //Console.WriteLine($"{nodeCounter.TotalNodes} were explored.");
 
             return movedColumn;
         }
@@ -489,11 +489,10 @@ namespace ConnectBot
         private decimal MaxValue(
             BitBoard board, 
             int depth,
-            AlphaBeta alphaBeta,
-            NodeCounter nodeCounter,
-            DiscColor turn)
+            AlphaBeta alphaBeta)//,
+            //NodeCounter nodeCounter)
         {
-            nodeCounter.Increment();
+            //nodeCounter.Increment();
 
             var openColumns = GetOpenColumns(board);
 
@@ -502,7 +501,7 @@ namespace ConnectBot
                 // return something other than an evaluation here
                 openColumns.Count == 0)
             {
-                return EvaluateBoardState(board, turn);
+                return EvaluateBoardState(board);
             }
 
             // TODO verify that these return values are what are wanted
@@ -515,12 +514,12 @@ namespace ConnectBot
 
             foreach (int openMove in openColumns)
             {
-                var newState = BitBoardMove(board, openMove, turn);
+                var newState = BitBoardMove(board, openMove, OpponentColor);
                 // var child = new Node(newState, openMove, node.CurrentTurn);
 
                 maximumMoveValue = Math.Max(
                     maximumMoveValue,
-                    MinValue(newState, depth - 1, alphaBeta, nodeCounter, ChangeTurnColor(turn)));
+                    MinValue(newState, depth - 1, alphaBeta, /*nodeCounter,*/ AiColor));
 
                 if (maximumMoveValue >= alphaBeta.Beta)
                     return maximumMoveValue;
@@ -535,17 +534,17 @@ namespace ConnectBot
             BitBoard board, 
             int depth,
             AlphaBeta alphaBeta,
-            NodeCounter nodeCounter,
+            //NodeCounter nodeCounter,
             DiscColor turn)
         {
-            nodeCounter.Increment();
+            //nodeCounter.Increment();
 
             var openColumns = GetOpenColumns(board);
 
             if (depth <= 0 ||
                 openColumns.Count == 0)
             {
-                return EvaluateBoardState(board, turn);
+                return EvaluateBoardState(board);
             }
 
             // TODO verify that these return values are what are wanted
@@ -558,12 +557,12 @@ namespace ConnectBot
 
             foreach (int openMove in openColumns)
             {
-                var newState = BitBoardMove(board, openMove, turn);
+                var newState = BitBoardMove(board, openMove, AiColor);
                 // var child = new Node(newState, openMove, node.CurrentTurn);
 
                 minimumMoveValue = Math.Min(
                     minimumMoveValue,
-                    MaxValue(board, depth - 1, alphaBeta, nodeCounter, ChangeTurnColor(turn)));
+                    MaxValue(board, depth - 1, alphaBeta /*, nodeCounter,*/ /*OpponentColor*/));
 
                 if (minimumMoveValue <= alphaBeta.Alpha)
                     return minimumMoveValue;
