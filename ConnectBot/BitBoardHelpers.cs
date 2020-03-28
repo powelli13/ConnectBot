@@ -204,7 +204,7 @@ namespace ConnectBot
 
         // find highest open spot in a column
         // move into an open column given index and color
-        public static BitBoard Move(BitBoard board, int column, DiscColor disc)
+        public static BitBoard BitBoardMove(BitBoard board, int column, DiscColor disc)
         {
             if (!IsColumnOpen(board, column))
                 throw new InvalidOperationException($"Column {column} is unavailable for movement.");
@@ -295,6 +295,17 @@ namespace ConnectBot
                 default:
                     return 0.0m;
             }
+        }
+
+        // TODO put the turn as a bit on the board
+        public static decimal EvaluateBoardState(BitBoard board, DiscColor disc)
+        {
+            var ret = ScorePossibleHorizontals(board, disc);
+            ret += ScorePossibleVerticals(board, disc);
+            ret += ScorePossibleRisingDiagonals(board, disc);
+            ret += ScorePossibleFallingDiagonals(board, disc);
+
+            return ret;
         }
 
         // check horizontal four

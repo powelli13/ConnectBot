@@ -382,7 +382,7 @@ namespace ConnectBot
         /// </summary>
         protected void UpdateBotBoard()
         {
-            Bot.UpdateBoard(GetTextBoard());
+            Bot.UpdateBoard(GetBitBoard());
         }
     }
 }

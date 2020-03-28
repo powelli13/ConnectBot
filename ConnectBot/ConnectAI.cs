@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using static ConnectBot.BitBoardHelpers;
 using static ConnectBot.LogicalBoardHelpers;
 
 namespace ConnectBot
@@ -14,6 +14,8 @@ namespace ConnectBot
         /// on the screen. Lowest row index is lowest in the column stack.
         /// </summary>
         protected DiscColor[,] GameDiscs = new DiscColor[NUM_COLUMNS, NUM_ROWS];
+
+        protected BitBoard GameBoard { get; set; }
 
         protected DiscColor AiColor { get; set; }
         protected DiscColor OpponentColor { get; set; }
@@ -122,6 +124,11 @@ namespace ConnectBot
             }
         }
 
+        public void UpdateBoard(BitBoard board)
+        {
+            GameBoard = board;
+        }
+
         public async Task<int> Move()
         {
             // Look for wins before performing in depth searches
@@ -137,9 +144,9 @@ namespace ConnectBot
             if (opponentWinningMove.HasWinner)
                 return opponentWinningMove.Column;
 
-            Node n = new Node(GameDiscs, 0, ChangeTurnColor(AiColor));
+            // Node n = new Node(GameDiscs, 0, ChangeTurnColor(AiColor));
             
-            int retMove = MinimaxCutoffSearch(n);
+            int retMove = MinimaxCutoffSearch(GameBoard);
 
             return retMove;
         }
@@ -151,7 +158,8 @@ namespace ConnectBot
                 var movedBoard = GenerateBoardState(openColumn, checkColor, boardState);
                 
                 if (CheckVictory(movedBoard) == checkColor)
-                    return new KillerMove(){
+                    return new KillerMove()
+                    {
                         Column = openColumn,
                         Color = checkColor
                     };
@@ -203,14 +211,14 @@ namespace ConnectBot
         /// <param name="boardState"></param>
         /// <returns></returns>
         /// TODO there has to be a better way to structure board than all this rigorous checking
-        protected decimal EvaluateBoardState(DiscColor[,] boardState)
-        {
-            // TODO adjust when moving to negamax
-            var redPossiblesValue = CountAllPossibles(boardState, DiscColor.Red);
-            var blackPossiblesValue = CountAllPossibles(boardState, DiscColor.Black);
+        // protected decimal EvaluateBoardState(DiscColor[,] boardState)
+        // {
+        //     // TODO adjust when moving to negamax
+        //     var redPossiblesValue = CountAllPossibles(boardState, DiscColor.Red);
+        //     var blackPossiblesValue = CountAllPossibles(boardState, DiscColor.Black);
 
-            return blackPossiblesValue + (redPossiblesValue * -1.0m);
-        }
+        //     return blackPossiblesValue + (redPossiblesValue * -1.0m);
+        // }
 
         decimal CountAllPossibles(DiscColor[,] boardState, DiscColor checkColor)
         {
@@ -420,9 +428,8 @@ namespace ConnectBot
         /// <summary>
         /// Min max searching algorithm with defined cutoff depth.
         /// </summary>
-        /// <param name="node">Node representing the current board state.</param>
         /// <returns>The column that will be moved played in.</returns>
-        private int MinimaxCutoffSearch(Node node)
+        private int MinimaxCutoffSearch(BitBoard board)
         {
             int maxDepth = 9;
 
@@ -435,12 +442,14 @@ namespace ConnectBot
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            foreach (int openMove in GetOpenColumns(node.BoardDiscState))
+            foreach (int openMove in GetOpenColumns(board))
             {
-                DiscColor[,] newState = GenerateBoardState(openMove, AiColor, node.BoardDiscState);
-                Node child = new Node(newState, openMove, AiColor);
+                // DiscColor[,] newState = GenerateBoardState(openMove, AiColor, board.BoardDiscState);
+                // Node child = new Node(newState, openMove, AiColor);
+                var newState = BitBoardMove(board, openMove, AiColor);
                 
-                var openMoveValue = MaxValue(child, maxDepth, alphaBeta, nodeCounter);
+                // prompt for opponents first move in the searching
+                var openMoveValue = MaxValue(newState, maxDepth, alphaBeta, nodeCounter, ChangeTurnColor(AiColor));
                 Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
 
                 // TODO do more reading because this feels unnecessary. the danger of 
@@ -478,25 +487,26 @@ namespace ConnectBot
         }
 
         private decimal MaxValue(
-            Node node, 
+            BitBoard board, 
             int depth,
             AlphaBeta alphaBeta,
-            NodeCounter nodeCounter)
+            NodeCounter nodeCounter,
+            DiscColor turn)
         {
             nodeCounter.Increment();
 
-            var openColumns = GetOpenColumns(node.BoardDiscState);
+            var openColumns = GetOpenColumns(board);
 
             if (depth <= 0 ||
                 // TODO this should represent a drawn game, we may want to
                 // return something other than an evaluation here
                 openColumns.Count == 0)
             {
-                return EvaluateBoardState(node.BoardDiscState);
+                return EvaluateBoardState(board, turn);
             }
 
             // TODO verify that these return values are what are wanted
-            var possibleWinner = CheckVictory(node.BoardDiscState);
+            var possibleWinner = CheckVictory(board);
 
             if (possibleWinner != DiscColor.None)
                 return EndgameStateScore(possibleWinner);
@@ -505,12 +515,12 @@ namespace ConnectBot
 
             foreach (int openMove in openColumns)
             {
-                var newState = GenerateBoardState(openMove, node.CurrentTurn, node.BoardDiscState);
-                var child = new Node(newState, openMove, node.CurrentTurn);
+                var newState = BitBoardMove(board, openMove, turn);
+                // var child = new Node(newState, openMove, node.CurrentTurn);
 
                 maximumMoveValue = Math.Max(
                     maximumMoveValue,
-                    MinValue(child, depth - 1, alphaBeta, nodeCounter));
+                    MinValue(newState, depth - 1, alphaBeta, nodeCounter, ChangeTurnColor(turn)));
 
                 if (maximumMoveValue >= alphaBeta.Beta)
                     return maximumMoveValue;
@@ -522,23 +532,24 @@ namespace ConnectBot
         }
 
         private decimal MinValue(
-            Node node, 
+            BitBoard board, 
             int depth,
             AlphaBeta alphaBeta,
-            NodeCounter nodeCounter)
+            NodeCounter nodeCounter,
+            DiscColor turn)
         {
             nodeCounter.Increment();
 
-            var openColumns = GetOpenColumns(node.BoardDiscState);
+            var openColumns = GetOpenColumns(board);
 
             if (depth <= 0 ||
                 openColumns.Count == 0)
             {
-                return EvaluateBoardState(node.BoardDiscState);
+                return EvaluateBoardState(board, turn);
             }
 
             // TODO verify that these return values are what are wanted
-            var possibleWinner = CheckVictory(node.BoardDiscState);
+            var possibleWinner = CheckVictory(board);
 
             if (possibleWinner != DiscColor.None)
                 return EndgameStateScore(possibleWinner);
@@ -547,12 +558,12 @@ namespace ConnectBot
 
             foreach (int openMove in openColumns)
             {
-                var newState = GenerateBoardState(openMove, node.CurrentTurn, node.BoardDiscState);
-                var child = new Node(newState, openMove, node.CurrentTurn);
+                var newState = BitBoardMove(board, openMove, turn);
+                // var child = new Node(newState, openMove, node.CurrentTurn);
 
                 minimumMoveValue = Math.Min(
                     minimumMoveValue,
-                    MaxValue(child, depth - 1, alphaBeta, nodeCounter));
+                    MaxValue(board, depth - 1, alphaBeta, nodeCounter, ChangeTurnColor(turn)));
 
                 if (minimumMoveValue <= alphaBeta.Alpha)
                     return minimumMoveValue;
