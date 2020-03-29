@@ -19,20 +19,20 @@ namespace ConnectBot
     */
     public static class BitBoardHelpers
     {
-        public static int ColumnOneTop = 5;
-        public static int ColumnTwoTop = 11;
-        public static int ColumnThreeTop = 17;  
-        public static int ColumnFourTop = 23;  
-        public static int ColumnFiveTop = 29;  
-        public static int ColumnSixTop = 35;  
-        public static int ColumnSevenTop = 41;
+        public readonly static int ColumnOneTop = 5;
+        public readonly static int ColumnTwoTop = 11;
+        public readonly static int ColumnThreeTop = 17;  
+        public readonly static int ColumnFourTop = 23;  
+        public readonly static int ColumnFiveTop = 29;  
+        public readonly static int ColumnSixTop = 35;  
+        public readonly static int ColumnSevenTop = 41;
 
         /* 
          * Below are precalculated ulongs used to quickly
          * check scoring fours on the bit board.
          */
         // TODO should these be | instead of +? would it make a performance difference?
-        public static ulong[][] RowHorizontals = new ulong[][]
+        public static readonly ulong[][] RowHorizontals = new ulong[][]
         {
             new ulong[4]
             {
@@ -78,7 +78,7 @@ namespace ConnectBot
             }
         };
 
-        public static ulong[][] ColumnVerticals = new ulong[][]
+        public static readonly ulong[][] ColumnVerticals = new ulong[][]
         { 
             new ulong []
             { 
@@ -124,7 +124,7 @@ namespace ConnectBot
             },
         };
 
-        public static ulong[][] FallingDiagonals = new ulong[][]
+        public static readonly ulong[][] FallingDiagonals = new ulong[][]
         {
             new ulong[]
             { 
@@ -152,7 +152,7 @@ namespace ConnectBot
             }
         };
 
-        public static ulong[][] RisingDiagonals = new ulong[][]
+        public static readonly ulong[][] RisingDiagonals = new ulong[][]
         {
             new ulong[]
             {
