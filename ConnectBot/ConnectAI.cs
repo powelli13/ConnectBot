@@ -442,14 +442,13 @@ namespace ConnectBot
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            foreach (int openMove in GetOpenColumns(board))
+            foreach (int openMove in GetOpenColumns(in board))
             {
                 // DiscColor[,] newState = GenerateBoardState(openMove, AiColor, board.BoardDiscState);
                 // Node child = new Node(newState, openMove, AiColor);
 
                 // TODO consider a way to undo each move?
-                var newState = new BitBoard(board.RedDiscs, board.BlackDiscs);
-                BitBoardMove(newState, openMove, AiColor);
+                var newState = BitBoardMove(in board, openMove, AiColor);
                 
                 // prompt for opponents first move in the searching
                 var openMoveValue = MaxValue(newState, maxDepth, alphaBeta /*, nodeCounter, ChangeTurnColor(AiColor)*/);
@@ -497,18 +496,18 @@ namespace ConnectBot
         {
             //nodeCounter.Increment();
 
-            var openColumns = GetOpenColumns(board);
+            var openColumns = GetOpenColumns(in board);
 
             if (depth <= 0 ||
                 // TODO this should represent a drawn game, we may want to
                 // return something other than an evaluation here
                 openColumns.Count == 0)
             {
-                return EvaluateBoardState(board);
+                return EvaluateBoardState(in board);
             }
 
             // TODO verify that these return values are what are wanted
-            var possibleWinner = CheckVictory(board);
+            var possibleWinner = CheckVictory(in board);
 
             if (possibleWinner != DiscColor.None)
                 return EndgameStateScore(possibleWinner);
@@ -517,8 +516,8 @@ namespace ConnectBot
 
             foreach (int openMove in openColumns)
             {
-                var newState = new BitBoard(board.RedDiscs, board.BlackDiscs);
-                BitBoardMove(newState, openMove, AiColor);
+                //var newState = new BitBoard(board.RedDiscs, board.BlackDiscs);
+                var newState = BitBoardMove(in board, openMove, AiColor);
 
                 maximumMoveValue = Math.Max(
                     maximumMoveValue,
@@ -542,16 +541,16 @@ namespace ConnectBot
         {
             //nodeCounter.Increment();
 
-            var openColumns = GetOpenColumns(board);
+            var openColumns = GetOpenColumns(in board);
 
             if (depth <= 0 ||
                 openColumns.Count == 0)
             {
-                return EvaluateBoardState(board);
+                return EvaluateBoardState(in board);
             }
 
             // TODO verify that these return values are what are wanted
-            var possibleWinner = CheckVictory(board);
+            var possibleWinner = CheckVictory(in board);
 
             if (possibleWinner != DiscColor.None)
                 return EndgameStateScore(possibleWinner);
@@ -560,8 +559,8 @@ namespace ConnectBot
 
             foreach (int openMove in openColumns)
             {
-                var newState = new BitBoard(board.RedDiscs, board.BlackDiscs);
-                BitBoardMove(newState, openMove, AiColor);
+                //var newState = new BitBoard(board.RedDiscs, board.BlackDiscs);
+                var newState = BitBoardMove(in board, openMove, AiColor);
 
                 minimumMoveValue = Math.Min(
                     minimumMoveValue,
