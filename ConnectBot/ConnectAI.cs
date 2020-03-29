@@ -424,7 +424,7 @@ namespace ConnectBot
         /// <returns>The column that will be moved played in.</returns>
         private int MinimaxCutoffSearch(Node node)
         {
-            int maxDepth = 9;
+            int maxDepth = 11;
 
             // TODO change this based on the AI's color
             // for all actions return min value of the result of the action
