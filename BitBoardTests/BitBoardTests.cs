@@ -274,5 +274,103 @@ namespace ConnectBotTests
 
             Assert.AreEqual(DiscColor.None, winner);
         }
+
+        [DataTestMethod]
+        [DataRow(0, 6)]
+        [DataRow(1, 5)]
+        [DataRow(2, 4)]
+        [DataRow(4, 2)]
+        [DataRow(5, 1)]
+        [DataRow(6, 0)]
+        public void EvaluateBoardState_ShouldReturnZero_GivenSymmetricSingleDiscs(
+            int redColumn,
+            int blackColumn)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+
+            var actualScore = BitBoardHelpers.EvaluateBoardState(in board);
+
+            Assert.AreEqual(0.0m, actualScore);
+        }
+
+        [DataTestMethod]
+        [DataRow(0, 6)]
+        [DataRow(1, 5)]
+        [DataRow(2, 4)]
+        [DataRow(4, 2)]
+        [DataRow(5, 1)]
+        [DataRow(6, 0)]
+        public void EvaluateBoardState_ShouldReturnZero_GivenSymmetricDoubleDiscs(
+            int redColumn,
+            int blackColumn)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+
+            var actualScore = BitBoardHelpers.EvaluateBoardState(in board);
+
+            Assert.AreEqual(0.0m, actualScore);
+        }
+
+        [DataTestMethod]
+        [DataRow(0, 6)]
+        [DataRow(1, 5)]
+        [DataRow(2, 4)]
+        [DataRow(4, 2)]
+        [DataRow(5, 1)]
+        [DataRow(6, 0)]
+        public void EvaluateBoardState_ShouldReturnZero_GivenSymmetricTripleDiscs(
+            int redColumn,
+            int blackColumn)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+
+            var actualScore = BitBoardHelpers.EvaluateBoardState(in board);
+
+            Assert.AreEqual(0.0m, actualScore);
+        }
+
+        [DataTestMethod]
+        [DataRow(0, 6)]
+        [DataRow(1, 5)]
+        [DataRow(2, 4)]
+        [DataRow(4, 2)]
+        [DataRow(5, 1)]
+        [DataRow(6, 0)]
+        public void EvaluateBoardState_ShouldReturnZero_GivenSymmetricFourDiscs(
+            int redColumn,
+            int blackColumn)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+
+            var actualScore = BitBoardHelpers.EvaluateBoardState(in board);
+
+            Assert.AreEqual(0.0m, actualScore);
+        }
     }
 }
