@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using static ConnectBot.LogicalBoardHelpers;
 
 namespace ConnectBot
@@ -180,10 +181,10 @@ namespace ConnectBot
             },
         };
 
-        public static bool CheckSingleBit(ulong board, int index)
+        public static bool CheckSingleBit(in ulong board, int index)
             => (board & (1ul << index)) != 0;
 
-        public static ulong SetSingleBit(ulong board, int index)
+        public static ulong SetSingleBit(in ulong board, int index)
             => (board | (1ul << index));
 
         /// <summary>
@@ -259,7 +260,7 @@ namespace ConnectBot
         {
             var openColumns = new List<int>();
 
-            for (int c = 0; c < NUM_COLUMNS; c++)
+            foreach (var c in new int[] { 3, 4, 2, 5, 1, 6, 0 })
             {
                 if (IsColumnOpen(board, c))
                     openColumns.Add(c);
@@ -307,16 +308,16 @@ namespace ConnectBot
             switch (count)
             {
                 case 1:
-                    return 0.2m;
+                    return 1.0m;
                 case 2:
-                    return 0.6m;
+                    return 4.0m;
                 case 3:
-                    return 1.2m;
+                    return 16.0m;
                 // TODO is this needed with killer move checking?
                 // TODO consider using some extremely large value that isn't max/min
                 // for victory states and when they are discovered through this evaluation
                 case 4:
-                    return 10000.0m;
+                    return 100000.0m;
                 default:
                     return 0.0m;
             }
@@ -445,6 +446,56 @@ namespace ConnectBot
                 return check;
 
             return DiscColor.None;
+        }
+
+        /*
+        * 5  11  17  23  29  35  41
+        * 4  10  16  22  28  34  40
+        * 3   9  15  21  27  33  39
+        * 2   8  14  20  26  32  38
+        * 1   7  13  19  25  31  37
+        * 0   6  12  18  24  30  36 
+        */
+        public static string GetPrettyPrint(in BitBoard board)
+        {
+            var sb = new StringBuilder();
+
+            var colTracker = 5;
+            // for row count
+            // scan acorss top row (num of columns)
+            for (var _row = 0; _row < LogicalBoardHelpers.NUM_ROWS; _row++)
+            {
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker));
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker + 6));
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker + 12));
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker + 18));
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker + 24));
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker + 30));
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker + 36));
+                sb.Append("|");
+                sb.AppendLine();
+                colTracker--;
+            }
+
+            return sb.ToString();
+        }
+
+        public static string GetColorString(in BitBoard board, int index)
+        {
+            if (CheckSingleBit(board.BlackDiscs, index))
+                return "O";
+
+            if (CheckSingleBit(board.RedDiscs, index))
+                return "X";
+
+            return " ";
         }
     }
 }

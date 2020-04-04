@@ -453,7 +453,7 @@ namespace ConnectBot
                 // prompt for opponents first move in the searching
                 var openMoveValue = MaxValue(newState, maxDepth, alphaBeta, nodeCounter /*, ChangeTurnColor(AiColor)*/);
                 Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
-
+                
                 // TODO do more reading because this feels unnecessary. the danger of 
                 // an opponent having an imminent win should be able to be captured in the heuristic
                 // final depth search to ensure that a move doesn't leave the 
@@ -503,6 +503,7 @@ namespace ConnectBot
                 // return something other than an evaluation here
                 openColumns.Count == 0)
             {
+                //Console.WriteLine(GetPrettyPrint(in board));
                 return EvaluateBoardState(in board);
             }
 
@@ -545,6 +546,7 @@ namespace ConnectBot
             if (depth <= 0 ||
                 openColumns.Count == 0)
             {
+                //Console.WriteLine(GetPrettyPrint(in board));
                 return EvaluateBoardState(in board);
             }
 
@@ -563,7 +565,7 @@ namespace ConnectBot
 
                 minimumMoveValue = Math.Min(
                     minimumMoveValue,
-                    MaxValue(board, depth - 1, alphaBeta, nodeCounter /*OpponentColor*/));
+                    MaxValue(newState, depth - 1, alphaBeta, nodeCounter /*OpponentColor*/));
 
                 if (minimumMoveValue <= alphaBeta.Alpha)
                     return minimumMoveValue;

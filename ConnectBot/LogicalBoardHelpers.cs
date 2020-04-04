@@ -167,7 +167,9 @@ namespace ConnectBot
                 color != DiscColor.Black)
                 throw new ArgumentException("Must pass in a valid disc color.", nameof(color));
 
-            return color == DiscColor.Red ? DiscColor.Black : DiscColor.Red;
+            return color == DiscColor.Red 
+                ? DiscColor.Black 
+                : DiscColor.Red;
         }
     }
 }
