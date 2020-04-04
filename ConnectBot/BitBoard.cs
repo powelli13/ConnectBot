@@ -23,17 +23,16 @@
     /// space is the first bit and it counts up as it moves
     /// up the columns. 
     /// </summary>
-    public struct BitBoard
+    public readonly struct BitBoard
     {
-        public ulong RedDiscs { get; }
-        public ulong BlackDiscs { get; }
-        public ulong FullBoard { get; }
+        public readonly ulong RedDiscs;
+
+        public readonly ulong BlackDiscs;
 
         public BitBoard(ulong redDiscs, ulong blackDiscs)
         {
             RedDiscs = redDiscs;
             BlackDiscs = blackDiscs;
-            FullBoard = redDiscs | blackDiscs;
         }
     }
 }

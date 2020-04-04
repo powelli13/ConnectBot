@@ -28,16 +28,16 @@ namespace ConnectBotTests
         [DataRow(4)]
         [DataRow(5)]
         [DataRow(6)]
-        public void Move_ShouldReturnFullColumn_GivenSixMovesInSameColumn(int column)
+        public void BitBoardMove_ShouldReturnFullColumn_GivenSixMovesInSameColumn(int column)
         {
             var board = BitBoardHelpers.GetNewBoard();
 
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
 
             Assert.IsFalse(BitBoardHelpers.IsColumnOpen(board, column));
         }
@@ -50,15 +50,15 @@ namespace ConnectBotTests
         [DataRow(4)]
         [DataRow(5)]
         [DataRow(6)]
-        public void Move_ShouldReturnOpenColumn_GivenFiveMovesInSameColumn(int column)
+        public void BitBoardMove_ShouldReturnOpenColumn_GivenFiveMovesInSameColumn(int column)
         {
             var board = BitBoardHelpers.GetNewBoard();
 
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
 
             Assert.IsTrue(BitBoardHelpers.IsColumnOpen(board, column));
         }
@@ -111,10 +111,10 @@ namespace ConnectBotTests
         {
             var board = BitBoardHelpers.GetNewBoard();
 
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
 
             var winner = BitBoardHelpers.CheckVictory(board);
 
@@ -133,10 +133,10 @@ namespace ConnectBotTests
         {
             var board = BitBoardHelpers.GetNewBoard();
 
-            board = BitBoardHelpers.Move(board, column, DiscColor.Black);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Black);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Black);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Black);
 
             var winner = BitBoardHelpers.CheckVictory(board);
 
@@ -155,9 +155,9 @@ namespace ConnectBotTests
         {
             var board = BitBoardHelpers.GetNewBoard();
 
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Red);
 
             var winner = BitBoardHelpers.CheckVictory(board);
 
@@ -176,9 +176,9 @@ namespace ConnectBotTests
         {
             var board = BitBoardHelpers.GetNewBoard();
 
-            board = BitBoardHelpers.Move(board, column, DiscColor.Black);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Black);
-            board = BitBoardHelpers.Move(board, column, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, column, DiscColor.Black);
 
             var winner = BitBoardHelpers.CheckVictory(board);
 
@@ -198,10 +198,10 @@ namespace ConnectBotTests
         {
             var board = BitBoardHelpers.GetNewBoard();
 
-            board = BitBoardHelpers.Move(board, firstColumn, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, secondColumn, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, thirdColumn, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, fourthColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, firstColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, secondColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, thirdColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, fourthColumn, DiscColor.Red);
 
             var winner = BitBoardHelpers.CheckVictory(board);
 
@@ -221,10 +221,10 @@ namespace ConnectBotTests
         {
             var board = BitBoardHelpers.GetNewBoard();
 
-            board = BitBoardHelpers.Move(board, firstColumn, DiscColor.Black);
-            board = BitBoardHelpers.Move(board, secondColumn, DiscColor.Black);
-            board = BitBoardHelpers.Move(board, thirdColumn, DiscColor.Black);
-            board = BitBoardHelpers.Move(board, fourthColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, firstColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, secondColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, thirdColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, fourthColumn, DiscColor.Black);
 
             var winner = BitBoardHelpers.CheckVictory(board);
 
@@ -244,9 +244,9 @@ namespace ConnectBotTests
         {
             var board = BitBoardHelpers.GetNewBoard();
 
-            board = BitBoardHelpers.Move(board, firstColumn, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, secondColumn, DiscColor.Red);
-            board = BitBoardHelpers.Move(board, thirdColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, firstColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, secondColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, thirdColumn, DiscColor.Red);
 
             var winner = BitBoardHelpers.CheckVictory(board);
 
@@ -266,13 +266,159 @@ namespace ConnectBotTests
         {
             var board = BitBoardHelpers.GetNewBoard();
 
-            board = BitBoardHelpers.Move(board, firstColumn, DiscColor.Black);
-            board = BitBoardHelpers.Move(board, secondColumn, DiscColor.Black);
-            board = BitBoardHelpers.Move(board, thirdColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, firstColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, secondColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, thirdColumn, DiscColor.Black);
 
             var winner = BitBoardHelpers.CheckVictory(board);
 
             Assert.AreEqual(DiscColor.None, winner);
+        }
+
+        [DataTestMethod]
+        [DataRow(0, 6)]
+        [DataRow(1, 5)]
+        [DataRow(2, 4)]
+        [DataRow(4, 2)]
+        [DataRow(5, 1)]
+        [DataRow(6, 0)]
+        public void EvaluateBoardState_ShouldReturnZero_GivenSymmetricSingleDiscs(
+            int redColumn,
+            int blackColumn)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+
+            var actualScore = BitBoardHelpers.EvaluateBoardState(in board);
+
+            Assert.AreEqual(0.0m, actualScore);
+        }
+
+        [DataTestMethod]
+        [DataRow(0, 6)]
+        [DataRow(1, 5)]
+        [DataRow(2, 4)]
+        [DataRow(4, 2)]
+        [DataRow(5, 1)]
+        [DataRow(6, 0)]
+        public void EvaluateBoardState_ShouldReturnZero_GivenSymmetricDoubleDiscs(
+            int redColumn,
+            int blackColumn)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+
+            var actualScore = BitBoardHelpers.EvaluateBoardState(in board);
+
+            Assert.AreEqual(0.0m, actualScore);
+        }
+
+        [DataTestMethod]
+        [DataRow(0, 6)]
+        [DataRow(1, 5)]
+        [DataRow(2, 4)]
+        [DataRow(4, 2)]
+        [DataRow(5, 1)]
+        [DataRow(6, 0)]
+        public void EvaluateBoardState_ShouldReturnZero_GivenSymmetricTripleDiscs(
+            int redColumn,
+            int blackColumn)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+
+            var actualScore = BitBoardHelpers.EvaluateBoardState(in board);
+
+            Assert.AreEqual(0.0m, actualScore);
+        }
+
+        [DataTestMethod]
+        [DataRow(0, 6)]
+        [DataRow(1, 5)]
+        [DataRow(2, 4)]
+        [DataRow(4, 2)]
+        [DataRow(5, 1)]
+        [DataRow(6, 0)]
+        public void EvaluateBoardState_ShouldReturnZero_GivenSymmetricFourDiscs(
+            int redColumn,
+            int blackColumn)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redColumn, DiscColor.Red);
+
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackColumn, DiscColor.Black);
+
+            var actualScore = BitBoardHelpers.EvaluateBoardState(in board);
+
+            Assert.AreEqual(0.0m, actualScore);
+        }
+
+        [DataTestMethod]
+        [DataRow(0, 1, 5, 6)]
+        [DataRow(1, 2, 4, 5)]
+        [DataRow(4, 5, 1, 2)]
+        [DataRow(5, 6, 0, 1)]
+        public void EvaluateBoardState_ShouldReturnZero_GivenSymmetricRowPairs(
+            int redFirst,
+            int redSecond,
+            int blackFirst,
+            int blackSecond)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            board = BitBoardHelpers.BitBoardMove(in board, redFirst, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redSecond, DiscColor.Red);
+
+            board = BitBoardHelpers.BitBoardMove(in board, blackFirst, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackSecond, DiscColor.Black);
+
+            var actualScore = BitBoardHelpers.EvaluateBoardState(in board);
+
+            Assert.AreEqual(0.0m, actualScore);
+        }
+
+        [DataTestMethod]
+        [DataRow(0, 6)]
+        [DataRow(1, 5)]
+        [DataRow(2, 4)]
+        [DataRow(4, 2)]
+        [DataRow(5, 1)]
+        [DataRow(6, 0)]
+        public void EvaluateBoardState_ShouldReturnZero_GivenOpposingStacks(
+            int firstColumn,
+            int secondColumn)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            board = BitBoardHelpers.BitBoardMove(in board, firstColumn, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, firstColumn, DiscColor.Black);
+
+            board = BitBoardHelpers.BitBoardMove(in board, secondColumn, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, secondColumn, DiscColor.Red);
+
+            var actualScore = BitBoardHelpers.EvaluateBoardState(in board);
+
+            Assert.AreEqual(0.0m, actualScore);
         }
     }
 }

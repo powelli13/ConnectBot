@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using static ConnectBot.LogicalBoardHelpers;
 
 namespace ConnectBot
@@ -19,24 +20,24 @@ namespace ConnectBot
     */
     public static class BitBoardHelpers
     {
-        public static int ColumnOneTop = 5;
-        public static int ColumnTwoTop = 11;
-        public static int ColumnThreeTop = 17;  
-        public static int ColumnFourTop = 23;  
-        public static int ColumnFiveTop = 29;  
-        public static int ColumnSixTop = 35;  
-        public static int ColumnSevenTop = 41;
+        public readonly static int ColumnOneTop = 5;
+        public readonly static int ColumnTwoTop = 11;
+        public readonly static int ColumnThreeTop = 17;  
+        public readonly static int ColumnFourTop = 23;  
+        public readonly static int ColumnFiveTop = 29;  
+        public readonly static int ColumnSixTop = 35;  
+        public readonly static int ColumnSevenTop = 41;
 
         /* 
          * Below are precalculated ulongs used to quickly
          * check scoring fours on the bit board.
          */
         // TODO should these be | instead of +? would it make a performance difference?
-        public static ulong[][] RowHorizontals = new ulong[][]
+        public static readonly ulong[][] RowHorizontals = new ulong[][]
         {
             new ulong[4]
             {
-                1 + (1ul << 6) + (1ul << 12) + (1ul << 18),
+                1ul + (1ul << 6) + (1ul << 12) + (1ul << 18),
                 (1ul << 6) + (1ul << 12) + (1ul << 18) + (1ul << 24),
                 (1ul << 12) + (1ul << 18) + (1ul << 24) + (1ul << 30),
                 (1ul << 18) + (1ul << 24) + (1ul << 30) + (1ul << 36)
@@ -78,11 +79,11 @@ namespace ConnectBot
             }
         };
 
-        public static ulong[][] ColumnVerticals = new ulong[][]
+        public static readonly ulong[][] ColumnVerticals = new ulong[][]
         { 
             new ulong []
             { 
-                1 + (1ul << 1) + (1ul << 2) + (1ul << 3),
+                1ul + (1ul << 1) + (1ul << 2) + (1ul << 3),
                 (1ul << 1) + (1ul << 2) + (1ul << 3) + (1ul << 4),
                 (1ul << 2) + (1ul << 3) + (1ul << 4) + (1ul << 5)
             },
@@ -124,7 +125,7 @@ namespace ConnectBot
             },
         };
 
-        public static ulong[][] FallingDiagonals = new ulong[][]
+        public static readonly ulong[][] FallingDiagonals = new ulong[][]
         {
             new ulong[]
             { 
@@ -152,11 +153,11 @@ namespace ConnectBot
             }
         };
 
-        public static ulong[][] RisingDiagonals = new ulong[][]
+        public static readonly ulong[][] RisingDiagonals = new ulong[][]
         {
             new ulong[]
             {
-                1 + (1ul << 7) + (1ul << 14) + (1ul << 21),
+                1ul + (1ul << 7) + (1ul << 14) + (1ul << 21),
                 (1ul << 1) + (1ul << 8) + (1ul << 15) + (1ul << 22),
                 (1ul << 2) + (1ul << 9) + (1ul << 16) + (1ul << 23)
             },
@@ -180,10 +181,10 @@ namespace ConnectBot
             },
         };
 
-        public static bool CheckSingleBit(ulong board, int index)
+        public static bool CheckSingleBit(in ulong board, int index)
             => (board & (1ul << index)) != 0;
 
-        public static ulong SetSingleBit(ulong board, int index)
+        public static ulong SetSingleBit(in ulong board, int index)
             => (board | (1ul << index));
 
         /// <summary>
@@ -192,11 +193,11 @@ namespace ConnectBot
         /// </summary>
         /// <param name="board">BitBoard representing current state</param>
         /// <param name="column">Index of the column to check, starts at zero</param>
-        public static bool IsColumnOpen(BitBoard board, int column)
+        public static bool IsColumnOpen(in BitBoard board, int column)
         {
             int checkIndex = 5 + (column * 6);
 
-            return !CheckSingleBit(board.FullBoard, checkIndex);
+            return !CheckSingleBit(board.RedDiscs | board.BlackDiscs, checkIndex);
         }
 
         public static BitBoard GetNewBoard()
@@ -204,7 +205,7 @@ namespace ConnectBot
 
         // find highest open spot in a column
         // move into an open column given index and color
-        public static BitBoard Move(BitBoard board, int column, DiscColor disc)
+        public static BitBoard BitBoardMove(in BitBoard board, int column, DiscColor disc)
         {
             if (!IsColumnOpen(board, column))
                 throw new InvalidOperationException($"Column {column} is unavailable for movement.");
@@ -214,10 +215,10 @@ namespace ConnectBot
 
             for (int r = 0; r < NUM_ROWS; r++)
             {
-                if (!CheckSingleBit(board.FullBoard, openBitIndex))
+                if (!CheckSingleBit(board.RedDiscs | board.BlackDiscs, openBitIndex))
                     break;
 
-                openBitIndex++;    
+                openBitIndex++;
             }
 
             if (disc == DiscColor.Red)
@@ -228,13 +229,38 @@ namespace ConnectBot
             return new BitBoard(board.RedDiscs, SetSingleBit(board.BlackDiscs, openBitIndex));
         }
 
+        //public static void BitBoardMove(in BitBoard board, int column, DiscColor disc)
+        //{
+        //    if (!IsColumnOpen(board, column))
+        //        throw new InvalidOperationException($"Column {column} is unavailable for movement.");
+
+        //    // TODO find or think of a more clever way to do with with some bit masks
+        //    int openBitIndex = 6 * column;
+
+        //    for (int r = 0; r < NUM_ROWS; r++)
+        //    {
+        //        if (!CheckSingleBit(board.RedDiscs | board.BlackDiscs, openBitIndex))
+        //            break;
+
+        //        openBitIndex++;
+        //    }
+
+        //    if (disc == DiscColor.Red)
+        //    {
+        //        board.RedDiscs = SetSingleBit(board.RedDiscs, openBitIndex);   
+        //    }
+        //    else
+        //    {
+        //        board.BlackDiscs = SetSingleBit(board.BlackDiscs, openBitIndex);
+        //    }
+        //}
 
         // retrieve open columns
-        public static List<int> GetOpenColumns(BitBoard board)
+        public static List<int> GetOpenColumns(in BitBoard board)
         {
             var openColumns = new List<int>();
 
-            for (int c = 0; c < NUM_COLUMNS; c++)
+            foreach (var c in new int[] { 3, 4, 2, 5, 1, 6, 0 })
             {
                 if (IsColumnOpen(board, c))
                     openColumns.Add(c);
@@ -243,7 +269,7 @@ namespace ConnectBot
             return openColumns;
         }
 
-        public static bool IsScorable(DiscColor disc, BitBoard board, ulong possibleFour)
+        public static bool IsScorable(DiscColor disc, in BitBoard board, ulong possibleFour)
         {
             if (disc == DiscColor.Red)
             {
@@ -275,43 +301,73 @@ namespace ConnectBot
 
             while (possibleFour > 0)
             {
-                count += possibleFour & 1;
+                count += possibleFour & 1ul;
                 possibleFour >>= 1;
             }
 
             switch (count)
             {
                 case 1:
-                    return 0.2m;
+                    return 1.0m;
                 case 2:
-                    return 0.6m;
+                    return 4.0m;
                 case 3:
-                    return 1.2m;
+                    return 16.0m;
                 // TODO is this needed with killer move checking?
                 // TODO consider using some extremely large value that isn't max/min
                 // for victory states and when they are discovered through this evaluation
                 case 4:
-                    return 10000.0m;
+                    return 64.0m;
                 default:
                     return 0.0m;
             }
         }
 
+        public static decimal EvaluateBoardState(in BitBoard board)
+        {
+            // TODO adjust when moving to negamax
+            var redPossiblesValue = CountAllPossibles(board, DiscColor.Red);
+            var blackPossiblesValue = CountAllPossibles(board, DiscColor.Black);
+
+            return blackPossiblesValue + (redPossiblesValue * -1.0m);
+        }
+
+        //decimal CountAllPossibles(DiscColor[,] boardState, DiscColor checkColor)
+        //{
+        //    decimal ret = PossibleHorizontals(boardState, checkColor);
+        //    ret += PossibleVerticals(boardState, checkColor);
+        //    ret += PossibleDiagonalRising(boardState, checkColor);
+        //    ret += PossibleDiagonalDescending(boardState, checkColor);
+
+        //    return ret;
+        //}
+
+        // TODO put the turn as a bit on the board
+        public static decimal CountAllPossibles(in BitBoard board, DiscColor disc)
+        {
+            var ret = ScorePossibleHorizontals(in board, disc);
+            ret += ScorePossibleVerticals(in board, disc);
+            ret += ScorePossibleRisingDiagonals(in board, disc);
+            ret += ScorePossibleFallingDiagonals(in board, disc);
+
+            return ret;
+        }
+
         // check horizontal four
-        public static decimal ScorePossibleHorizontals(BitBoard board, DiscColor disc)
-            => ScorePossibleFours(board, disc, RowHorizontals);
+        public static decimal ScorePossibleHorizontals(in BitBoard board, DiscColor disc)
+            => ScorePossibleFours(in board, disc, RowHorizontals);
 
         // check vertical four
-        public static decimal ScorePossibleVerticals(BitBoard board, DiscColor disc)
-            => ScorePossibleFours(board, disc, ColumnVerticals);
+        public static decimal ScorePossibleVerticals(in BitBoard board, DiscColor disc)
+            => ScorePossibleFours(in board, disc, ColumnVerticals);
 
         // check rising diagonal four
-        public static decimal ScorePossibleRisingDiagonals(BitBoard board, DiscColor disc)
-            => ScorePossibleFours(board, disc, RisingDiagonals);
+        public static decimal ScorePossibleRisingDiagonals(in BitBoard board, DiscColor disc)
+            => ScorePossibleFours(in board, disc, RisingDiagonals);
 
         // check falling diagonal four
-        public static decimal ScorePossibleFallingDiagonals(BitBoard board, DiscColor disc)
-            => ScorePossibleFours(board, disc, FallingDiagonals);
+        public static decimal ScorePossibleFallingDiagonals(in BitBoard board, DiscColor disc)
+            => ScorePossibleFours(in board, disc, FallingDiagonals);
 
         /// <summary>
         /// Generic possible score generator that calculates using alignments 
@@ -322,7 +378,7 @@ namespace ConnectBot
         /// <param name="disc"></param>
         /// <param name="scoringAlignments"></param>
         /// <returns></returns>
-        public static decimal ScorePossibleFours(BitBoard board, DiscColor disc, ulong[][] scoringAlignments)
+        public static decimal ScorePossibleFours(in BitBoard board, DiscColor disc, ulong[][] scoringAlignments)
         {
             decimal ret = 0.0m;
 
@@ -332,12 +388,12 @@ namespace ConnectBot
                 {
                     if (disc == DiscColor.Red)
                     {
-                        if (IsScorable(disc, board, grouping))
+                        if (IsScorable(disc, in board, grouping))
                             ret += PossibleFourValue(board.RedDiscs & grouping);
                     }
                     else
                     {
-                        if (IsScorable(disc, board, grouping))
+                        if (IsScorable(disc, in board, grouping))
                             ret += PossibleFourValue(board.BlackDiscs & grouping);
                     }
                 }
@@ -346,7 +402,7 @@ namespace ConnectBot
             return ret;
         }
 
-        static DiscColor CheckGroupingsVictory(BitBoard board, ulong[][] scoringAlignments)
+        static DiscColor CheckGroupingsVictory(in BitBoard board, ulong[][] scoringAlignments)
         {
             foreach (var groupings in scoringAlignments)
             {
@@ -363,7 +419,7 @@ namespace ConnectBot
             return DiscColor.None;
         }
 
-        public static DiscColor CheckVictory(BitBoard board)
+        public static DiscColor CheckVictory(in BitBoard board)
         {
             // This would represent both colors
             // having discs on the same space so it
@@ -373,23 +429,73 @@ namespace ConnectBot
 
             var check = DiscColor.None;
 
-            check = CheckGroupingsVictory(board, RowHorizontals);
+            check = CheckGroupingsVictory(in board, RowHorizontals);
             if (check != DiscColor.None)
                 return check;
 
-            check = CheckGroupingsVictory(board, ColumnVerticals);
+            check = CheckGroupingsVictory(in board, ColumnVerticals);
             if (check != DiscColor.None)
                 return check;
 
-            check = CheckGroupingsVictory(board, FallingDiagonals);
+            check = CheckGroupingsVictory(in board, FallingDiagonals);
             if (check != DiscColor.None)
                 return check;
 
-            check = CheckGroupingsVictory(board, RisingDiagonals);
+            check = CheckGroupingsVictory(in board, RisingDiagonals);
             if (check != DiscColor.None)
                 return check;
 
             return DiscColor.None;
+        }
+
+        /*
+        * 5  11  17  23  29  35  41
+        * 4  10  16  22  28  34  40
+        * 3   9  15  21  27  33  39
+        * 2   8  14  20  26  32  38
+        * 1   7  13  19  25  31  37
+        * 0   6  12  18  24  30  36 
+        */
+        public static string GetPrettyPrint(in BitBoard board)
+        {
+            var sb = new StringBuilder();
+
+            var colTracker = 5;
+            // for row count
+            // scan acorss top row (num of columns)
+            for (var _row = 0; _row < LogicalBoardHelpers.NUM_ROWS; _row++)
+            {
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker));
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker + 6));
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker + 12));
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker + 18));
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker + 24));
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker + 30));
+                sb.Append("|");
+                sb.Append(GetColorString(in board, colTracker + 36));
+                sb.Append("|");
+                sb.AppendLine();
+                colTracker--;
+            }
+
+            return sb.ToString();
+        }
+
+        public static string GetColorString(in BitBoard board, int index)
+        {
+            if (CheckSingleBit(board.BlackDiscs, index))
+                return "O";
+
+            if (CheckSingleBit(board.RedDiscs, index))
+                return "X";
+
+            return " ";
         }
     }
 }
