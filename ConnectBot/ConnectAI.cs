@@ -419,10 +419,10 @@ namespace ConnectBot
 
             if (winner == DiscColor.Black)
                 //return Decimal.MaxValue - 1.0m;
-                return 10000.0m;
+                return 100000.0m;
 
             //return Decimal.MinValue + 1.0m;
-            return -10000.0m;
+            return -100000.0m;
         }
 
         /// <summary>
@@ -444,9 +444,6 @@ namespace ConnectBot
 
             foreach (int openMove in GetOpenColumns(in board))
             {
-                // DiscColor[,] newState = GenerateBoardState(openMove, AiColor, board.BoardDiscState);
-                // Node child = new Node(newState, openMove, AiColor);
-
                 // TODO consider a way to undo each move?
                 var newState = BitBoardMove(in board, openMove, AiColor);
                 
@@ -517,7 +514,6 @@ namespace ConnectBot
 
             foreach (int openMove in openColumns)
             {
-                //var newState = new BitBoard(board.RedDiscs, board.BlackDiscs);
                 var newState = BitBoardMove(in board, openMove, OpponentColor);
 
                 maximumMoveValue = Math.Max(
@@ -560,7 +556,6 @@ namespace ConnectBot
 
             foreach (int openMove in openColumns)
             {
-                //var newState = new BitBoard(board.RedDiscs, board.BlackDiscs);
                 var newState = BitBoardMove(in board, openMove, AiColor);
 
                 minimumMoveValue = Math.Min(

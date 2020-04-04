@@ -23,10 +23,6 @@ namespace ConnectBot
         public static int NUM_ROWS = 6;
         public static int NUM_COLUMNS = 7;
 
-        //public static int DISC_COLOR_BLACK = 1;
-        //public static int DISC_COLOR_RED = -1;
-        //public static int DISC_COLOR_NONE = 0;
-
         /// <summary>
         /// Returns the winning color, otherwise zero to indicate no winner.
         /// </summary>
@@ -37,18 +33,6 @@ namespace ConnectBot
             if (board.GetLength(1) != NUM_ROWS) throw new ArgumentException("Invalid number of rows.", nameof(board));
 
             // TODO display board after victory for a few seconds.
-            // when checking up add 1, 2, 3 to rows
-            //      check up on 0 - 6 columns
-            //      check up on 0 - 2 rows
-            // when checking right add 1, 2, 3, to columns
-            //      check right on 0 - 3 columns
-            //      check right on 0 - 6 rows
-            // when checking up left subtract 1 from cols, add 1 to rows
-            //      check up left on columns 3 - 6
-            //      check up right on rows 0 - 2
-            // when checking up right add 1 to cols, add 1 to rows
-            //      check up right on columns 0 - 3
-            //      check up right on rows 0 - 2
             // TODO could only check when latest move is in the mix
             DiscColor first;
             DiscColor second;

@@ -37,7 +37,7 @@ namespace ConnectBot
         {
             new ulong[4]
             {
-                1 + (1ul << 6) + (1ul << 12) + (1ul << 18),
+                1ul + (1ul << 6) + (1ul << 12) + (1ul << 18),
                 (1ul << 6) + (1ul << 12) + (1ul << 18) + (1ul << 24),
                 (1ul << 12) + (1ul << 18) + (1ul << 24) + (1ul << 30),
                 (1ul << 18) + (1ul << 24) + (1ul << 30) + (1ul << 36)
@@ -83,7 +83,7 @@ namespace ConnectBot
         { 
             new ulong []
             { 
-                1 + (1ul << 1) + (1ul << 2) + (1ul << 3),
+                1ul + (1ul << 1) + (1ul << 2) + (1ul << 3),
                 (1ul << 1) + (1ul << 2) + (1ul << 3) + (1ul << 4),
                 (1ul << 2) + (1ul << 3) + (1ul << 4) + (1ul << 5)
             },
@@ -157,7 +157,7 @@ namespace ConnectBot
         {
             new ulong[]
             {
-                1 + (1ul << 7) + (1ul << 14) + (1ul << 21),
+                1ul + (1ul << 7) + (1ul << 14) + (1ul << 21),
                 (1ul << 1) + (1ul << 8) + (1ul << 15) + (1ul << 22),
                 (1ul << 2) + (1ul << 9) + (1ul << 16) + (1ul << 23)
             },
@@ -301,7 +301,7 @@ namespace ConnectBot
 
             while (possibleFour > 0)
             {
-                count += possibleFour & 1;
+                count += possibleFour & 1ul;
                 possibleFour >>= 1;
             }
 
@@ -317,7 +317,7 @@ namespace ConnectBot
                 // TODO consider using some extremely large value that isn't max/min
                 // for victory states and when they are discovered through this evaluation
                 case 4:
-                    return 100000.0m;
+                    return 64.0m;
                 default:
                     return 0.0m;
             }
