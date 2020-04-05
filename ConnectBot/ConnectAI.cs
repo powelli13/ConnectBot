@@ -79,44 +79,46 @@ namespace ConnectBot
         public async Task<int> Move()
         {
             // Look for wins before performing in depth searches
-            //var aiWinningMove = FindKillerMove(GameDiscs, AiColor);
+            var aiWinningMove = FindKillerMove(GameBoard, AiColor);
 
-            //if (aiWinningMove.HasWinner) 
-            //    return aiWinningMove.Column;
+            if (aiWinningMove.HasWinner)
+                return aiWinningMove.Column;
 
-            //// TODO consider refactoring FindKillerMove so that we only need to call once
-            //// Ensure we block the opponents winning moves
-            //var opponentWinningMove = FindKillerMove(GameDiscs, OpponentColor);
+            // TODO consider refactoring FindKillerMove so that we only need to call once
+            // Ensure we block the opponents winning moves
+            var opponentWinningMove = FindKillerMove(GameBoard, OpponentColor);
 
-            //if (opponentWinningMove.HasWinner)
-            //    return opponentWinningMove.Column;
-            
+            if (opponentWinningMove.HasWinner)
+                return opponentWinningMove.Column;
+
             int retMove = MinimaxCutoffSearch(GameBoard);
 
             return retMove;
         }
 
-        // Keep as reference
-        //KillerMove FindKillerMove(DiscColor[,] boardState, DiscColor checkColor)
-        //{
-        //    foreach (var openColumn in GetOpenColumns(boardState))
-        //    {
-        //        var movedBoard = GenerateBoardState(openColumn, checkColor, boardState);
-                
-        //        if (CheckVictory(movedBoard) == checkColor)
-        //            return new KillerMove()
-        //            {
-        //                Column = openColumn,
-        //                Color = checkColor
-        //            };
-        //    }
+        // TODO Killer move needs to be used during the search to ensure that the opponent
+        // cannot win after a given move
+        KillerMove FindKillerMove(BitBoard board, DiscColor disc)
+        {
+            foreach (var openColumn in GetOpenColumns(board))
+            {
+                //var movedBoard = GenerateBoardState(openColumn, disc, boardState);
+                var movedBoard = BitBoardMove(in board, openColumn, disc);
 
-        //    return new KillerMove()
-        //    {
-        //        Column = -1,
-        //        Color = DiscColor.None
-        //    };
-        //}
+                if (CheckVictory(movedBoard) == disc)
+                    return new KillerMove()
+                    {
+                        Column = openColumn,
+                        Color = disc
+                    };
+            }
+
+            return new KillerMove()
+            {
+                Column = -1,
+                Color = DiscColor.None
+            };
+        }
 
         // TODO consider changing this if negamax is used
         //decimal EndgameStateScore(DiscColor winner)
