@@ -260,7 +260,8 @@ namespace ConnectBot
         {
             var openColumns = new List<int>();
 
-            foreach (var c in new int[] { 3, 4, 2, 5, 1, 6, 0 })
+            //foreach (var c in new int[] { 3, 4, 2, 5, 1, 6, 0 })
+            for (int c = 0; c < NUM_COLUMNS; c++)
             {
                 if (IsColumnOpen(board, c))
                     openColumns.Add(c);
@@ -317,7 +318,7 @@ namespace ConnectBot
                 // TODO consider using some extremely large value that isn't max/min
                 // for victory states and when they are discovered through this evaluation
                 case 4:
-                    return 64.0m;
+                    return 100000.0m;
                 default:
                     return 0.0m;
             }
@@ -332,17 +333,6 @@ namespace ConnectBot
             return blackPossiblesValue + (redPossiblesValue * -1.0m);
         }
 
-        //decimal CountAllPossibles(DiscColor[,] boardState, DiscColor checkColor)
-        //{
-        //    decimal ret = PossibleHorizontals(boardState, checkColor);
-        //    ret += PossibleVerticals(boardState, checkColor);
-        //    ret += PossibleDiagonalRising(boardState, checkColor);
-        //    ret += PossibleDiagonalDescending(boardState, checkColor);
-
-        //    return ret;
-        //}
-
-        // TODO put the turn as a bit on the board
         public static decimal CountAllPossibles(in BitBoard board, DiscColor disc)
         {
             var ret = ScorePossibleHorizontals(in board, disc);

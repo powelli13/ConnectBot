@@ -116,7 +116,7 @@ namespace ConnectBot
             }
             else
             {
-                if (GetOpenColumns(GetTextBoard()).Count == 0)
+                if (BitBoardHelpers.GetOpenColumns(GetBitBoard()).Count == 0)
                 {
                     ShowPlayAgainDrawnMenu();
                 }
@@ -249,7 +249,7 @@ namespace ConnectBot
                                         timeSinceLastMove = 0.0;
 
                                         ChangeTurn();
-                                        DiscColor winner = CheckVictory(GetTextBoard());
+                                        var winner = BitBoardHelpers.CheckVictory(GetBitBoard());
                                         VictoryConfirmed(winner);
 
                                         UpdateBotBoard();
@@ -308,7 +308,7 @@ namespace ConnectBot
             boardColumns[botMove].SetSpace(BotTurn);
 
             ChangeTurn();
-            DiscColor winner = CheckVictory(GetTextBoard());
+            var winner = BitBoardHelpers.CheckVictory(GetBitBoard());
             VictoryConfirmed(winner);
 
             botThinking = false;

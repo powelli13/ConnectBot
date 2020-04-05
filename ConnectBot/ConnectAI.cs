@@ -119,16 +119,16 @@ namespace ConnectBot
         //}
 
         // TODO consider changing this if negamax is used
-        decimal EndgameStateScore(DiscColor winner)
-        {
-            if (winner == DiscColor.None) 
-                throw new ArgumentException("Disc color to check cannot be None.", nameof(winner));
+        //decimal EndgameStateScore(DiscColor winner)
+        //{
+        //    if (winner == DiscColor.None) 
+        //        throw new ArgumentException("Disc color to check cannot be None.", nameof(winner));
 
-            if (winner == DiscColor.Black)
-                return 100000.0m;
+        //    if (winner == DiscColor.Black)
+        //        return 128.0m;
 
-            return -100000.0m;
-        }
+        //    return -128.0m;
+        //}
 
         /// <summary>
         /// Min max searching algorithm with defined cutoff depth.
@@ -136,7 +136,7 @@ namespace ConnectBot
         /// <returns>The column that will be moved played in.</returns>
         private int MinimaxCutoffSearch(BitBoard board)
         {
-            int maxDepth = 11;
+            int maxDepth = 10;
 
             // TODO change this based on the AI's color
             // for all actions return min value of the result of the action
@@ -149,7 +149,6 @@ namespace ConnectBot
 
             foreach (int openMove in GetOpenColumns(in board))
             {
-                // TODO consider a way to undo each move?
                 var newState = BitBoardMove(in board, openMove, AiColor);
                 
                 // prompt for opponents first move in the searching
@@ -205,6 +204,7 @@ namespace ConnectBot
                 // return something other than an evaluation here
                 openColumns.Count == 0)
             {
+                //Console.WriteLine($"Evaluated at depth {depth} for board:");
                 //Console.WriteLine(GetPrettyPrint(in board));
                 return EvaluateBoardState(in board);
             }
@@ -213,7 +213,12 @@ namespace ConnectBot
             var possibleWinner = CheckVictory(in board);
 
             if (possibleWinner != DiscColor.None)
-                return EndgameStateScore(possibleWinner);
+            {
+                //Console.WriteLine($"Depth {depth} found victory for {possibleWinner} with board:");
+                //Console.WriteLine(GetPrettyPrint(in board));
+                //return EndgameStateScore(possibleWinner);
+                return EvaluateBoardState(in board);
+            }
 
             decimal maximumMoveValue = decimal.MinValue;
 
@@ -247,6 +252,7 @@ namespace ConnectBot
             if (depth <= 0 ||
                 openColumns.Count == 0)
             {
+                //Console.WriteLine($"Evaluated at depth {depth} for board:");
                 //Console.WriteLine(GetPrettyPrint(in board));
                 return EvaluateBoardState(in board);
             }
@@ -255,7 +261,12 @@ namespace ConnectBot
             var possibleWinner = CheckVictory(in board);
 
             if (possibleWinner != DiscColor.None)
-                return EndgameStateScore(possibleWinner);
+            {
+                //Console.WriteLine($"Depth {depth} found victory for {possibleWinner} with board:");
+                //Console.WriteLine(GetPrettyPrint(in board));
+                //return EndgameStateScore(possibleWinner);
+                return EvaluateBoardState(in board);
+            }
 
             decimal minimumMoveValue = decimal.MaxValue;
 
