@@ -11,8 +11,7 @@ namespace ConnectBot
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
-        [STAThread] // TODO Should this be single threaded application? 
-        // probably not based on how I'm trying to use the AI, does it need to be?
+        [STAThread]
         static void Main()
         {
             using (var game = new ConnectGame())

@@ -32,7 +32,6 @@ namespace ConnectBot
          * Below are precalculated ulongs used to quickly
          * check scoring fours on the bit board.
          */
-        // TODO should these be | instead of +? would it make a performance difference?
         public static readonly ulong[][] RowHorizontals = new ulong[][]
         {
             new ulong[4]

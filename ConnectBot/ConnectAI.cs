@@ -84,7 +84,6 @@ namespace ConnectBot
             if (aiWinningMove.HasWinner)
                 return aiWinningMove.Column;
 
-            // TODO consider refactoring FindKillerMove so that we only need to call once
             // Ensure we block the opponents winning moves
             var opponentWinningMove = FindKillerMove(GameBoard, OpponentColor);
 
@@ -102,7 +101,6 @@ namespace ConnectBot
         {
             foreach (var openColumn in GetOpenColumns(board))
             {
-                //var movedBoard = GenerateBoardState(openColumn, disc, boardState);
                 var movedBoard = BitBoardMove(in board, openColumn, disc);
 
                 if (CheckVictory(movedBoard) == disc)
@@ -120,18 +118,6 @@ namespace ConnectBot
             };
         }
 
-        // TODO consider changing this if negamax is used
-        //decimal EndgameStateScore(DiscColor winner)
-        //{
-        //    if (winner == DiscColor.None) 
-        //        throw new ArgumentException("Disc color to check cannot be None.", nameof(winner));
-
-        //    if (winner == DiscColor.Black)
-        //        return 128.0m;
-
-        //    return -128.0m;
-        //}
-
         /// <summary>
         /// Min max searching algorithm with defined cutoff depth.
         /// </summary>
@@ -140,7 +126,7 @@ namespace ConnectBot
         {
             int maxDepth = 10;
 
-            // TODO change this based on the AI's color
+            // TODO change this based on the AI's color when color selection menu is used
             // for all actions return min value of the result of the action
             var minimumMoveValue = decimal.MaxValue;
             var movedColumn = -1;
@@ -157,20 +143,6 @@ namespace ConnectBot
                 var openMoveValue = MaxValue(newState, maxDepth, alphaBeta, nodeCounter /*, ChangeTurnColor(AiColor)*/);
                 Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
                 
-                // TODO do more reading because this feels unnecessary. the danger of 
-                // an opponent having an imminent win should be able to be captured in the heuristic
-                // final depth search to ensure that a move doesn't leave the 
-                // opponent with an opportunity to win
-                //var killer = FindKillerMove(child.BoardDiscState, OpponentColor);
-
-                //if (killer.HasWinner)
-                //{
-                //    // TODO still could probably be improved. this reflects
-                //    // the worst possible move but will ensure that the bot
-                //    // moves when every move gives the opponent a win
-                //    openMoveValue = decimal.MaxValue - 1.0m;
-                //}
-
                 if (openMoveValue < minimumMoveValue)
                 {
                     minimumMoveValue = openMoveValue;
@@ -211,16 +183,8 @@ namespace ConnectBot
                 return EvaluateBoardState(in board);
             }
 
-            // TODO verify that these return values are what are wanted
-            var possibleWinner = CheckVictory(in board);
-
-            if (possibleWinner != DiscColor.None)
-            {
-                //Console.WriteLine($"Depth {depth} found victory for {possibleWinner} with board:");
-                //Console.WriteLine(GetPrettyPrint(in board));
-                //return EndgameStateScore(possibleWinner);
+            if (CheckVictory(in board) != DiscColor.None)
                 return EvaluateBoardState(in board);
-            }
 
             decimal maximumMoveValue = decimal.MinValue;
 
@@ -259,16 +223,8 @@ namespace ConnectBot
                 return EvaluateBoardState(in board);
             }
 
-            // TODO verify that these return values are what are wanted
-            var possibleWinner = CheckVictory(in board);
-
-            if (possibleWinner != DiscColor.None)
-            {
-                //Console.WriteLine($"Depth {depth} found victory for {possibleWinner} with board:");
-                //Console.WriteLine(GetPrettyPrint(in board));
-                //return EndgameStateScore(possibleWinner);
+            if (CheckVictory(in board) != DiscColor.None)
                 return EvaluateBoardState(in board);
-            }
 
             decimal minimumMoveValue = decimal.MaxValue;
 
