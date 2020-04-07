@@ -228,32 +228,6 @@ namespace ConnectBot
             return new BitBoard(board.RedDiscs, SetSingleBit(board.BlackDiscs, openBitIndex));
         }
 
-        //public static void BitBoardMove(in BitBoard board, int column, DiscColor disc)
-        //{
-        //    if (!IsColumnOpen(board, column))
-        //        throw new InvalidOperationException($"Column {column} is unavailable for movement.");
-
-        //    // TODO find or think of a more clever way to do with with some bit masks
-        //    int openBitIndex = 6 * column;
-
-        //    for (int r = 0; r < NUM_ROWS; r++)
-        //    {
-        //        if (!CheckSingleBit(board.RedDiscs | board.BlackDiscs, openBitIndex))
-        //            break;
-
-        //        openBitIndex++;
-        //    }
-
-        //    if (disc == DiscColor.Red)
-        //    {
-        //        board.RedDiscs = SetSingleBit(board.RedDiscs, openBitIndex);   
-        //    }
-        //    else
-        //    {
-        //        board.BlackDiscs = SetSingleBit(board.BlackDiscs, openBitIndex);
-        //    }
-        //}
-
         // retrieve open columns
         public static List<int> GetOpenColumns(in BitBoard board)
         {
@@ -264,6 +238,51 @@ namespace ConnectBot
             {
                 if (IsColumnOpen(board, c))
                     openColumns.Add(c);
+            }
+
+            return openColumns;
+        }
+
+        /// <summary>
+        /// Similar to GetOpenColumns however it will return a single element
+        /// if a winning move is found for the moving color and it will remove
+        /// any columns that allow the opposing color to win on the next turn.
+        /// </summary>
+        /// <param name="board"></param>
+        /// <param name="movingDisc">The DiscColor about to move.</param>
+        /// <returns></returns>
+        public static List<int> GetOptimalColumns(in BitBoard board, DiscColor movingDisc)
+        {
+            // if a column is a win for the current color, return only that column
+            // if a column allows the opponent to win next turn remove that column
+            // if a column allows the opponent to win the next turn in the same column remove it
+            var openColumns = new List<int>();
+
+            var killerMove = FindKillerMove(in board, movingDisc);
+
+            if (killerMove.HasWinner &&
+                killerMove.Winner == movingDisc)
+            {
+                openColumns.Add(killerMove.Column);
+                return openColumns;
+            }
+
+            var oppKillerMove = FindKillerMove(in board, ChangeTurnColor(movingDisc));
+
+            if (oppKillerMove.HasWinner)
+            {
+                openColumns.Add(oppKillerMove.Column);
+                return openColumns;
+            }
+
+            // this only prevents giving the opponent a winning move by moving underneat them
+            foreach (var column in openColumns)
+            {
+                var checkBoard = BitBoardMove(in board, column, movingDisc);
+                checkBoard = BitBoardMove(in checkBoard, column, ChangeTurnColor(movingDisc));
+
+                if (CheckVictory(in checkBoard) != ChangeTurnColor(movingDisc))
+                    openColumns.Add(column);
             }
 
             return openColumns;
@@ -482,6 +501,38 @@ namespace ConnectBot
                 return "X";
 
             return " ";
+        }
+
+        /// <summary>
+        /// Holds a killer (winning) move column and the
+        /// disc color that move would benefit.
+        /// </summary>
+        public class KillerMove
+        {
+            public bool HasWinner => Column != -1;
+            public int Column { get; }
+            public DiscColor Winner { get; }
+
+            public KillerMove(int column, DiscColor disc)
+            {
+                Column = column;
+                Winner = disc;
+            }
+        }
+
+        // TODO Killer move needs to be used during the search to ensure that the opponent
+        // cannot win after a given move
+        public static KillerMove FindKillerMove(in BitBoard board, DiscColor disc)
+        {
+            foreach (var openColumn in GetOpenColumns(board))
+            {
+                var movedBoard = BitBoardMove(in board, openColumn, disc);
+
+                if (CheckVictory(movedBoard) == disc)
+                    return new KillerMove(openColumn, disc);
+            }
+
+            return new KillerMove(-1, DiscColor.None);
         }
     }
 }
