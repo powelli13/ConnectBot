@@ -95,6 +95,7 @@ namespace ConnectBot
             // TODO change this based on the AI's color when color selection menu is used
             // for all actions return min value of the result of the action
             var minimumMoveValue = decimal.MaxValue;
+            var openMoveValue = 0.0m;
             var movedColumn = -1;
             var alphaBeta = new AlphaBeta();
             var nodeCounter = new NodeCounter();
@@ -106,7 +107,15 @@ namespace ConnectBot
                 var newState = BitBoardMove(in board, openMove, AiColor);
 
                 // prompt for opponents first move in the searching
-                var openMoveValue = MaxValue(newState, maxDepth, alphaBeta, nodeCounter /*, ChangeTurnColor(AiColor)*/);
+                if (AiColor == DiscColor.Red)
+                {
+                    openMoveValue = MaxValue(newState, maxDepth, alphaBeta, nodeCounter, OpponentColor);
+                }
+                else
+                {
+                    openMoveValue = MinValue(newState, maxDepth, alphaBeta, nodeCounter, OpponentColor);
+                }
+
                 Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
 
                 if (openMoveValue < minimumMoveValue)
@@ -133,7 +142,8 @@ namespace ConnectBot
             BitBoard board,
             int depth,
             AlphaBeta alphaBeta,
-            NodeCounter nodeCounter)
+            NodeCounter nodeCounter,
+            DiscColor movingColor)
         {
             nodeCounter.Increment();
 
@@ -155,11 +165,11 @@ namespace ConnectBot
                 return EvaluateBoardState(in board);
 
             // Win and return immediately if possible
-            var winningMove = FindKillerMove(in board, OpponentColor);
+            var winningMove = FindKillerMove(in board, movingColor);
             if (winningMove.HasWinner &&
-                winningMove.Winner == OpponentColor)
+                winningMove.Winner == movingColor)
             {
-                var winningBoard = BitBoardMove(in board, winningMove.Column, OpponentColor);
+                var winningBoard = BitBoardMove(in board, winningMove.Column, movingColor);
                 var winningScore = EvaluateBoardState(in winningBoard);
 
                 alphaBeta.Alpha = Math.Max(alphaBeta.Alpha, winningScore);
@@ -183,11 +193,11 @@ namespace ConnectBot
 
             foreach (int openMove in openColumns)
             {
-                var newState = BitBoardMove(in board, openMove, OpponentColor);
+                var newState = BitBoardMove(in board, openMove, movingColor);
 
                 maximumMoveValue = Math.Max(
                     maximumMoveValue,
-                    MinValue(newState, depth - 1, alphaBeta, nodeCounter /*AiColor*/));
+                    MinValue(newState, depth - 1, alphaBeta, nodeCounter, ChangeTurnColor(movingColor)));
 
                 if (maximumMoveValue >= alphaBeta.Beta)
                     return maximumMoveValue;
@@ -202,7 +212,8 @@ namespace ConnectBot
             BitBoard board,
             int depth,
             AlphaBeta alphaBeta,
-            NodeCounter nodeCounter)
+            NodeCounter nodeCounter,
+            DiscColor movingColor)
         {
             nodeCounter.Increment();
 
@@ -221,11 +232,11 @@ namespace ConnectBot
                 return EvaluateBoardState(in board);
 
             // Win and return immediately if possible
-            var winningMove = FindKillerMove(in board, AiColor);
+            var winningMove = FindKillerMove(in board, movingColor);
             if (winningMove.HasWinner &&
-                winningMove.Winner == AiColor)
+                winningMove.Winner == movingColor)
             {
-                var winningBoard = BitBoardMove(in board, winningMove.Column, AiColor);
+                var winningBoard = BitBoardMove(in board, winningMove.Column, movingColor);
                 var winningScore = EvaluateBoardState(in winningBoard);
 
                 alphaBeta.Beta = Math.Min(alphaBeta.Beta, winningScore);
@@ -249,11 +260,11 @@ namespace ConnectBot
 
             foreach (int openMove in openColumns)
             {
-                var newState = BitBoardMove(in board, openMove, AiColor);
+                var newState = BitBoardMove(in board, openMove, movingColor);
 
                 minimumMoveValue = Math.Min(
                     minimumMoveValue,
-                    MaxValue(newState, depth - 1, alphaBeta, nodeCounter /*OpponentColor*/));
+                    MaxValue(newState, depth - 1, alphaBeta, nodeCounter, ChangeTurnColor(movingColor)));
 
                 if (minimumMoveValue <= alphaBeta.Alpha)
                     return minimumMoveValue;

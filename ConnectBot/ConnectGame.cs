@@ -165,9 +165,11 @@ namespace ConnectBot
             }
 
             ResetGame();
-            
-            PlayerTurn = DiscColor.Black;
-            BotTurn = DiscColor.Red;
+
+            //PlayerTurn = DiscColor.Black;
+            //BotTurn = DiscColor.Red;
+            PlayerTurn = DiscColor.Red;
+            BotTurn = DiscColor.Black;
 
             Bot = new ConnectAI(BotTurn);
             UpdateBotBoard();
