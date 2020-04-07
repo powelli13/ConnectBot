@@ -90,11 +90,12 @@ namespace ConnectBot
         /// <returns>The column that will be moved played in.</returns>
         private int MinimaxCutoffSearch(BitBoard board)
         {
-            int maxDepth = 11;
+            int maxDepth = 20;
 
             // TODO change this based on the AI's color when color selection menu is used
             // for all actions return min value of the result of the action
             var minimumMoveValue = decimal.MaxValue;
+            var maximumMoveValue = decimal.MinValue;
             var openMoveValue = 0.0m;
             var movedColumn = -1;
             var alphaBeta = new AlphaBeta();
@@ -110,18 +111,26 @@ namespace ConnectBot
                 if (AiColor == DiscColor.Red)
                 {
                     openMoveValue = MaxValue(newState, maxDepth, alphaBeta, nodeCounter, OpponentColor);
+
+                    Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
+
+                    if (openMoveValue < minimumMoveValue)
+                    {
+                        minimumMoveValue = openMoveValue;
+                        movedColumn = openMove;
+                    }
                 }
                 else
                 {
                     openMoveValue = MinValue(newState, maxDepth, alphaBeta, nodeCounter, OpponentColor);
-                }
 
-                Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
+                    Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
 
-                if (openMoveValue < minimumMoveValue)
-                {
-                    minimumMoveValue = openMoveValue;
-                    movedColumn = openMove;
+                    if (openMoveValue > maximumMoveValue)
+                    {
+                        maximumMoveValue = openMoveValue;
+                        movedColumn = openMove;
+                    }
                 }
             }
 
