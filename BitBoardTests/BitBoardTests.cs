@@ -420,5 +420,129 @@ namespace ConnectBotTests
 
             Assert.AreEqual(0.0m, actualScore);
         }
+
+        [DataTestMethod]
+        [DataRow(0, 1, 2, 3)]
+        [DataRow(1, 2, 3, 4)]
+        [DataRow(2, 3, 4, 5)]
+        [DataRow(3, 4, 5, 6)]
+        [DataRow(2, 3, 0, 1)]
+        [DataRow(3, 4, 1, 2)]
+        [DataRow(4, 5, 2, 3)]
+        [DataRow(5, 6, 3, 4)]
+        [DataRow(0, 1, 5, 6)]
+        [DataRow(0, 1, 3, 4)]
+        [DataRow(0, 2, 1, 3)]
+        [DataRow(1, 3, 0, 2)]
+        [DataRow(2, 4, 3, 1)]
+        [DataRow(2, 4, 3, 5)]
+        [DataRow(3, 5, 4, 6)]
+        public void CheckVictory_ShouldReturnNone_GivenNonWinningFirstRowHorizontals(
+            int blackOne, int blackTwo,
+            int redOne, int redTwo)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            board = BitBoardHelpers.BitBoardMove(in board, blackOne, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackTwo, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, redOne, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redTwo, DiscColor.Red);
+
+            var winner = BitBoardHelpers.CheckVictory(in board);
+
+            Assert.AreEqual(DiscColor.None, winner);
+        }
+
+        [DataTestMethod]
+        [DataRow(0, 1, 2, 3)]
+        [DataRow(1, 2, 3, 4)]
+        [DataRow(2, 3, 4, 5)]
+        [DataRow(3, 4, 5, 6)]
+        [DataRow(2, 3, 0, 1)]
+        [DataRow(3, 4, 1, 2)]
+        [DataRow(4, 5, 2, 3)]
+        [DataRow(5, 6, 3, 4)]
+        [DataRow(0, 1, 5, 6)]
+        [DataRow(0, 1, 3, 4)]
+        [DataRow(0, 2, 1, 3)]
+        [DataRow(1, 3, 0, 2)]
+        [DataRow(2, 4, 3, 1)]
+        [DataRow(2, 4, 3, 5)]
+        [DataRow(3, 5, 4, 6)]
+        public void CheckVictory_ShouldReturnNone_GivenNonWinningSecondRowHorizontals(
+            int blackOne, int blackTwo,
+            int redOne, int redTwo)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            // Fill first row with non winners
+            board = BitBoardHelpers.BitBoardMove(in board, 0, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, 1, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, 2, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, 3, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, 4, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, 5, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, 6, DiscColor.Black);
+            
+            board = BitBoardHelpers.BitBoardMove(in board, blackOne, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackTwo, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, redOne, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redTwo, DiscColor.Red);
+
+            var winner = BitBoardHelpers.CheckVictory(in board);
+
+            Assert.AreEqual(DiscColor.None, winner);
+        }
+
+
+        [DataTestMethod]
+        [DataRow(0, 1, 2, 3)]
+        [DataRow(1, 2, 3, 4)]
+        [DataRow(2, 3, 4, 5)]
+        [DataRow(3, 4, 5, 6)]
+        [DataRow(2, 3, 0, 1)]
+        [DataRow(3, 4, 1, 2)]
+        [DataRow(4, 5, 2, 3)]
+        [DataRow(5, 6, 3, 4)]
+        [DataRow(0, 1, 5, 6)]
+        [DataRow(0, 1, 3, 4)]
+        [DataRow(0, 2, 1, 3)]
+        [DataRow(1, 3, 0, 2)]
+        [DataRow(2, 4, 3, 1)]
+        [DataRow(2, 4, 3, 5)]
+        [DataRow(3, 5, 4, 6)]
+        public void CheckVictory_ShouldReturnNone_GivenNonWinningThirdRowHorizontals(
+            int blackOne, int blackTwo,
+            int redOne, int redTwo)
+        {
+            var board = BitBoardHelpers.GetNewBoard();
+
+            // Fill first row with non winners
+            board = BitBoardHelpers.BitBoardMove(in board, 0, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, 1, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, 2, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, 3, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, 4, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, 5, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, 6, DiscColor.Black);
+
+            // Fill second row with non winners
+            board = BitBoardHelpers.BitBoardMove(in board, 0, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, 1, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, 2, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, 3, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, 4, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, 5, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, 6, DiscColor.Red);
+
+            board = BitBoardHelpers.BitBoardMove(in board, blackOne, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, blackTwo, DiscColor.Black);
+            board = BitBoardHelpers.BitBoardMove(in board, redOne, DiscColor.Red);
+            board = BitBoardHelpers.BitBoardMove(in board, redTwo, DiscColor.Red);
+
+            var winner = BitBoardHelpers.CheckVictory(in board);
+
+            Assert.AreEqual(DiscColor.None, winner);
+        }
     }
 }

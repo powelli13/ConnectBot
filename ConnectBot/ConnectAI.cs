@@ -84,13 +84,24 @@ namespace ConnectBot
             return retMove;
         }
 
+        public decimal EndGameScore(DiscColor disc, int depth)
+        {
+            if (disc == DiscColor.None)
+                throw new ArgumentException("The disc cannot be None", nameof(disc));
+
+            if (disc == DiscColor.Black)
+                return 100000.00m - depth;
+
+            return -100000.00m + depth;
+        }
+
         /// <summary>
         /// Min max searching algorithm with defined cutoff depth.
         /// </summary>
         /// <returns>The column that will be moved played in.</returns>
         private int MinimaxCutoffSearch(BitBoard board)
         {
-            int maxDepth = 20;
+            int maxDepth = 25;
 
             // TODO change this based on the AI's color when color selection menu is used
             // for all actions return min value of the result of the action
@@ -98,7 +109,6 @@ namespace ConnectBot
             var maximumMoveValue = decimal.MinValue;
             var openMoveValue = 0.0m;
             var movedColumn = -1;
-            var alphaBeta = new AlphaBeta();
             var nodeCounter = new NodeCounter();
             var stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -110,6 +120,7 @@ namespace ConnectBot
                 // prompt for opponents first move in the searching
                 if (AiColor == DiscColor.Red)
                 {
+                    var alphaBeta = new AlphaBeta();
                     openMoveValue = MaxValue(newState, maxDepth, alphaBeta, nodeCounter, OpponentColor);
 
                     Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
@@ -122,6 +133,7 @@ namespace ConnectBot
                 }
                 else
                 {
+                    var alphaBeta = new AlphaBeta();
                     openMoveValue = MinValue(newState, maxDepth, alphaBeta, nodeCounter, OpponentColor);
 
                     Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
@@ -164,14 +176,20 @@ namespace ConnectBot
                 // return something other than an evaluation here
                 openColumns.Count == 0)
             {
-                //Console.WriteLine($"Evaluated at depth {depth} for board:");
+                var retScore = EvaluateBoardState(in board);
+                //Console.WriteLine($"DEPTH: Evaluated at depth {depth} for board with Score {retScore}:");
                 //Console.WriteLine(GetPrettyPrint(in board));
-                return EvaluateBoardState(in board);
+                return retScore;
             }
 
             // TODO is this obsolete then?
-            if (CheckVictory(in board) != DiscColor.None)
-                return EvaluateBoardState(in board);
+            var winner = CheckVictory(in board);
+            if (winner != DiscColor.None)
+            {
+
+                return EndGameScore(winner, depth);
+                //return EvaluateBoardState(in board);
+            }
 
             // Win and return immediately if possible
             var winningMove = FindKillerMove(in board, movingColor);
@@ -179,10 +197,14 @@ namespace ConnectBot
                 winningMove.Winner == movingColor)
             {
                 var winningBoard = BitBoardMove(in board, winningMove.Column, movingColor);
-                var winningScore = EvaluateBoardState(in winningBoard);
+                //var winningScore = EvaluateBoardState(in winningBoard);
+                var winningScore = EndGameScore(winningMove.Winner, depth);
 
                 alphaBeta.Alpha = Math.Max(alphaBeta.Alpha, winningScore);
 
+                //Console.WriteLine($"WINNER: Evaluated at depth {depth} for board with Score {winningScore}:");
+                //Console.WriteLine(GetPrettyPrint(in winningBoard));
+                
                 return winningScore;
             }
 
@@ -232,23 +254,33 @@ namespace ConnectBot
             if (depth <= 0 ||
                 openColumns.Count == 0)
             {
-                //Console.WriteLine($"Evaluated at depth {depth} for board:");
+                var retScore = EvaluateBoardState(in board);
+                //Console.WriteLine($"DEPTH: Evaluated at depth {depth} for board with Score {retScore}:");
                 //Console.WriteLine(GetPrettyPrint(in board));
-                return EvaluateBoardState(in board);
+                return retScore;
             }
 
-            if (CheckVictory(in board) != DiscColor.None)
-                return EvaluateBoardState(in board);
 
+            var winner = CheckVictory(in board);
+            if (winner != DiscColor.None)
+            {
+
+                return EndGameScore(winner, depth);
+                //return EvaluateBoardState(in board);
+            }
             // Win and return immediately if possible
             var winningMove = FindKillerMove(in board, movingColor);
             if (winningMove.HasWinner &&
                 winningMove.Winner == movingColor)
             {
                 var winningBoard = BitBoardMove(in board, winningMove.Column, movingColor);
-                var winningScore = EvaluateBoardState(in winningBoard);
+                //var winningScore = EvaluateBoardState(in winningBoard);
+                var winningScore = EndGameScore(winningMove.Winner, depth);
 
                 alphaBeta.Beta = Math.Min(alphaBeta.Beta, winningScore);
+
+                //Console.WriteLine($"Evaluated at depth {depth} for board with Score {winningScore}:");
+                //Console.WriteLine(GetPrettyPrint(in winningBoard));
 
                 return winningScore;
             }

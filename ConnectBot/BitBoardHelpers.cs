@@ -331,9 +331,10 @@ namespace ConnectBot
                 case 2:
                     return 4.0m;
                 case 3:
-                    return 16.0m;
+                    return 32.0m;
                 case 4:
-                    return 100000.0m;
+                    throw new InvalidOperationException("PossibleFourValue should not be called with a winning board.");
+                    //return 100000.0m;
                 default:
                     return 0.0m;
             }
@@ -414,16 +415,25 @@ namespace ConnectBot
                 foreach (var grouping in groupings)
                 {
                     if ((grouping & board.RedDiscs) == grouping)
+                    {
+                        //Console.WriteLine($"Red victory. {grouping}");
+
                         return DiscColor.Red;
+                    }
 
                     if ((grouping & board.BlackDiscs) == grouping)
+                    {
+                        //Console.WriteLine($"Black victory. {grouping}");
+
                         return DiscColor.Black;
+                    }
                 }
             }
 
             return DiscColor.None;
         }
 
+        // TODO this is returning winners when it shouldn't
         public static DiscColor CheckVictory(in BitBoard board)
         {
             // This would represent both colors
@@ -436,21 +446,37 @@ namespace ConnectBot
 
             check = CheckGroupingsVictory(in board, RowHorizontals);
             if (check != DiscColor.None)
+            {
+                //Console.WriteLine($"Winner: {check} horizontal");
+                //Console.WriteLine(GetPrettyPrint(in board));
                 return check;
+            }
 
             check = CheckGroupingsVictory(in board, ColumnVerticals);
             if (check != DiscColor.None)
+            {
+                //Console.WriteLine($"Winner: {check} vertical");
+                //Console.WriteLine(GetPrettyPrint(in board));
                 return check;
+            }
 
             check = CheckGroupingsVictory(in board, FallingDiagonals);
             if (check != DiscColor.None)
+            {
+                //Console.WriteLine($"Winner: {check} falling diagonals");
+                //Console.WriteLine(GetPrettyPrint(in board));
                 return check;
+            }
 
             check = CheckGroupingsVictory(in board, RisingDiagonals);
             if (check != DiscColor.None)
+            {
+                //Console.WriteLine($"Winner: {check} rising diagonals");
+                //Console.WriteLine(GetPrettyPrint(in board));
                 return check;
+            }
 
-            return DiscColor.None;
+            return check;
         }
 
         /*
@@ -529,7 +555,13 @@ namespace ConnectBot
                 var movedBoard = BitBoardMove(in board, openColumn, disc);
 
                 if (CheckVictory(movedBoard) == disc)
+                {
+                    //Console.WriteLine($"WINNER: {disc}");
+                    //Console.WriteLine(GetPrettyPrint(in board));
+                    //Console.WriteLine($"With score: {EvaluateBoardState(in movedBoard)}");
+                    //Console.WriteLine("---------------------------------------------");
                     return new KillerMove(openColumn, disc);
+                }
             }
 
             return new KillerMove(-1, DiscColor.None);
