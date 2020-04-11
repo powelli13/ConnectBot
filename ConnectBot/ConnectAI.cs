@@ -90,9 +90,9 @@ namespace ConnectBot
                 throw new ArgumentException("The disc cannot be None", nameof(disc));
 
             if (disc == DiscColor.Black)
-                return 100000.00m - depth;
+                return 42.00m - depth;
 
-            return -100000.00m + depth;
+            return -42.00m + depth;
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace ConnectBot
         /// <returns>The column that will be moved played in.</returns>
         private int MinimaxCutoffSearch(BitBoard board)
         {
-            int maxDepth = 25;
+            int maxDepth = 42;
 
             // TODO change this based on the AI's color when color selection menu is used
             // for all actions return min value of the result of the action
@@ -171,11 +171,17 @@ namespace ConnectBot
             var openColumns = GetOpenColumns(in board);
             //var openColumns = GetOptimalColumns(in board, OpponentColor);
 
+            // Drawn game
+            if (openColumns.Count == 0)
+                return 0.0m;
+
+
             if (depth <= 0 ||
                 // TODO this should represent a drawn game, we may want to
                 // return something other than an evaluation here
                 openColumns.Count == 0)
             {
+                throw new InvalidOperationException("Should not reach depth");
                 var retScore = EvaluateBoardState(in board);
                 //Console.WriteLine($"DEPTH: Evaluated at depth {depth} for board with Score {retScore}:");
                 //Console.WriteLine(GetPrettyPrint(in board));
@@ -209,16 +215,17 @@ namespace ConnectBot
             }
 
             // Stop the opponent from winning if possible
-            //var oppWinningMove = FindKillerMove(in board, AiColor);
-            //if (oppWinningMove.HasWinner)
-            //{
-            //    var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, OpponentColor);
-            //    var stopWinningScore = EvaluateBoardState(in stopWinningBoard);
+            var oppWinningMove = FindKillerMove(in board, AiColor);
+            if (oppWinningMove.HasWinner)
+            {
+                var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, OpponentColor);
+                //var stopWinningScore = EvaluateBoardState(in stopWinningBoard);
+                var stopWinningScore = EndGameScore(oppWinningMove.Winner, depth);
 
-            //    alphaBeta.Alpha = Math.Max(alphaBeta.Alpha, stopWinningScore);
+                alphaBeta.Alpha = Math.Max(alphaBeta.Alpha, stopWinningScore);
 
-            //    return stopWinningScore;
-            //}
+                return stopWinningScore;
+            }
 
             decimal maximumMoveValue = decimal.MinValue;
 
@@ -251,9 +258,14 @@ namespace ConnectBot
             var openColumns = GetOpenColumns(in board);
             //var openColumns = GetOptimalColumns(in board, AiColor);
 
+            // Drawn game
+            if (openColumns.Count == 0)
+                return 0.0m;
+
             if (depth <= 0 ||
                 openColumns.Count == 0)
             {
+                throw new InvalidOperationException("Should not reach depth");
                 var retScore = EvaluateBoardState(in board);
                 //Console.WriteLine($"DEPTH: Evaluated at depth {depth} for board with Score {retScore}:");
                 //Console.WriteLine(GetPrettyPrint(in board));
@@ -286,16 +298,17 @@ namespace ConnectBot
             }
 
             // Stop the opponent from winning if possible
-            //var oppWinningMove = FindKillerMove(in board, OpponentColor);
-            //if (oppWinningMove.HasWinner)
-            //{
-            //    var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, AiColor);
-            //    var stopWinningScore = EvaluateBoardState(in stopWinningBoard);
+            var oppWinningMove = FindKillerMove(in board, OpponentColor);
+            if (oppWinningMove.HasWinner)
+            {
+                var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, AiColor);
+                //var stopWinningScore = EvaluateBoardState(in stopWinningBoard);
+                var stopWinningScore = EndGameScore(oppWinningMove.Winner, depth);
 
-            //    alphaBeta.Beta = Math.Min(alphaBeta.Beta, stopWinningScore);
+                alphaBeta.Beta = Math.Min(alphaBeta.Beta, stopWinningScore);
 
-            //    return stopWinningScore;
-            //}
+                return stopWinningScore;
+            }
 
             decimal minimumMoveValue = decimal.MaxValue;
 
