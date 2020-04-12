@@ -164,7 +164,6 @@ namespace ConnectBot
                 xPos += DrawingConstants.SpaceSize;
             }
 
-            ResetGame();
 
             //PlayerTurn = DiscColor.Black;
             //BotTurn = DiscColor.Red;
@@ -172,10 +171,10 @@ namespace ConnectBot
             BotTurn = DiscColor.Black;
 
             Bot = new ConnectAI(BotTurn);
-            UpdateBotBoard();
-
+            
             playAgainMenu = new GameMenus.PlayAgainMenu();
 
+            ResetGame();
         }
 
         /// <summary>
@@ -369,6 +368,8 @@ namespace ConnectBot
             {
                 boardColumns[c].ResetSpaces();
             }
+
+            UpdateBotBoard();
         }
 
         /// <summary>

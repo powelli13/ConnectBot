@@ -233,7 +233,7 @@ namespace ConnectBot
         {
             var openColumns = new List<int>();
 
-            foreach (var c in new int[] { 3, 4, 2, 5, 1, 6, 0 })
+            foreach (var c in new int[] { 3, 2, 4, 5, 1, 6, 0 })
                 //for (int c = 0; c < NUM_COLUMNS; c++)
             {
                 if (IsColumnOpen(board, c))
@@ -356,13 +356,13 @@ namespace ConnectBot
                 case 1:
                     return 1.0m;
                 case 2:
-                    return 4.0m * 1.2m;
+                    return 4.0m * 1.4m;
                 case 3:
-                    return 32.0m * 1.2m;
+                    return 32.0m * 1.8m;
                 case 4:
                     // TODO emdgame score?
                     //throw new InvalidOperationException("PossibleFourValue should not be called with a winning board.");
-                    return 100000.0m * 1.2m;
+                    return 100000.0m * 2.2m;
                 default:
                     return 0.0m;
             }
@@ -370,19 +370,6 @@ namespace ConnectBot
 
         public static decimal EvaluateBoardState(in BitBoard board, DiscColor disc)
         {
-            // TODO adjust when moving to negamax
-            //var opponent = ChangeTurnColor(disc);
-
-            //var friendlyPossibles = CountAllPossibles(board, disc);
-            //var opponentPossibles = CountAllPossibles(board, opponent);
-
-            ////red is negative
-            //if (disc == DiscColor.Red)
-            //{
-            //    return opponentPossibles + (friendlyPossibles * -1.0m);
-            //}
-
-            //return friendlyPossibles + (opponentPossibles * -1.0m);
             return CountAllPossibles(board, disc);
         }
 
@@ -436,7 +423,7 @@ namespace ConnectBot
                     if (disc == DiscColor.Red)
                     {
                         if (IsScorable(disc, in board, grouping))
-                            ret += PossibleFourValue(board.RedDiscs & grouping, disc);
+                            ret += (PossibleFourValue(board.RedDiscs & grouping, disc) * -1.0m);
 
                         if (IsScorable(opponent, in board, grouping))
                             ret += PossibleOpponentFourValue(board.BlackDiscs & grouping, opponent);
@@ -447,19 +434,8 @@ namespace ConnectBot
                             ret += PossibleFourValue(board.BlackDiscs & grouping, disc);
 
                         if (IsScorable(opponent, in board, grouping))
-                            ret += PossibleOpponentFourValue(board.RedDiscs & grouping, opponent);
+                            ret += (PossibleOpponentFourValue(board.RedDiscs & grouping, opponent) * -1.0m);
                     }
-
-                    //if (opponent == DiscColor.Red)
-                    //{
-                    //    if (IsScorable(opponent, in board, grouping))
-                    //        ret += PossibleOpponentFourValue(board.RedDiscs & grouping, opponent);
-                    //}
-                    //else
-                    //{
-                    //    if (IsScorable(opponent, in board, grouping))
-                    //        ret += PossibleOpponentFourValue(board.BlackDiscs & grouping, opponent);
-                    //}
                 }
             }
 
@@ -474,15 +450,11 @@ namespace ConnectBot
                 {
                     if ((grouping & board.RedDiscs) == grouping)
                     {
-                        //Console.WriteLine($"Red victory. {grouping}");
-
                         return DiscColor.Red;
                     }
 
                     if ((grouping & board.BlackDiscs) == grouping)
                     {
-                        //Console.WriteLine($"Black victory. {grouping}");
-
                         return DiscColor.Black;
                     }
                 }
@@ -606,10 +578,6 @@ namespace ConnectBot
 
                 if (CheckVictory(movedBoard) == disc)
                 {
-                    //Console.WriteLine($"WINNER: {disc}");
-                    //Console.WriteLine(GetPrettyPrint(in board));
-                    //Console.WriteLine($"With score: {EvaluateBoardState(in movedBoard)}");
-                    //Console.WriteLine("---------------------------------------------");
                     return new KillerMove(openColumn, disc);
                 }
             }
