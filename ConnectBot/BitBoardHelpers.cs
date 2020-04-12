@@ -22,10 +22,10 @@ namespace ConnectBot
     {
         public readonly static int ColumnOneTop = 5;
         public readonly static int ColumnTwoTop = 11;
-        public readonly static int ColumnThreeTop = 17;  
-        public readonly static int ColumnFourTop = 23;  
-        public readonly static int ColumnFiveTop = 29;  
-        public readonly static int ColumnSixTop = 35;  
+        public readonly static int ColumnThreeTop = 17;
+        public readonly static int ColumnFourTop = 23;
+        public readonly static int ColumnFiveTop = 29;
+        public readonly static int ColumnSixTop = 35;
         public readonly static int ColumnSevenTop = 41;
 
         /* 
@@ -79,9 +79,9 @@ namespace ConnectBot
         };
 
         public static readonly ulong[][] ColumnVerticals = new ulong[][]
-        { 
+        {
             new ulong []
-            { 
+            {
                 1ul + (1ul << 1) + (1ul << 2) + (1ul << 3),
                 (1ul << 1) + (1ul << 2) + (1ul << 3) + (1ul << 4),
                 (1ul << 2) + (1ul << 3) + (1ul << 4) + (1ul << 5)
@@ -127,7 +127,7 @@ namespace ConnectBot
         public static readonly ulong[][] FallingDiagonals = new ulong[][]
         {
             new ulong[]
-            { 
+            {
                 (1ul << 3) + (1ul << 8) + (1ul << 13) + (1ul << 18),
                 (1ul << 4) + (1ul << 9) + (1ul << 14) + (1ul << 19),
                 (1ul << 5) + (1ul << 10) + (1ul << 15) + (1ul << 20)
@@ -233,8 +233,8 @@ namespace ConnectBot
         {
             var openColumns = new List<int>();
 
-            //foreach (var c in new int[] { 3, 4, 2, 5, 1, 6, 0 })
-            for (int c = 0; c < NUM_COLUMNS; c++)
+            foreach (var c in new int[] { 3, 4, 2, 5, 1, 6, 0 })
+                //for (int c = 0; c < NUM_COLUMNS; c++)
             {
                 if (IsColumnOpen(board, c))
                     openColumns.Add(c);
@@ -314,7 +314,7 @@ namespace ConnectBot
             return true;
         }
 
-        public static decimal PossibleFourValue(ulong possibleFour)
+        public static decimal PossibleFourValue(ulong possibleFour, DiscColor disc)
         {
             ulong count = 0;
 
@@ -333,20 +333,57 @@ namespace ConnectBot
                 case 3:
                     return 32.0m;
                 case 4:
-                    throw new InvalidOperationException("PossibleFourValue should not be called with a winning board.");
-                    //return 100000.0m;
+                    // TODO emdgame score?
+                    //throw new InvalidOperationException("PossibleFourValue should not be called with a winning board.");
+                    return 100000.0m;
                 default:
                     return 0.0m;
             }
         }
 
-        public static decimal EvaluateBoardState(in BitBoard board)
+        public static decimal PossibleOpponentFourValue(ulong possibleFour, DiscColor disc)
+        {
+            ulong count = 0;
+
+            while (possibleFour > 0)
+            {
+                count += possibleFour & 1ul;
+                possibleFour >>= 1;
+            }
+
+            switch (count)
+            {
+                case 1:
+                    return 1.0m;
+                case 2:
+                    return 4.0m * 1.2m;
+                case 3:
+                    return 32.0m * 1.2m;
+                case 4:
+                    // TODO emdgame score?
+                    //throw new InvalidOperationException("PossibleFourValue should not be called with a winning board.");
+                    return 100000.0m * 1.2m;
+                default:
+                    return 0.0m;
+            }
+        }
+
+        public static decimal EvaluateBoardState(in BitBoard board, DiscColor disc)
         {
             // TODO adjust when moving to negamax
-            var redPossiblesValue = CountAllPossibles(board, DiscColor.Red);
-            var blackPossiblesValue = CountAllPossibles(board, DiscColor.Black);
+            //var opponent = ChangeTurnColor(disc);
 
-            return blackPossiblesValue + (redPossiblesValue * -1.0m);
+            //var friendlyPossibles = CountAllPossibles(board, disc);
+            //var opponentPossibles = CountAllPossibles(board, opponent);
+
+            ////red is negative
+            //if (disc == DiscColor.Red)
+            //{
+            //    return opponentPossibles + (friendlyPossibles * -1.0m);
+            //}
+
+            //return friendlyPossibles + (opponentPossibles * -1.0m);
+            return CountAllPossibles(board, disc);
         }
 
         public static decimal CountAllPossibles(in BitBoard board, DiscColor disc)
@@ -387,21 +424,42 @@ namespace ConnectBot
         public static decimal ScorePossibleFours(in BitBoard board, DiscColor disc, ulong[][] scoringAlignments)
         {
             decimal ret = 0.0m;
+            var opponent = ChangeTurnColor(disc);
 
             foreach (ulong[] alignment in scoringAlignments)
             {
                 foreach (ulong grouping in alignment)
                 {
+                    // score friendlies, disc is friendly
+
+                    // score opponent, heavier threes
                     if (disc == DiscColor.Red)
                     {
                         if (IsScorable(disc, in board, grouping))
-                            ret += PossibleFourValue(board.RedDiscs & grouping);
+                            ret += PossibleFourValue(board.RedDiscs & grouping, disc);
+
+                        if (IsScorable(opponent, in board, grouping))
+                            ret += PossibleOpponentFourValue(board.BlackDiscs & grouping, opponent);
                     }
                     else
                     {
                         if (IsScorable(disc, in board, grouping))
-                            ret += PossibleFourValue(board.BlackDiscs & grouping);
+                            ret += PossibleFourValue(board.BlackDiscs & grouping, disc);
+
+                        if (IsScorable(opponent, in board, grouping))
+                            ret += PossibleOpponentFourValue(board.RedDiscs & grouping, opponent);
                     }
+
+                    //if (opponent == DiscColor.Red)
+                    //{
+                    //    if (IsScorable(opponent, in board, grouping))
+                    //        ret += PossibleOpponentFourValue(board.RedDiscs & grouping, opponent);
+                    //}
+                    //else
+                    //{
+                    //    if (IsScorable(opponent, in board, grouping))
+                    //        ret += PossibleOpponentFourValue(board.BlackDiscs & grouping, opponent);
+                    //}
                 }
             }
 
@@ -447,32 +505,24 @@ namespace ConnectBot
             check = CheckGroupingsVictory(in board, RowHorizontals);
             if (check != DiscColor.None)
             {
-                //Console.WriteLine($"Winner: {check} horizontal");
-                //Console.WriteLine(GetPrettyPrint(in board));
                 return check;
             }
 
             check = CheckGroupingsVictory(in board, ColumnVerticals);
             if (check != DiscColor.None)
             {
-                //Console.WriteLine($"Winner: {check} vertical");
-                //Console.WriteLine(GetPrettyPrint(in board));
                 return check;
             }
 
             check = CheckGroupingsVictory(in board, FallingDiagonals);
             if (check != DiscColor.None)
             {
-                //Console.WriteLine($"Winner: {check} falling diagonals");
-                //Console.WriteLine(GetPrettyPrint(in board));
                 return check;
             }
 
             check = CheckGroupingsVictory(in board, RisingDiagonals);
             if (check != DiscColor.None)
             {
-                //Console.WriteLine($"Winner: {check} rising diagonals");
-                //Console.WriteLine(GetPrettyPrint(in board));
                 return check;
             }
 
