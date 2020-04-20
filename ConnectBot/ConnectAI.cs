@@ -114,7 +114,7 @@ namespace ConnectBot
         /// <returns>The column that will be moved played in.</returns>
         private int MinimaxCutoffSearch(BitBoard board)
         {
-            int maxDepth = 42;
+            int maxDepth = 12;
 
             // TODO change this based on the AI's color when color selection menu is used
             // for all actions return min value of the result of the action
@@ -211,7 +211,7 @@ namespace ConnectBot
             {
                 var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, OpponentColor);
                 var stopWinningScore = EvaluateBoardState(in stopWinningBoard, movingColor);
-                
+
                 alphaBeta.Alpha = Math.Max(alphaBeta.Alpha, stopWinningScore);
 
                 return stopWinningScore;

@@ -28,12 +28,28 @@ namespace ConnectBot
         public readonly static int ColumnSixTop = 35;
         public readonly static int ColumnSevenTop = 41;
 
+        public readonly static ulong FirstRow = 
+            1ul + (1ul << 6) + (1ul << 12) + (1ul << 18) + (1ul << 24) + (1ul << 30) + (1ul << 36);
+
+        public readonly static ulong SecondRow =
+            (1ul << 1) + (1ul << 7) + (1ul << 13) + (1ul << 19) + (1ul << 25) + (1ul << 31) + (1ul << 37);
+
+        public readonly static ulong ThirdRow =
+            (1ul << 2) + (1ul << 8) + (1ul << 14) + (1ul << 20) + (1ul << 26) + (1ul << 32) + (1ul << 38);
+
+        public readonly static ulong FourthRow =
+            (1ul << 3) + (1ul << 9) + (1ul << 15) + (1ul << 21) + (1ul << 27) + (1ul << 33) + (1ul << 39);
+
+        public readonly static ulong FifthRow =
+            (1ul << 4) + (1ul << 10) + (1ul << 16) + (1ul << 22) + (1ul << 28) + (1ul << 34) + (1ul << 40);
+
         /* 
          * Below are precalculated ulongs used to quickly
          * check scoring fours on the bit board.
          */
         public static readonly ulong[][] RowHorizontals = new ulong[][]
         {
+            // bottom row
             new ulong[4]
             {
                 1ul + (1ul << 6) + (1ul << 12) + (1ul << 18),
@@ -41,6 +57,7 @@ namespace ConnectBot
                 (1ul << 12) + (1ul << 18) + (1ul << 24) + (1ul << 30),
                 (1ul << 18) + (1ul << 24) + (1ul << 30) + (1ul << 36)
             },
+            // second row
             new ulong[4]
             {
                 (1ul << 1) + (1ul << 7) + (1ul << 13) + (1ul << 19),
@@ -48,6 +65,7 @@ namespace ConnectBot
                 (1ul << 13) + (1ul << 19) + (1ul << 25) + (1ul << 31),
                 (1ul << 19) + (1ul << 25) + (1ul << 31) + (1ul << 37)
             },
+            // third row
             new ulong[4]
             {
                 (1ul << 2) + (1ul << 8) + (1ul << 14) + (1ul << 20),
@@ -55,6 +73,7 @@ namespace ConnectBot
                 (1ul << 14) + (1ul << 20) + (1ul << 26) + (1ul << 32),
                 (1ul << 20) + (1ul << 26) + (1ul << 32) + (1ul << 38)
             },
+            // fourth row
             new ulong[4]
             {
                 (1ul << 3) + (1ul << 9) + (1ul << 15) + (1ul << 21),
@@ -62,6 +81,7 @@ namespace ConnectBot
                 (1ul << 15) + (1ul << 21) + (1ul << 27) + (1ul << 33),
                 (1ul << 21) + (1ul << 27) + (1ul << 33) + (1ul << 39)
             },
+            // fifth row
             new ulong[4]
             {
                 (1ul << 4) + (1ul << 10) + (1ul << 16) + (1ul << 22),
@@ -69,6 +89,7 @@ namespace ConnectBot
                 (1ul << 16) + (1ul << 22) + (1ul << 28) + (1ul << 34),
                 (1ul << 22) + (1ul << 28) + (1ul << 34) + (1ul << 40)
             },
+            // sixth row
             new ulong[4]
             {
                 (1ul << 5) + (1ul << 11) + (1ul << 17) + (1ul << 23),
@@ -78,6 +99,7 @@ namespace ConnectBot
             }
         };
 
+        // these are mixed heights
         public static readonly ulong[][] ColumnVerticals = new ulong[][]
         {
             new ulong []
@@ -124,6 +146,7 @@ namespace ConnectBot
             },
         };
 
+        // these are mixed heights
         public static readonly ulong[][] FallingDiagonals = new ulong[][]
         {
             new ulong[]
@@ -152,6 +175,7 @@ namespace ConnectBot
             }
         };
 
+        // these are mixed heights
         public static readonly ulong[][] RisingDiagonals = new ulong[][]
         {
             new ulong[]
@@ -288,6 +312,26 @@ namespace ConnectBot
             return openColumns;
         }
 
+        public static int GetGroupingHeight(ulong grouping)
+        {
+            if ((grouping & FirstRow) != 0)
+                return 0;
+
+            if ((grouping & SecondRow) != 0)
+                return 1;
+
+            if ((grouping & ThirdRow) != 0)
+                return 2;
+
+            if ((grouping & FourthRow) != 0)
+                return 3;
+
+            if ((grouping & FifthRow) != 0)
+                return 4;
+
+            return 5;
+        }
+
         public static bool IsScorable(DiscColor disc, in BitBoard board, ulong possibleFour)
         {
             if (disc == DiscColor.Red)
@@ -314,6 +358,14 @@ namespace ConnectBot
             return true;
         }
 
+        static decimal singleValue = 1.0m;
+        static decimal doubleValue = 2.4m;
+        static decimal tripleValue = 6.4m;
+
+        static decimal opponentMultiplier = 2.0m;
+
+        static double heightFactor = 0.5d;
+
         public static decimal PossibleFourValue(ulong possibleFour, DiscColor disc)
         {
             ulong count = 0;
@@ -324,14 +376,16 @@ namespace ConnectBot
                 possibleFour >>= 1;
             }
 
+            decimal heightMultiplier = (decimal)Math.Pow(heightFactor, (double)GetGroupingHeight(possibleFour));
+
             switch (count)
             {
                 case 1:
-                    return 1.0m;
+                    return singleValue * heightMultiplier;
                 case 2:
-                    return 4.0m;
+                    return doubleValue * heightMultiplier;
                 case 3:
-                    return 32.0m;
+                    return tripleValue * heightMultiplier;
                 case 4:
                     // TODO emdgame score?
                     //throw new InvalidOperationException("PossibleFourValue should not be called with a winning board.");
@@ -351,18 +405,20 @@ namespace ConnectBot
                 possibleFour >>= 1;
             }
 
+            decimal heightMultiplier = (decimal)Math.Pow(heightFactor, (double)GetGroupingHeight(possibleFour));
+
             switch (count)
             {
                 case 1:
-                    return 1.0m;
+                    return singleValue * heightMultiplier;
                 case 2:
-                    return 4.0m * 1.4m;
+                    return doubleValue * opponentMultiplier * heightMultiplier;
                 case 3:
-                    return 32.0m * 1.8m;
+                    return tripleValue * opponentMultiplier * heightMultiplier;
                 case 4:
                     // TODO emdgame score?
                     //throw new InvalidOperationException("PossibleFourValue should not be called with a winning board.");
-                    return 100000.0m * 2.2m;
+                    return 100000.0m;
                 default:
                     return 0.0m;
             }
@@ -370,7 +426,15 @@ namespace ConnectBot
 
         public static decimal EvaluateBoardState(in BitBoard board, DiscColor disc)
         {
-            return CountAllPossibles(board, disc);
+            var score = CountAllPossibles(board, disc);
+
+            //if (score > (2 * 100000.0m))
+            //{
+            //    Console.WriteLine($"Score of {score} found for board:");
+            //    Console.WriteLine(GetPrettyPrint(in board));
+            //}
+
+            return score;
         }
 
         public static decimal CountAllPossibles(in BitBoard board, DiscColor disc)
