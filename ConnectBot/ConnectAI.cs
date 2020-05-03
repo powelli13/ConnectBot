@@ -33,24 +33,6 @@ namespace ConnectBot
         }
 
         /// <summary>
-        /// Used to store the window edges Alpha and Beta
-        /// when performing an Alpha Beta search.
-        /// </summary>
-        class AlphaBeta
-        {
-            public decimal Alpha { get; set; }
-            public decimal Beta { get; set; }
-
-            public AlphaBeta(
-                decimal alpha = decimal.MinValue,
-                decimal beta = decimal.MaxValue)
-            {
-                Alpha = alpha;
-                Beta = beta;
-            }
-        }
-
-        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="color">Color for AI to play.</param>
@@ -114,48 +96,25 @@ namespace ConnectBot
         /// <returns>The column that will be moved played in.</returns>
         private int MinimaxCutoffSearch(BitBoard board)
         {
-            int maxDepth = 12;
+            int maxDepth = 7;
 
-            // TODO change this based on the AI's color when color selection menu is used
-            // for all actions return min value of the result of the action
-            var minimumMoveValue = decimal.MaxValue;
-            var maximumMoveValue = decimal.MinValue;
             var openMoveValue = 0.0m;
             var movedColumn = -1;
-            var alphaBeta = new AlphaBeta();
+
+            var alpha = decimal.MinValue;
+            var beta = decimal.MaxValue;
+
             var nodeCounter = new NodeCounter();
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            foreach (int openMove in GetOpenColumns(in board))
+            if (AiColor == DiscColor.Red)
             {
-                var newState = BitBoardMove(in board, openMove, AiColor);
-
-                // prompt for opponents first move in the searching
-                if (AiColor == DiscColor.Red)
-                {
-                    openMoveValue = MaxValue(newState, maxDepth, alphaBeta, nodeCounter, OpponentColor);
-
-                    Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
-
-                    if (openMoveValue < minimumMoveValue)
-                    {
-                        minimumMoveValue = openMoveValue;
-                        movedColumn = openMove;
-                    }
-                }
-                else
-                {
-                    openMoveValue = MinValue(newState, maxDepth, alphaBeta, nodeCounter, OpponentColor);
-
-                    Console.WriteLine($"Column {openMove} had a score of {openMoveValue}.");
-
-                    if (openMoveValue > maximumMoveValue)
-                    {
-                        maximumMoveValue = openMoveValue;
-                        movedColumn = openMove;
-                    }
-                }
+                (openMoveValue, movedColumn) = MinValue(board, maxDepth, alpha, beta, nodeCounter, AiColor);
+            }
+            else
+            {
+                (openMoveValue, movedColumn) = MaxValue(board, maxDepth, alpha, beta, nodeCounter, AiColor);
             }
 
             stopWatch.Stop();
@@ -171,134 +130,151 @@ namespace ConnectBot
             return movedColumn;
         }
 
-        private decimal MaxValue(
+        private (decimal BoardScore, int Column) MaxValue(
             BitBoard board,
             int depth,
-            AlphaBeta alphaBeta,
+            decimal alpha,
+            decimal beta,
             NodeCounter nodeCounter,
             DiscColor movingColor)
         {
             nodeCounter.Increment();
 
+            // TODO double check if -1 should be used
+            // I didn't see any problems with this during some test games, may require more vetting though
             var openColumns = GetOpenColumns(in board);
-            
+
             // Drawn game
             if (openColumns.Count == 0)
-                return 0.0m;
+                return (0.0m, -1);
 
             if (depth == 0 ||
                 CheckVictory(in board) != DiscColor.None)
             {
-                return EvaluateBoardState(in board, movingColor);
+                return (EvaluateBoardState(in board, movingColor), -1);
             }
 
             // Win and return immediately if possible
-            var winningMove = FindKillerMove(in board, movingColor);
-            if (winningMove.HasWinner &&
-                winningMove.Winner == movingColor)
-            {
-                var winningBoard = BitBoardMove(in board, winningMove.Column, movingColor);
-                var winningScore = EvaluateBoardState(in winningBoard, movingColor);
+            //var winningMove = FindKillerMove(in board, movingColor);
+            //if (winningMove.HasWinner &&
+            //    winningMove.Winner == movingColor)
+            //{
+            //    var winningBoard = BitBoardMove(in board, winningMove.Column, movingColor);
+            //    var winningScore = EvaluateBoardState(in winningBoard, movingColor);
 
-                alphaBeta.Alpha = Math.Max(alphaBeta.Alpha, winningScore);
+            //    alpha = Math.Max(alpha, winningScore);
 
-                return winningScore;
-            }
+            //    return (winningScore, winningMove.Column);
+            //}
 
-            // Stop the opponent from winning if possible
-            var oppWinningMove = FindKillerMove(in board, AiColor);
-            if (oppWinningMove.HasWinner)
-            {
-                var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, OpponentColor);
-                var stopWinningScore = EvaluateBoardState(in stopWinningBoard, movingColor);
+            //// Stop the opponent from winning if possible
+            //var oppWinningMove = FindKillerMove(in board, AiColor);
+            //if (oppWinningMove.HasWinner)
+            //{
+            //    var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, OpponentColor);
+            //    var stopWinningScore = EvaluateBoardState(in stopWinningBoard, movingColor);
 
-                alphaBeta.Alpha = Math.Max(alphaBeta.Alpha, stopWinningScore);
+            //    alpha = Math.Max(alpha, stopWinningScore);
 
-                return stopWinningScore;
-            }
+            //    return (stopWinningScore, oppWinningMove.Column);
+            //}
 
             decimal maximumMoveValue = decimal.MinValue;
+            int movedColumn = -1;
 
             foreach (int openMove in openColumns)
             {
                 var newState = BitBoardMove(in board, openMove, movingColor);
 
-                maximumMoveValue = Math.Max(
-                    maximumMoveValue,
-                    MinValue(newState, depth - 1, alphaBeta, nodeCounter, ChangeTurnColor(movingColor)));
+                var childMinValue = MinValue(newState, depth - 1, alpha, beta, nodeCounter, ChangeTurnColor(movingColor)).BoardScore;
+                if (childMinValue > maximumMoveValue)
+                {
+                    maximumMoveValue = childMinValue;
+                    movedColumn = openMove;
+                }
 
-                if (maximumMoveValue >= alphaBeta.Beta)
-                    return maximumMoveValue;
+                if (maximumMoveValue >= beta)
+                    return (maximumMoveValue, openMove);
 
-                alphaBeta.Alpha = Math.Max(alphaBeta.Alpha, maximumMoveValue);
+                alpha = Math.Max(alpha, maximumMoveValue);
             }
 
-            return maximumMoveValue;
+            return (maximumMoveValue, movedColumn);
         }
 
-        private decimal MinValue(
+        private (decimal BoardScore, int Column) MinValue(
             BitBoard board,
             int depth,
-            AlphaBeta alphaBeta,
+            decimal alpha,
+            decimal beta,
             NodeCounter nodeCounter,
             DiscColor movingColor)
         {
             nodeCounter.Increment();
 
             var openColumns = GetOpenColumns(in board);
-            
+
+            // TODO I think these columns are safe but not certain
+            // I didn't see any problems with this during some test games, may require more vetting though
             // Drawn game
             if (openColumns.Count == 0)
-                return 0.0m;
+                return (0.0m, -1);
 
             if (depth == 0 ||
                 CheckVictory(in board) != DiscColor.None)
             {
-                return EvaluateBoardState(in board, movingColor);
+                return (EvaluateBoardState(in board, movingColor), -1);
             }
 
             // Win and return immediately if possible
-            var winningMove = FindKillerMove(in board, movingColor);
-            if (winningMove.HasWinner &&
-                winningMove.Winner == movingColor)
-            {
-                var winningBoard = BitBoardMove(in board, winningMove.Column, movingColor);
-                var winningScore = EvaluateBoardState(in winningBoard, movingColor);
+            //var winningMove = FindKillerMove(in board, movingColor);
+            //if (winningMove.HasWinner &&
+            //    winningMove.Winner == movingColor)
+            //{
+            //    var winningBoard = BitBoardMove(in board, winningMove.Column, movingColor);
+            //    var winningScore = EvaluateBoardState(in winningBoard, movingColor);
 
-                alphaBeta.Beta = Math.Min(alphaBeta.Beta, winningScore);
+            //    // TODO not sure if this should be done now
+            //    beta = Math.Min(beta, winningScore);
 
-                return winningScore;
-            }
+            //    return (winningScore, winningMove.Column);
+            //}
 
-            // Stop the opponent from winning if possible
-            var oppWinningMove = FindKillerMove(in board, OpponentColor);
-            if (oppWinningMove.HasWinner)
-            {
-                var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, AiColor);
-                var stopWinningScore = EvaluateBoardState(in stopWinningBoard, movingColor);
+            //// Stop the opponent from winning if possible
+            //var oppWinningMove = FindKillerMove(in board, OpponentColor);
+            //if (oppWinningMove.HasWinner)
+            //{
+            //    var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, AiColor);
+            //    var stopWinningScore = EvaluateBoardState(in stopWinningBoard, movingColor);
 
-                alphaBeta.Beta = Math.Min(alphaBeta.Beta, stopWinningScore);
+            //    // TODO not sure if this should be done now
+            //    beta = Math.Min(beta, stopWinningScore);
 
-                return stopWinningScore;
-            }
+            //    return (stopWinningScore, oppWinningMove.Column);
+            //}
 
             decimal minimumMoveValue = decimal.MaxValue;
+            int movedColumn = -1;
 
             foreach (int openMove in openColumns)
             {
                 var newState = BitBoardMove(in board, openMove, movingColor);
 
-                minimumMoveValue = Math.Min(
-                    minimumMoveValue,
-                    MaxValue(newState, depth - 1, alphaBeta, nodeCounter, ChangeTurnColor(movingColor)));
+                var childMaxValue = MaxValue(newState, depth - 1, alpha, beta, nodeCounter, ChangeTurnColor(movingColor)).BoardScore;
 
-                if (minimumMoveValue <= alphaBeta.Alpha)
-                    return minimumMoveValue;
+                if (childMaxValue < minimumMoveValue)
+                {
+                    minimumMoveValue = childMaxValue;
+                    movedColumn = openMove;
+                }
 
-                alphaBeta.Beta = Math.Min(alphaBeta.Beta, minimumMoveValue);
+                if (minimumMoveValue <= alpha)
+                    return (minimumMoveValue, openMove);
+
+                beta = Math.Min(beta, minimumMoveValue);
             }
 
-            return minimumMoveValue;
+            return (minimumMoveValue, movedColumn);
         }
     }
 }
