@@ -360,13 +360,13 @@ namespace ConnectBot
 
         static decimal singleValue = 1.0m;
         static decimal doubleValue = 2.4m;
-        static decimal tripleValue = 6.4m;
+        static decimal tripleValue = 8.4m;
 
-        static decimal opponentMultiplier = 2.0m;
+        static decimal opponentMultiplier = 1.5m;
             
         static double heightFactor = 0.5d;
 
-        public static decimal PossibleFourValue(ulong possibleFour, DiscColor disc, bool isVertical = false)
+        public static decimal PossibleFourValue(ulong possibleFour, ulong grouping, DiscColor disc, bool isVertical = false)
         {
             ulong count = 0;
 
@@ -376,7 +376,8 @@ namespace ConnectBot
                 possibleFour >>= 1;
             }
 
-            decimal heightMultiplier = (decimal)Math.Pow(heightFactor, (double)GetGroupingHeight(possibleFour));
+
+            decimal heightMultiplier = (decimal)Math.Pow(heightFactor, (double)GetGroupingHeight(grouping));
             decimal vertMultiplier = (isVertical ? 0.5m : 1.0m);
 
             switch (count)
@@ -396,7 +397,7 @@ namespace ConnectBot
             }
         }
 
-        public static decimal PossibleOpponentFourValue(ulong possibleFour, DiscColor disc, bool isVertical = false)
+        public static decimal PossibleOpponentFourValue(ulong possibleFour, ulong grouping, DiscColor disc, bool isVertical = false)
         {
             ulong count = 0;
 
@@ -406,7 +407,7 @@ namespace ConnectBot
                 possibleFour >>= 1;
             }
 
-            decimal heightMultiplier = (decimal)Math.Pow(heightFactor, (double)GetGroupingHeight(possibleFour));
+            decimal heightMultiplier = (decimal)Math.Pow(heightFactor, (double)GetGroupingHeight(grouping));
             decimal vertMultiplier = (isVertical ? 0.5m : 1.0m);
 
             switch (count)
@@ -490,18 +491,18 @@ namespace ConnectBot
                     if (disc == DiscColor.Red)
                     {
                         if (IsScorable(disc, in board, grouping))
-                            ret += (PossibleFourValue(board.RedDiscs & grouping, disc, isVertical) * -1.0m);
+                            ret += (PossibleFourValue(board.RedDiscs & grouping, grouping, disc, isVertical) * -1.0m);
 
                         if (IsScorable(opponent, in board, grouping))
-                            ret += PossibleOpponentFourValue(board.BlackDiscs & grouping, opponent, isVertical);
+                            ret += PossibleOpponentFourValue(board.BlackDiscs & grouping, grouping, opponent, isVertical);
                     }
                     else
                     {
                         if (IsScorable(disc, in board, grouping))
-                            ret += PossibleFourValue(board.BlackDiscs & grouping, disc, isVertical);
+                            ret += PossibleFourValue(board.BlackDiscs & grouping, grouping, disc, isVertical);
 
                         if (IsScorable(opponent, in board, grouping))
-                            ret += (PossibleOpponentFourValue(board.RedDiscs & grouping, opponent, isVertical) * -1.0m);
+                            ret += (PossibleOpponentFourValue(board.RedDiscs & grouping, grouping, opponent, isVertical) * -1.0m);
                     }
                 }
             }
