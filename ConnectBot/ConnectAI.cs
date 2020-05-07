@@ -155,29 +155,25 @@ namespace ConnectBot
             }
 
             // Win and return immediately if possible
-            //var winningMove = FindKillerMove(in board, movingColor);
-            //if (winningMove.HasWinner &&
-            //    winningMove.Winner == movingColor)
-            //{
-            //    var winningBoard = BitBoardMove(in board, winningMove.Column, movingColor);
-            //    var winningScore = EvaluateBoardState(in winningBoard, movingColor);
+            var winningMove = FindKillerMove(in board, movingColor);
+            if (winningMove.HasWinner &&
+                winningMove.Winner == movingColor)
+            {
+                var winningBoard = BitBoardMove(in board, winningMove.Column, movingColor);
+                var winningScore = EvaluateBoardState(in winningBoard, movingColor);
 
-            //    alpha = Math.Max(alpha, winningScore);
+                return (winningScore, winningMove.Column);
+            }
 
-            //    return (winningScore, winningMove.Column);
-            //}
+            // Stop the opponent from winning if possible
+            var oppWinningMove = FindKillerMove(in board, AiColor);
+            if (oppWinningMove.HasWinner)
+            {
+                var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, OpponentColor);
+                var stopWinningScore = EvaluateBoardState(in stopWinningBoard, movingColor);
 
-            //// Stop the opponent from winning if possible
-            //var oppWinningMove = FindKillerMove(in board, AiColor);
-            //if (oppWinningMove.HasWinner)
-            //{
-            //    var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, OpponentColor);
-            //    var stopWinningScore = EvaluateBoardState(in stopWinningBoard, movingColor);
-
-            //    alpha = Math.Max(alpha, stopWinningScore);
-
-            //    return (stopWinningScore, oppWinningMove.Column);
-            //}
+                return (stopWinningScore, oppWinningMove.Column);
+            }
 
             decimal maximumMoveValue = decimal.MinValue;
             int movedColumn = -1;
@@ -227,31 +223,25 @@ namespace ConnectBot
             }
 
             // Win and return immediately if possible
-            //var winningMove = FindKillerMove(in board, movingColor);
-            //if (winningMove.HasWinner &&
-            //    winningMove.Winner == movingColor)
-            //{
-            //    var winningBoard = BitBoardMove(in board, winningMove.Column, movingColor);
-            //    var winningScore = EvaluateBoardState(in winningBoard, movingColor);
+            var winningMove = FindKillerMove(in board, movingColor);
+            if (winningMove.HasWinner &&
+                winningMove.Winner == movingColor)
+            {
+                var winningBoard = BitBoardMove(in board, winningMove.Column, movingColor);
+                var winningScore = EvaluateBoardState(in winningBoard, movingColor);
 
-            //    // TODO not sure if this should be done now
-            //    beta = Math.Min(beta, winningScore);
+                return (winningScore, winningMove.Column);
+            }
 
-            //    return (winningScore, winningMove.Column);
-            //}
+            // Stop the opponent from winning if possible
+            var oppWinningMove = FindKillerMove(in board, OpponentColor);
+            if (oppWinningMove.HasWinner)
+            {
+                var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, AiColor);
+                var stopWinningScore = EvaluateBoardState(in stopWinningBoard, movingColor);
 
-            //// Stop the opponent from winning if possible
-            //var oppWinningMove = FindKillerMove(in board, OpponentColor);
-            //if (oppWinningMove.HasWinner)
-            //{
-            //    var stopWinningBoard = BitBoardMove(in board, oppWinningMove.Column, AiColor);
-            //    var stopWinningScore = EvaluateBoardState(in stopWinningBoard, movingColor);
-
-            //    // TODO not sure if this should be done now
-            //    beta = Math.Min(beta, stopWinningScore);
-
-            //    return (stopWinningScore, oppWinningMove.Column);
-            //}
+                return (stopWinningScore, oppWinningMove.Column);
+            }
 
             decimal minimumMoveValue = decimal.MaxValue;
             int movedColumn = -1;
