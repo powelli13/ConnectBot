@@ -15,4 +15,4 @@ Contributions to this ConnectBot are always welcome! Here is how you can contrib
 * [Submit pull requests](https://github.com/powelli13/ConnectBot/pulls) for bugs or suggested features.
 
 ## License
-Code licensed under the MIT License.
+Code licensed under the [MIT License](https://github.com/powelli13/ConnectBot/blob/master/LICENSE.txt).
