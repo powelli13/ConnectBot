@@ -163,8 +163,7 @@ namespace ConnectBot
             
             // Populate image dictionary
             _imageDict = new Dictionary<string, Texture2D>();
-            // TODO check name, also is it necessary to include in the project?
-            _consolas24 = Content.Load<SpriteFont>("File");
+            _consolas24 = Content.Load<SpriteFont>("consolas24");
 
             foreach (string img in ImageNames.AllImageNames)
             {
