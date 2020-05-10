@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ConnectBot.GameMenus;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -13,26 +14,27 @@ namespace ConnectBot
     /// </summary>
     public class ConnectGame : Game
     {
-        GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+        GraphicsDeviceManager _graphics;
+        SpriteBatch _spriteBatch;
         
         /// <summary>
         /// Dictionary of int to texture for easily grabbing
         /// repeating displayable images.
         /// </summary>
-        Dictionary<string, Texture2D> imageDict;
+        Dictionary<string, Texture2D> _imageDict;
+        SpriteFont _consolas24;
 
         /// <summary>
         /// Array of board column objects, contains game board state
         /// and drawing functionality.
         /// </summary>
-        BoardColumn[] boardColumns = new BoardColumn[NUM_COLUMNS];
+        BoardColumn[] _boardColumns = new BoardColumn[NUM_COLUMNS];
 
         protected DiscColor CurrentTurn { get; set; }
         protected DiscColor PlayerTurn { get; set; }
         protected DiscColor BotTurn { get; set; }
 
-        private double timeSinceLastMove;
+        private double _timeSinceLastMove;
 
         /// <summary>
         /// Used to handle click inputs.
@@ -48,52 +50,31 @@ namespace ConnectBot
             None,
             PlayAgain,
             PlayAgainDrawn,
-            SelectColor
+            Start
         };
 
         private MenuState CurrentMenu { get; set; }
 
         private ConnectAI Bot { get; set; }
 
-        private bool botThinking = false;
+        private bool _botThinking = false;
 
         /// <summary>
         /// Menus classes to handle various inputs.
         /// </summary>
-        private GameMenus.PlayAgainMenu playAgainMenu;
+        private PlayAgainMenu _playAgainMenu;
+        private StartMenu _startMenu;
 
         public ConnectGame()
         {
-            graphics = new GraphicsDeviceManager(this);
-            graphics.PreferredBackBufferWidth = 900;
-            graphics.PreferredBackBufferHeight = 740;
-            graphics.ApplyChanges();
+            _graphics = new GraphicsDeviceManager(this);
+            _graphics.PreferredBackBufferWidth = 900;
+            _graphics.PreferredBackBufferHeight = 740;
+            _graphics.ApplyChanges();
             
             Content.RootDirectory = "Content";
         }
-        
-        /// <summary>
-        /// Returns multi dimensional array of DiscColor enums
-        /// representing the current state of the board.
-        /// </summary>
-        /// <returns></returns>
-        /// // TODO update this to return a bit board
-        public DiscColor[,] GetTextBoard()
-        {
-            DiscColor[,] retBoard = new DiscColor[NUM_COLUMNS, NUM_ROWS];
 
-            for (int c = 0; c < NUM_COLUMNS; c++)
-            {
-                for (int r = 0; r < NUM_ROWS; r++)
-                {
-                    retBoard[c, r] = boardColumns[c].GetSpace(r);
-                }
-            }
-
-            return retBoard;
-        }
-
-        // TODO unit tests around this
         public BitBoard GetBitBoard()
         {
             ulong redDiscs = 0;
@@ -101,8 +82,8 @@ namespace ConnectBot
 
             for (int column = 0; column < NUM_COLUMNS; column++)
             {
-                redDiscs |= (boardColumns[column].GetBitColumn().RedDiscs << (column * 6));
-                blackDiscs |= (boardColumns[column].GetBitColumn().BlackDiscs << (column * 6));
+                redDiscs |= (_boardColumns[column].GetBitColumn().RedDiscs << (column * 6));
+                blackDiscs |= (_boardColumns[column].GetBitColumn().BlackDiscs << (column * 6));
             }
 
             return new BitBoard(redDiscs, blackDiscs);
@@ -142,37 +123,31 @@ namespace ConnectBot
         protected override void Initialize()
         {
             base.Initialize();
-            // TODO figure out how to resize the window
             IsMouseVisible = true;
-
+            
             // Create and load space objects
-            int xPos = DrawingConstants.XBoardBuffer;
+            int xPos = DrawingConstants.X_BOARD_BUFFER;
 
             // Add space size added to account for blue arrow
-            int yPos = DrawingConstants.YBoardBuffer + DrawingConstants.SpaceSize;
+            int yPos = DrawingConstants.Y_BOARD_BUFFER + DrawingConstants.SPACE_SIZE;
 
             for (int col = 0; col < NUM_COLUMNS; col++)
             {
-                boardColumns[col] = new BoardColumn(
+                _boardColumns[col] = new BoardColumn(
                     xPos, 
                     yPos, 
-                    imageDict[ImageNames.COLUMN_HOLDER],
-                    imageDict[ImageNames.HIGHLIGHTED_COLUMN_HOLDER],
-                    imageDict[ImageNames.BLUE_ARROW]);
+                    _imageDict[ImageNames.COLUMN_HOLDER],
+                    _imageDict[ImageNames.HIGHLIGHTED_COLUMN_HOLDER],
+                    _imageDict[ImageNames.BLUE_ARROW]);
 
                 // Move to next column.
-                xPos += DrawingConstants.SpaceSize;
+                xPos += DrawingConstants.SPACE_SIZE;
             }
 
+            CurrentMenu = MenuState.Start;
 
-            //PlayerTurn = DiscColor.Black;
-            //BotTurn = DiscColor.Red;
-            PlayerTurn = DiscColor.Red;
-            BotTurn = DiscColor.Black;
-
-            Bot = new ConnectAI(BotTurn);
-            
-            playAgainMenu = new GameMenus.PlayAgainMenu();
+            _startMenu = new StartMenu(_consolas24);
+            _playAgainMenu = new PlayAgainMenu();
 
             ResetGame();
         }
@@ -184,24 +159,17 @@ namespace ConnectBot
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new SpriteBatch(GraphicsDevice);
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
             
             // Populate image dictionary
-            imageDict = new Dictionary<string, Texture2D>();
+            _imageDict = new Dictionary<string, Texture2D>();
+            // TODO check name, also is it necessary to include in the project?
+            _consolas24 = Content.Load<SpriteFont>("File");
 
             foreach (string img in ImageNames.AllImageNames)
             {
-                imageDict[img] = Content.Load<Texture2D>(img);
+                _imageDict[img] = Content.Load<Texture2D>(img);
             }
-        }
-
-        /// <summary>
-        /// UnloadContent will be called once per game and is the place to unload
-        /// game-specific content.
-        /// </summary>
-        protected override void UnloadContent()
-        {
-            // TODO: Unload any non ContentManager content here
         }
 
         /// <summary>
@@ -211,14 +179,13 @@ namespace ConnectBot
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            // TODO Escape doesn't completed stop execution.
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || 
                 Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
                 EndGame();
             }
 
-            timeSinceLastMove += gameTime.ElapsedGameTime.TotalSeconds;
+            _timeSinceLastMove += gameTime.ElapsedGameTime.TotalSeconds;
 
             // TODO should this be a seperate method?
             // Handle user clicks that could be attempted moves.
@@ -229,25 +196,42 @@ namespace ConnectBot
             
             switch (CurrentMenu)
             {
+                case MenuState.Start:
+                    if (LastMouseState.LeftButton == ButtonState.Pressed &&
+                            MouseState.LeftButton == ButtonState.Released)
+                    {
+                        if (_startMenu.BlackDiscContainsMouse(mousePosition))
+                        {
+                            SetGameColors(DiscColor.Black);
+                            break;
+                        }
+                        else if (_startMenu.RedDiscContainsMouse(mousePosition))
+                        {
+                            SetGameColors(DiscColor.Red);
+                            break;
+                        }
+                    }
+                    break;
+
                 case MenuState.None:
                     // Check for movement clicks
-                    if (timeSinceLastMove > 0.5)
+                    if (_timeSinceLastMove > 0.5)
                     {
                         if (CurrentTurn == PlayerTurn)
                         {
                             for (int col = 0; col < NUM_COLUMNS; col++)
                             {
-                                if (boardColumns[col].ContainMouse(mousePosition))
+                                if (_boardColumns[col].ContainMouse(mousePosition))
                                 {
-                                    boardColumns[col].IsFocused = true;
+                                    _boardColumns[col].IsFocused = true;
 
                                     if (LastMouseState.LeftButton == ButtonState.Pressed &&
                                         MouseState.LeftButton == ButtonState.Released)
                                     {
                                         //Perform move and change turn.
-                                        boardColumns[col].SetSpace(PlayerTurn);
-                                        boardColumns[col].IsFocused = false;
-                                        timeSinceLastMove = 0.0;
+                                        _boardColumns[col].SetSpace(PlayerTurn);
+                                        _boardColumns[col].IsFocused = false;
+                                        _timeSinceLastMove = 0.0;
 
                                         ChangeTurn();
                                         var winner = BitBoardHelpers.CheckVictory(GetBitBoard());
@@ -259,15 +243,15 @@ namespace ConnectBot
                                 // TODO is there a way to improve this using some object with a mouse enters event or something?
                                 else
                                 {
-                                    boardColumns[col].IsFocused = false;
+                                    _boardColumns[col].IsFocused = false;
                                 }
                             }
                         }
                         else if (CurrentTurn == BotTurn)
                         {
-                            if (!botThinking)
+                            if (!_botThinking)
                             {
-                                botThinking = true;
+                                _botThinking = true;
                                 GetBotMove();
                             }
                         }
@@ -280,12 +264,12 @@ namespace ConnectBot
                     if (LastMouseState.LeftButton == ButtonState.Pressed &&
                             MouseState.LeftButton == ButtonState.Released)
                     {
-                        if (playAgainMenu.YesButtonContainsMouse(mousePosition))
+                        if (_playAgainMenu.YesButtonContainsMouse(mousePosition))
                         {
                             ResetGame();
                             break;
                         }
-                        else if (playAgainMenu.NoButtonContainsMouse(mousePosition))
+                        else if (_playAgainMenu.NoButtonContainsMouse(mousePosition))
                         {
                             EndGame();
                             break;
@@ -306,13 +290,28 @@ namespace ConnectBot
             // maybe the board state should be passed into the bot at move request
             if (botMove == -1) throw new InvalidOperationException("The bot did not return a valid column.");
 
-            boardColumns[botMove].SetSpace(BotTurn);
+            _boardColumns[botMove].SetSpace(BotTurn);
 
             ChangeTurn();
             var winner = BitBoardHelpers.CheckVictory(GetBitBoard());
             VictoryConfirmed(winner);
 
-            botThinking = false;
+            _botThinking = false;
+        }
+
+        /// <summary>
+        /// Updates the player and bot disc colors and the 
+        /// menu state to reflect that the player has chosen
+        /// which color they would like to play.
+        /// </summary>
+        /// <param name="playerChoice"></param>
+        void SetGameColors(DiscColor playerChoice)
+        {
+            PlayerTurn = playerChoice;
+            BotTurn = ChangeTurnColor(playerChoice);
+
+            Bot = new ConnectAI(BotTurn);
+            CurrentMenu = MenuState.None;
         }
 
         protected void ChangeTurn()
@@ -327,33 +326,44 @@ namespace ConnectBot
         protected override void Draw(GameTime gameTime)
         {
             // TODO wait a little while to show game end
-            GraphicsDevice.Clear(Color.Wheat);
-            spriteBatch.Begin();
-
-            bool drawBlueArrow = false;
-
-            if (timeSinceLastMove > 0.5 && CurrentTurn != BotTurn)
-            {
-                drawBlueArrow = true;
-            }
-
-            for (int col = 0; col < NUM_COLUMNS; col++)
-            {
-                boardColumns[col].Draw(spriteBatch, imageDict, drawBlueArrow);
-            }
+            GraphicsDevice.Clear(DrawingConstants.BACKGROUND_COLOR);
+            _spriteBatch.Begin();
 
             switch (CurrentMenu)
             {
-                case MenuState.PlayAgain:
-                    playAgainMenu.Draw(spriteBatch, imageDict);
+                case MenuState.Start:
+                    _startMenu.Draw(_spriteBatch, _imageDict);
                     break;
+
+                case MenuState.PlayAgain:
+                    DrawBoard();
+                    _playAgainMenu.Draw(_spriteBatch, _imageDict);
+                    break;
+
                 case MenuState.PlayAgainDrawn:
-                    playAgainMenu.Draw(spriteBatch, imageDict, true);
+                    DrawBoard();
+                    _playAgainMenu.Draw(_spriteBatch, _imageDict, true);
+                    break;
+
+                case MenuState.None:
+                    DrawBoard();
                     break;
             }
 
-            spriteBatch.End();
+            _spriteBatch.End();
             base.Draw(gameTime);
+        }
+
+        private void DrawBoard()
+        {
+            for (int col = 0; col < NUM_COLUMNS; col++)
+            {
+                _boardColumns[col].Draw(
+                    _spriteBatch,
+                    _imageDict,
+                    // Used to delay the appearance of the blue arrow for improved visuals
+                    (_timeSinceLastMove > 0.5 && CurrentTurn != BotTurn));
+            }
         }
 
         /// <summary>
@@ -362,11 +372,11 @@ namespace ConnectBot
         protected void ResetGame()
         {
             CurrentTurn = DiscColor.Black;
-            CurrentMenu = MenuState.None;
+            CurrentMenu = MenuState.Start;
 
             for (int c = 0; c < NUM_COLUMNS; c++)
             {
-                boardColumns[c].ResetSpaces();
+                _boardColumns[c].ResetSpaces();
             }
 
             UpdateBotBoard();
@@ -385,7 +395,7 @@ namespace ConnectBot
         /// </summary>
         protected void UpdateBotBoard()
         {
-            Bot.UpdateBoard(GetBitBoard());
+            Bot?.UpdateBoard(GetBitBoard());
         }
     }
 }

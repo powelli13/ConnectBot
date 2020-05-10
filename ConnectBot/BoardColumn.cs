@@ -35,13 +35,13 @@ namespace ConnectBot
         public BoardColumn(int x, int y, Texture2D columnHolder, Texture2D highlightedColumnHolder, Texture2D blueArrow)
         {
             ColumnHolderRect = new Rectangle(x, y, 
-                DrawingConstants.SpaceSize, 
-                DrawingConstants.SpaceSize * LogicalBoardHelpers.NUM_ROWS);
+                DrawingConstants.SPACE_SIZE, 
+                DrawingConstants.SPACE_SIZE * LogicalBoardHelpers.NUM_ROWS);
 
             BlueArrowRect = new Rectangle(x, 
-                y - DrawingConstants.SpaceSize,
-                DrawingConstants.SpaceSize,
-                DrawingConstants.SpaceSize);
+                y - DrawingConstants.SPACE_SIZE,
+                DrawingConstants.SPACE_SIZE,
+                DrawingConstants.SPACE_SIZE);
 
             ColumnHolder = columnHolder;
             HighlightedColumnHolder = highlightedColumnHolder;
@@ -50,14 +50,14 @@ namespace ConnectBot
             // Initialize spaces in column.
             columnSpaces = new Space[6];
 
-            int yPos = y + LogicalBoardHelpers.NUM_ROWS * DrawingConstants.SpaceSize;
+            int yPos = y + LogicalBoardHelpers.NUM_ROWS * DrawingConstants.SPACE_SIZE;
 
             for (int row = 0; row < LogicalBoardHelpers.NUM_ROWS; row++)
             {
                 // Add space and move up column.
                 // Subtract first because x, y in constructor are the top left of rectangle
                 // Move up to ensure that we appear inside column container.
-                yPos -= DrawingConstants.SpaceSize;
+                yPos -= DrawingConstants.SPACE_SIZE;
                 columnSpaces[row] = new Space(x, yPos);
             }
 

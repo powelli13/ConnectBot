@@ -49,6 +49,13 @@
 /processorParam:TextureFormat=Color
 /build:column_holder.png
 
+#begin File.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:File.spritefont
+
 #begin game_drawn_declare.png
 /importer:TextureImporter
 /processor:TextureProcessor

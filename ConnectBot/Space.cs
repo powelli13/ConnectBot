@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
+using static ConnectBot.DrawingConstants;
 
 namespace ConnectBot
 {
@@ -15,8 +16,6 @@ namespace ConnectBot
         // Rectangle used to draw discs falling over time
         private Rectangle discDrawRect;
 
-        //private Rectangle holderDrawRect;
-
         public DiscColor Disc { get; set; }
 
         /// <summary>
@@ -24,14 +23,14 @@ namespace ConnectBot
         /// </summary>
         public Space(int x, int y)
         {
-            rect = new Rectangle(x, y, DrawingConstants.SpaceSize, DrawingConstants.SpaceSize);
+            rect = new Rectangle(x, y, SPACE_SIZE, SPACE_SIZE);
 
             // Draw rectangle starting y is the top most disc space for a column
             // Top buffer of board to edge of screen add space size to account for blue arrows
             discDrawRect = new Rectangle(x,
-                DrawingConstants.TopBuffer + DrawingConstants.SpaceSize,
-                DrawingConstants.SpaceSize,
-                DrawingConstants.SpaceSize);
+                TOP_BUFFER + SPACE_SIZE,
+                SPACE_SIZE,
+                SPACE_SIZE);
 
         }
 
@@ -71,7 +70,7 @@ namespace ConnectBot
         public void Reset()
         {
             Disc = DiscColor.None;
-            discDrawRect.Y = DrawingConstants.TopBuffer + DrawingConstants.SpaceSize;
+            discDrawRect.Y = TOP_BUFFER + SPACE_SIZE;
         }
     }
 }

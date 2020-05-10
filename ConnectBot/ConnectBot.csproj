@@ -66,7 +66,8 @@
     <Compile Include="BoardColumn.cs" />
     <Compile Include="ConnectAI.cs" />
     <Compile Include="ConnectGame.cs" />
-    <Compile Include="GameMenus.cs" />
+    <Compile Include="GameMenus\PlayAgainMenu.cs" />
+    <Compile Include="GameMenus\StartMenu.cs" />
     <Compile Include="ImageNames.cs" />
     <Compile Include="LogicalBoardHelpers.cs" />
     <Compile Include="Program.cs" />

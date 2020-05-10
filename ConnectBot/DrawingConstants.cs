@@ -1,13 +1,17 @@
-﻿namespace ConnectBot
+﻿using Microsoft.Xna.Framework;
+
+namespace ConnectBot
 {
-    public class DrawingConstants
+    public static class DrawingConstants
     {
-        public const int SpaceSize = 80;
+        public static int SPACE_SIZE = 80;
+               
+        public static int SIDE_BUFFER = 80;
+        public static int TOP_BUFFER = 100;
+               
+        public static int X_BOARD_BUFFER = 80;
+        public static int Y_BOARD_BUFFER = 100;
 
-        public const int SideBuffer = 80;
-        public const int TopBuffer = 100;
-
-        public const int XBoardBuffer = 80;
-        public const int YBoardBuffer = 100;
+        public static Color BACKGROUND_COLOR = Color.WhiteSmoke;
     }
 }
