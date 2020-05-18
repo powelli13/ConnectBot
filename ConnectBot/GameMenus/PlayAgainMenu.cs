@@ -1,97 +1,109 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
+using static ConnectBot.DrawingConstants;
 
 namespace ConnectBot.GameMenus
 {
     class PlayAgainMenu
     {
-        /// <summary>
-        /// Spacing constants for drawing.
-        /// </summary>
-        readonly int XBuffer = 560;
-        readonly int YBuffer = 12;
+        readonly int BUTTON_WIDTH = 60;
+        readonly int BUTTON_HEIGHT = 35;
 
-        readonly int XQuestionBuffer = 10;
-        readonly int YQuestionBuffer = 10;
-            
-        readonly int XYesButtonBuffer = 10;
-        readonly int YYesButtonBuffer = 90;
-            
-        readonly int XNoButtonBuffer = 190;
-        readonly int YNoButtonBuffer = 90;
+        readonly SpriteFont _font;
+        readonly Rectangle _yesRectange;
+        readonly Rectangle _noRectange;
 
-        Dictionary<string, Rectangle> DrawingRectangles;
+        readonly Vector2 _yesPosition;
+        readonly Vector2 _noPosition;
 
-        public PlayAgainMenu()
+        readonly Texture2D _buttonBackgroundTexture;
+
+        public PlayAgainMenu(SpriteFont font, GraphicsDevice graphicsDevice)
         {
-            // Create rectangles that will be used for drawinng
-            DrawingRectangles = new Dictionary<string, Rectangle>();
+            _font = font;
 
-            DrawingRectangles[ImageNames.PLAY_AGAIN_BACKGROUND] = new Rectangle(XBuffer, YBuffer, 320, 160);
-            DrawingRectangles[ImageNames.PLAY_AGAIN_DRAWN_QUESTION] = new Rectangle(XBuffer, YBuffer, 320, 160);
-
-            DrawingRectangles[ImageNames.PLAY_AGAIN_QUESTION] = new Rectangle(
-                XBuffer + XQuestionBuffer,
-                YBuffer + YQuestionBuffer,
-                320, 80
+            // Create rectangles that will be used for detecting clicks
+            _yesRectange = new Rectangle(
+                TOP_BUFFER,
+                60,
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT
             );
 
-            DrawingRectangles[ImageNames.YES_BUTTON] = new Rectangle(
-                XBuffer + XYesButtonBuffer,
-                YBuffer + YYesButtonBuffer,
-                120, 70
+            _noRectange = new Rectangle(
+                TOP_BUFFER + BUTTON_WIDTH + 10,
+                60,
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT
             );
 
-            DrawingRectangles[ImageNames.NO_BUTTON] = new Rectangle(
-                XBuffer + XNoButtonBuffer,
-                YBuffer + YNoButtonBuffer,
-                120, 70
-            );
+            var data = new Color[_yesRectange.Width * _yesRectange.Height];
+            for (int i = 0; i < data.Length; i++)
+            {
+                data[i] = Color.White;
+            }
 
+            _buttonBackgroundTexture = new Texture2D(
+                graphicsDevice,
+                _yesRectange.Width,
+                _yesRectange.Height);
+            _buttonBackgroundTexture.SetData(data);
+
+            _yesPosition = new Vector2(_yesRectange.Left, _yesRectange.Top);
+            _noPosition = new Vector2(_noRectange.Left, _noRectange.Top);
         }
 
         /// <summary>
         /// Draws the play again menu to the screen.
         /// </summary>
-        public void Draw(SpriteBatch sb, Dictionary<string, Texture2D> images, bool gameDrawn = false)
+        public void Draw(
+            SpriteBatch sb, 
+            Dictionary<string, Texture2D> images,
+            DiscColor winner,
+            bool gameDrawn = false)
         {
-            sb.Draw(
-                images[ImageNames.PLAY_AGAIN_BACKGROUND], 
-                DrawingRectangles[ImageNames.PLAY_AGAIN_BACKGROUND],
-                DrawingConstants.BACKGROUND_COLOR);
+            var menuText = gameDrawn
+                ? "Game drawn! Play again?"
+                : $"{winner} has won! Play again?";
 
-            var questionImageName = gameDrawn
-                ? ImageNames.PLAY_AGAIN_DRAWN_QUESTION
-                : ImageNames.PLAY_AGAIN_QUESTION;
-
-            sb.Draw(
-                images[questionImageName],
-                DrawingRectangles[questionImageName],
-                DrawingConstants.BACKGROUND_COLOR);
-                
-            sb.Draw(
-                images[ImageNames.YES_BUTTON], 
-                DrawingRectangles[ImageNames.YES_BUTTON],
-                DrawingConstants.BACKGROUND_COLOR);
+            sb.DrawString(
+                _font,
+                menuText,
+                new Vector2(10, 10),
+                Color.Black);
 
             sb.Draw(
-                images[ImageNames.NO_BUTTON], 
-                DrawingRectangles[ImageNames.NO_BUTTON], 
-                DrawingConstants.BACKGROUND_COLOR);
+                _buttonBackgroundTexture, 
+                _yesPosition, 
+                Color.White);
+
+            sb.DrawString(
+                _font,
+                "Yes",
+                new Vector2(
+                    TOP_BUFFER,
+                    60),
+                Color.Black);
+
+            sb.Draw(
+                _buttonBackgroundTexture, 
+                _noPosition, 
+                Color.White);
+
+            sb.DrawString(
+                _font,
+                "No",
+                new Vector2(
+                    TOP_BUFFER + BUTTON_WIDTH + 10,
+                    60),
+                Color.Black);
         }
 
-        /// <summary>
-        /// Determine if the yes button contains the given mouse position.
-        /// </summary>
         public bool YesButtonContainsMouse(Point p)
-            => DrawingRectangles[ImageNames.YES_BUTTON].Contains(p);
+            => _yesRectange.Contains(p);
 
-        /// <summary>
-        /// Determine if the no button contains the given mouse position.
-        /// </summary>
         public bool NoButtonContainsMouse(Point p)
-            => DrawingRectangles[ImageNames.NO_BUTTON].Contains(p);
-
+            => _noRectange.Contains(p);
     }
 }

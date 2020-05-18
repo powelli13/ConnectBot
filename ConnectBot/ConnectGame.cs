@@ -55,6 +55,8 @@ namespace ConnectBot
 
         private MenuState CurrentMenu { get; set; }
 
+        private DiscColor _winner;
+
         private ConnectAI Bot { get; set; }
 
         private bool _botThinking = false;
@@ -93,7 +95,7 @@ namespace ConnectBot
         {
             if (winner != DiscColor.None)
             {
-                ShowPlayAgainMenu();
+                ShowPlayAgainMenu(winner);
             }
             else
             {
@@ -109,8 +111,9 @@ namespace ConnectBot
             CurrentMenu = MenuState.PlayAgainDrawn;
         }
 
-        protected void ShowPlayAgainMenu()
+        protected void ShowPlayAgainMenu(DiscColor winner)
         {
+            _winner = winner; 
             CurrentMenu = MenuState.PlayAgain;
         }
 
@@ -145,9 +148,10 @@ namespace ConnectBot
             }
 
             CurrentMenu = MenuState.Start;
+            _winner = DiscColor.None;
 
             _startMenu = new StartMenu(_consolas24);
-            _playAgainMenu = new PlayAgainMenu();
+            _playAgainMenu = new PlayAgainMenu(_consolas24, GraphicsDevice);
 
             ResetGame();
         }
@@ -239,7 +243,6 @@ namespace ConnectBot
                                         UpdateBotBoard();
                                     }
                                 }
-                                // TODO is there a way to improve this using some object with a mouse enters event or something?
                                 else
                                 {
                                     _boardColumns[col].IsFocused = false;
@@ -336,12 +339,12 @@ namespace ConnectBot
 
                 case MenuState.PlayAgain:
                     DrawBoard();
-                    _playAgainMenu.Draw(_spriteBatch, _imageDict);
+                    _playAgainMenu.Draw(_spriteBatch, _imageDict, _winner);
                     break;
 
                 case MenuState.PlayAgainDrawn:
                     DrawBoard();
-                    _playAgainMenu.Draw(_spriteBatch, _imageDict, true);
+                    _playAgainMenu.Draw(_spriteBatch, _imageDict, DiscColor.None, true);
                     break;
 
                 case MenuState.None:
