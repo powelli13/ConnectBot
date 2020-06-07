@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PipelineBuildEvent xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SourceFile>C:/Users/powel/source/repos/ConnectBot/ConnectBot/Content/consolas24.spritefont</SourceFile>
+  <SourceTime>2020-05-09T23:23:09.51534-07:00</SourceTime>
+  <DestFile>C:/Users/powel/source/repos/ConnectBot/ConnectBot/Content/consolas24.xnb</DestFile>
+  <DestTime>2020-06-07T11:08:22.3997029-07:00</DestTime>
+  <Importer>FontDescriptionImporter</Importer>
+  <ImporterTime>2018-12-08T08:35:54-08:00</ImporterTime>
+  <Processor>FontDescriptionProcessor</Processor>
+  <ProcessorTime>2018-12-08T08:35:54-08:00</ProcessorTime>
+  <Parameters>
+    <Key>PremultiplyAlpha</Key>
+    <Value>True</Value>
+  </Parameters>
+  <Parameters>
+    <Key>TextureFormat</Key>
+    <Value>Compressed</Value>
+  </Parameters>
+  <Dependencies />
+  <BuildAsset />
+  <BuildOutput />
+</PipelineBuildEvent>
