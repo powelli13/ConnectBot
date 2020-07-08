@@ -4,13 +4,13 @@
   <Platform>Windows</Platform>
   <Config />
   <SourceFiles>
-    <File>C:/Users/powel/source/repos/ConnectBot/ConnectBot/Content/black_disc.png</File>
-    <File>C:/Users/powel/source/repos/ConnectBot/ConnectBot/Content/blue_arrow.png</File>
-    <File>C:/Users/powel/source/repos/ConnectBot/ConnectBot/Content/column_holder.png</File>
-    <File>C:/Users/powel/source/repos/ConnectBot/ConnectBot/Content/consolas24.spritefont</File>
-    <File>C:/Users/powel/source/repos/ConnectBot/ConnectBot/Content/highlighted_column_holder.png</File>
-    <File>C:/Users/powel/source/repos/ConnectBot/ConnectBot/Content/place_holder.png</File>
-    <File>C:/Users/powel/source/repos/ConnectBot/ConnectBot/Content/red_disc.png</File>
+    <File>C:/Users/ipowell/Source/Repos/ConnectBot/ConnectBot/Content/black_disc.png</File>
+    <File>C:/Users/ipowell/Source/Repos/ConnectBot/ConnectBot/Content/blue_arrow.png</File>
+    <File>C:/Users/ipowell/Source/Repos/ConnectBot/ConnectBot/Content/column_holder.png</File>
+    <File>C:/Users/ipowell/Source/Repos/ConnectBot/ConnectBot/Content/consolas24.spritefont</File>
+    <File>C:/Users/ipowell/Source/Repos/ConnectBot/ConnectBot/Content/highlighted_column_holder.png</File>
+    <File>C:/Users/ipowell/Source/Repos/ConnectBot/ConnectBot/Content/place_holder.png</File>
+    <File>C:/Users/ipowell/Source/Repos/ConnectBot/ConnectBot/Content/red_disc.png</File>
   </SourceFiles>
   <DestFiles>
     <File xsi:nil="true" />

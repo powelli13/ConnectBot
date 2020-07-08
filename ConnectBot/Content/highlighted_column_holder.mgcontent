@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PipelineBuildEvent xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <SourceFile>C:/Users/powel/source/repos/ConnectBot/ConnectBot/Content/highlighted_column_holder.png</SourceFile>
-  <SourceTime>2020-03-05T12:51:46.8256969-08:00</SourceTime>
-  <DestFile>C:/Users/powel/source/repos/ConnectBot/ConnectBot/Content/highlighted_column_holder.xnb</DestFile>
-  <DestTime>2020-06-07T11:08:22.4198564-07:00</DestTime>
+  <SourceFile>C:/Users/ipowell/Source/Repos/ConnectBot/ConnectBot/Content/highlighted_column_holder.png</SourceFile>
+  <SourceTime>2020-03-18T15:20:03.9956428-07:00</SourceTime>
+  <DestFile>C:/Users/ipowell/Source/Repos/ConnectBot/ConnectBot/Content/highlighted_column_holder.xnb</DestFile>
+  <DestTime>2020-07-08T07:36:43.5534258-07:00</DestTime>
   <Importer>TextureImporter</Importer>
   <ImporterTime>2018-12-08T08:35:54-08:00</ImporterTime>
   <Processor>TextureProcessor</Processor>
