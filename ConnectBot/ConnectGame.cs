@@ -291,7 +291,7 @@ namespace ConnectBot
         /// </summary>
         protected async Task GetBotMoveAsync()
         {
-            int botMove = await Bot.MoveAsync();
+            int botMove = await Task.Run(() => Bot.MoveAsync());
 
             if (botMove == -1)
                 throw new InvalidOperationException("The bot did not return a valid column.");
