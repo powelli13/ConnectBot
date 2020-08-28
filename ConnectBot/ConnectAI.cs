@@ -59,7 +59,7 @@ namespace ConnectBot
             }
         }
 
-        public async Task<int> Move()
+        public async Task<int> MoveAsync()
         {
             // Look for wins before performing in depth searches
             var aiWinningMove = FindKillerMove(GameBoard, AiColor);

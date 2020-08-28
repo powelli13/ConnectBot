@@ -254,7 +254,7 @@ namespace ConnectBot
                             if (!_botThinking)
                             {
                                 _botThinking = true;
-                                GetBotMove();
+                                GetBotMoveAsync();
                             }
                         }
                     }
@@ -283,18 +283,22 @@ namespace ConnectBot
             base.Update(gameTime);
         }
 
-        protected async void GetBotMove()
+        /// <summary>
+        /// Retrieves move from the bot and updates game state
+        /// accordingly after. This method should not be awaited
+        /// because it is intended to prompt the bot to calculate
+        /// its move asynchronously while not blocking the UI.
+        /// </summary>
+        protected async Task GetBotMoveAsync()
         {
-            int botMove = -1;
-            await Task.Run(() => botMove = Bot.Move().Result);
+            int botMove = await Bot.MoveAsync();
 
-            // TODO ensure bot made valid move if it tried to cheat request another
-            // maybe the board state should be passed into the bot at move request
-            if (botMove == -1) throw new InvalidOperationException("The bot did not return a valid column.");
+            if (botMove == -1)
+                throw new InvalidOperationException("The bot did not return a valid column.");
 
             _boardColumns[botMove].SetSpace(BotTurn);
-
             ChangeTurn();
+
             var winner = BitBoardHelpers.CheckVictory(GetBitBoard());
             VictoryConfirmed(winner);
 
