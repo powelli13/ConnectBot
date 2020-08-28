@@ -284,14 +284,12 @@ namespace ConnectBot
         }
 
         /// <summary>
-        /// Retrieves move from the bot and updates game state
-        /// accordingly after. This method should not be awaited
-        /// because it is intended to prompt the bot to calculate
-        /// its move asynchronously while not blocking the UI.
+        /// Prompts bot to calculate move in the background 
+        /// and updates game state accordingly after.
         /// </summary>
         protected async Task GetBotMoveAsync()
         {
-            int botMove = await Task.Run(() => Bot.MoveAsync());
+            int botMove = await Task.Run(() => Bot.Move());
 
             if (botMove == -1)
                 throw new InvalidOperationException("The bot did not return a valid column.");
